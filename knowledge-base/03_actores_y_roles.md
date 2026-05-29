@@ -1,127 +1,134 @@
 # 03 — Actores y Roles
 
-## Actores del sistema
-
-### A1 — PROFESOR (docente regular)
-- **Rol confirmado**: visible en tabla de "Mis equipos" con valor `PROFESOR`.
-- **Acceso típico**: index.php, mis_equipos, mis_guardias, mis_tareas, encuentros, perfil.
-- **Restricciones observadas**: `admin_mail_approval.php` redirige, `salarios.php` → No autorizado.
-
-### A2 — COORDINADOR
-- **Rol confirmado**: visible en tabla de "Mis equipos" con valor `COORDINADOR`.
-- **Diferencia con PROFESOR**: en `admin_asignaciones.php` hay campo `responde_legs[]` → un coordinador es quien "responde" por uno o más profesores.
-- **Suposición:** accede al menú "Gestión" completo (Profesores, Asignaciones, Carreras, Cohortes, etc.).
-
-### A3 — ADMIN (flag booleano `is_admin`)
-- **Evidencia**: en `admin_profesores.php` hay checkbox `is_admin` separado del rol.
-- **Lectura**: es un atributo ortogonal al rol académico — un profesor o coordinador puede o no ser admin del sistema.
-- **Privilegios inferidos**: ABM de profesores, edición de salarios, aprobación de mails masivos.
-
-### A4 — ADMIN FINANCIERO (inferido)
-- **No es un rol visible** explícitamente, pero `salarios.php` requiere autorización adicional incluso para un coordinador.
-- **Suposición:** existe un permiso fino sobre el módulo de Salarios/Liquidaciones, posiblemente vinculado a `is_admin` o a un flag adicional.
-
-### A5 — TUTOR (CONFIRMADO ✅)
-- **Evidencia confirmada**: `salarios.php` muestra el catálogo cerrado de roles en los selects `base_rol` y `plus_rol`: `ALL, PROFESOR, TUTOR, NEXO, COORDINADOR`.
-- **Salario base detectado**: TUPAD pagó $420.000/mes a TUTOR desde 2026-02-01 (al momento del análisis).
-- **Diferencia con PROFESOR**: rol intermedio, posiblemente auxiliares/ayudantes con responsabilidades de seguimiento y guardias, menor remuneración que PROFESOR ($560.000).
-
-### A8 — NEXO (CONFIRMADO ✅ — descubierto en segunda pasada)
-- **Evidencia confirmada**: opción del select en `salarios.php` + sección dedicada en `liquidaciones.php`: *"Roles NEXO (se muestran aparte, pero suman al total y al resumen por docente)"*.
-- **Salario base detectado**: $660.000/mes (más que PROFESOR, menos que COORDINADOR).
-- **Lectura semántica**: posiblemente rol de **enlace/articulación territorial o académica** — un puente entre la institución y un grupo de docentes o alumnos.
-- **Tratamiento contable especial**: aparece en una tabla aparte en la liquidación pero suma al total general.
-
-### A6 — ALUMNO (sujeto, NO usuario)
-- **No tiene UI propia** en este sistema.
-- Aparece como **destinatario** de mails, como **registro** en padrones, y como **objeto observado** en monitores.
-- Toda interacción real del alumno ocurre en Moodle.
-
-### A7 — USUARIO ANÓNIMO
-- **No tiene acceso**: la única ruta "pública" inferida es la de login. Ningún `.php` recorrido funcionó sin sesión.
-
-## Tabla RBAC (inferida)
-
-| Pantalla | PROFESOR | COORDINADOR | ADMIN (is_admin) | ADMIN FINANCIERO |
-|----------|----------|-------------|------------------|------------------|
-| `index.php` (Procesos Moodle) | ✅ propia | ✅ propia | ✅ | ✅ |
-| `coloquios/index.php` | ✅ | ✅ | ✅ | ✅ |
-| `monitor_evalia.php` (vista tutor) | ✅ | ✅ | ✅ | ✅ |
-| `admin_monitor_evalia.php` (vista admin) | ❓ | ✅ | ✅ | ✅ |
-| `admin_coloquios.php` | ❓ | ✅ | ✅ | ✅ |
-| `admin.php` (Panel interacciones) | ❓ | ✅ | ✅ | ✅ |
-| `mis_equipos.php` | ✅ propio | ✅ propio | ✅ | ✅ |
-| `encuentros.php` | ✅ | ✅ | ✅ | ✅ |
-| `mis_guardias.php` | ✅ propias | ✅ | ✅ | ✅ |
-| `mis_tareas.php` | ✅ propias | ✅ | ✅ | ✅ |
-| `admin_reportes.php` (Equipos) | ❓ | ✅ | ✅ | ✅ |
-| `admin_profesores.php` | ❌ | ✅ | ✅ | ✅ |
-| `admin_asignaciones.php` | ❌ | ✅ | ✅ | ✅ |
-| `admin_monitor.php` (Monitor Alumnos) | ❓ | ✅ | ✅ | ✅ |
-| `admin_carreras.php` | ❌ | ✅ | ✅ | ✅ |
-| `admin_cohortes.php` | ❌ | ✅ | ✅ | ✅ |
-| `programas_materias.php` | ❌ | ✅ | ✅ | ✅ |
-| `fechas_parciales.php` | ❌ | ✅ | ✅ | ✅ |
-| `admin_monitor_general.php` (Monitor Atrasos) | ❓ | ✅ | ✅ | ✅ |
-| `admin_avisos.php` | ❌ | ✅ | ✅ | ✅ |
-| `admin_mail_approval.php` | 🔒 redirect | ❓ | ✅ | ✅ |
-| `admin_tareas.php` | ❌ | ✅ | ✅ | ✅ |
-| `liquidaciones.php` | ❌ | ❌ | ✅ (super-admin) | ✅ |
-| `salarios.php` | 🔒 No autorizado | 🔒 | ✅ (super-admin) | ✅ |
-| `admin_facturas.php` | ❌ | ❌ | ✅ (super-admin) | ✅ |
-| `admin_mail_approval.php` | 🔒 redirect | 🔒 redirect | 🔧 redirige si cola vacía | ✅ si hay items |
-| `perfil.php` | ✅ propio | ✅ propio | ✅ | ✅ |
-| `logout.php` | ✅ | ✅ | ✅ | ✅ |
-
-Leyenda:
-- ✅ = acceso confirmado
-- ❌ = sin acceso (inferido)
-- ❓ = no validado (no se probó con el rol exacto)
-- 🔒 = redirección o "No autorizado" confirmado
-- "propia/propio" = solo ve sus propios datos, no globales
-
-> **Nota**: el usuario logueado durante el análisis (Cortez Alberto) tiene rol mixto **COORDINADOR + PROFESOR** según su tabla "Mis equipos", lo cual le da casi todos los accesos excepto los dos restringidos.
-
-## Modelo de permisos detectado
-
-### 1. Rol académico (catálogo cerrado, CONFIRMADO en `salarios.php`)
-Catálogo cerrado real de roles del sistema (select `base_rol`):
-- `ALL` (valor especial: aplica a todos los roles, usado en grilla salarial)
-- `PROFESOR`
-- `TUTOR`
-- `NEXO`
-- `COORDINADOR`
-
-### 2. Flag `is_admin` (booleano)
-- Atributo ortogonal en `admin_profesores.php`.
-- Activa el acceso a las pantallas administrativas del sistema.
-
-### 3. Permisos por módulo (inferido)
-- Existe un nivel fino adicional para Salarios y Aprobación de Mails — el simple flag `is_admin` no parece bastar (o el usuario observado no lo tiene activo).
-
-### 4. Vigencia temporal
-- Cada asignación de docente tiene `desde` y `hasta` (fechas) y un `Estado` (Vigente / vencida).
-- Las cohortes también tienen `vig_desde` y `vig_hasta`.
-- **Regla inferida**: los permisos efectivos de un docente sobre una materia están condicionados por la vigencia de su asignación.
-
-## Rutas no autenticadas
-
-Solo se infiere una: **login** (probablemente `login.php` o similar, no recorrida porque el usuario ya estaba logueado al inicio).
-
-→ Ver [10_preguntas_abiertas.md](10_preguntas_abiertas.md#PA-04) para validar.
+> **Propósito**: definir QUIÉNES usan el sistema y QUÉ puede hacer cada uno. Escrito en lenguaje de dominio y agnóstico de tecnología: describe el modelo de permisos a construir, no una implementación concreta. El detalle técnico de cómo se implementa la seguridad vive en [`docs/ARQUITECTURA.md` §5](../docs/ARQUITECTURA.md).
 
 ---
 
-## ⚠️ Corrección para activia-trace — modelo de roles y permisos
+## 1. Concepto: identidad, rol y tenant
 
-> Todo lo de arriba describe el modelo **observado en PulseUPs/olsoft (el sistema que reemplazamos)**. NO replicar. activia-trace corrige estos puntos:
+El sistema es **multi-institución (multi-tenant)**. Cada institución es un **tenant** aislado: sus datos jamás se cruzan con los de otra. Todo usuario pertenece a exactamente un tenant.
 
-| Anti-patrón observado en olsoft | Corrección en activia-trace |
-|----------------------------------|------------------------------|
-| **Flag binario `is_admin`** ortogonal al rol (A3, D7) — permisos opacos | **RBAC con permisos finos por feature**. Roles ricos: `ALUMNO`, `TUTOR`, `PROFESOR`, `COORDINADOR`, `ADMIN`, `FINANZAS`. Sin flag binario. ([RF-04](../docs/PRD.md#auth-roles-y-tenants)) |
-| **ADMIN FINANCIERO inferido** (A4) sin rol explícito | Rol **`FINANZAS`** de primera clase, con permisos propios sobre Salarios/Liquidaciones |
-| **Super-admin vía `?leg=1`** (impersonation por URL) | **Identidad SOLO desde el JWT firmado**. La impersonation legítima es feature explícita, permisada y 100% auditada. Ver [P11](../docs/PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver) |
-| **ALUMNO es objeto, no usuario** (A6) | `ALUMNO` es un **rol/usuario real** con portal propio (Fase 2) |
-| **Sin aislamiento entre instituciones** | Todo rol vive **dentro de un Tenant**. Un usuario nunca ve datos de otro tenant ([RNF-22](../docs/PRD.md#multi-tenancy)) |
+Dentro de un tenant, cada usuario tiene:
 
-Detalle completo del modelo de seguridad en [`docs/ARQUITECTURA.md` §5](../docs/ARQUITECTURA.md).
+- **Una identidad** — quién es la persona (única e inmutable dentro del tenant).
+- **Uno o más roles** — qué función cumple (un usuario puede ser, por ejemplo, PROFESOR y COORDINADOR a la vez).
+- **Un conjunto de permisos efectivos** — qué acciones concretas puede ejecutar, derivados de sus roles.
+
+> 🔑 **Regla de oro (no negociable)**: la identidad, los roles y el tenant de un usuario se derivan **exclusivamente de su sesión autenticada**. Ningún dato de la petición (parámetro de URL, campo de formulario, encabezado) puede cambiar quién es el usuario ni qué permisos tiene. Esta regla es la base de todo el modelo de seguridad.
+
+---
+
+## 2. Roles del dominio
+
+El sistema define los siguientes roles. Cada uno representa una **función**, no un nivel de privilegio acumulativo: un ADMIN no es "un PROFESOR con más permisos", son funciones distintas con permisos distintos.
+
+| Rol | Quién es | Responsabilidad principal |
+|-----|----------|---------------------------|
+| **ALUMNO** | Estudiante que cursa materias | Consultar su propio estado académico, reservar instancias de evaluación, confirmar avisos. |
+| **TUTOR** | Auxiliar / ayudante de cátedra | Acompañar el seguimiento de alumnos, cubrir guardias, asistir al profesor. |
+| **PROFESOR** | Docente a cargo de una o más comisiones | Gestionar sus comisiones: calificaciones, detección de atrasados, comunicación con alumnos, encuentros. |
+| **COORDINADOR** | Responsable de un conjunto de materias o de una cohorte | Armar equipos docentes, supervisar rendimiento, publicar avisos, coordinar tareas. |
+| **NEXO** | Rol de articulación / enlace transversal | Cumple funciones de puente entre la institución y grupos de docentes o alumnos (no atado a una materia específica). |
+| **ADMIN** | Administrador del sistema dentro del tenant | Gestionar la estructura académica (carreras, cohortes, materias), usuarios y configuración del tenant. |
+| **FINANZAS** | Responsable de liquidaciones y honorarios | Operar la grilla salarial, calcular y cerrar liquidaciones, gestionar facturas. |
+
+> ℹ️ **Extensibilidad**: el conjunto de roles debe ser un catálogo administrable por tenant, no una lista fija en código. Una institución podría necesitar un rol que otra no use.
+
+---
+
+## 3. Modelo de autorización (RBAC con permisos finos)
+
+La autorización se basa en **permisos finos por capacidad**, agrupados en roles. **No** existe un "flag de superusuario" binario: cada acción protegida exige un permiso explícito.
+
+### 3.1 Permisos
+
+Un **permiso** es una capacidad atómica sobre un módulo, expresada como `modulo:accion`. Ejemplos:
+
+- `calificaciones:importar`
+- `atrasados:ver`
+- `comunicacion:enviar`
+- `comunicacion:aprobar`
+- `equipos:asignar`
+- `liquidaciones:cerrar`
+- `auditoria:ver`
+- `impersonacion:usar`
+
+### 3.2 Roles como conjuntos de permisos
+
+Cada rol agrupa un conjunto de permisos. Los permisos efectivos de un usuario son la **unión** de los permisos de todos sus roles, **acotados por su tenant** y por la **vigencia** de sus asignaciones (ver §5).
+
+### 3.3 Matriz de capacidades por rol
+
+> La matriz se expresa por **capacidad de negocio**, no por pantalla ni ruta, para que sea implementable en cualquier arquitectura. `✅` = el rol tiene la capacidad; `—` = no la tiene; `(propio)` = solo sobre sus propios datos, no los de otros usuarios.
+
+| Capacidad / Módulo | ALUMNO | TUTOR | PROFESOR | COORDINADOR | ADMIN | FINANZAS |
+|--------------------|:------:|:-----:|:--------:|:-----------:|:-----:|:--------:|
+| Ver estado académico propio | ✅ | — | — | — | — | — |
+| Reservar instancia de evaluación | ✅ | — | — | — | — | — |
+| Confirmar avisos (acknowledgment) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Importar calificaciones | — | — | ✅ (propio) | ✅ | ✅ | — |
+| Ver alumnos atrasados | — | ✅ | ✅ (propio) | ✅ | ✅ | — |
+| Detectar entregas sin corregir | — | ✅ | ✅ (propio) | ✅ | ✅ | — |
+| Enviar comunicaciones a alumnos | — | — | ✅ (propio) | ✅ | ✅ | — |
+| Aprobar comunicaciones masivas | — | — | — | ✅ | ✅ | — |
+| Gestionar encuentros | — | ✅ | ✅ (propio) | ✅ | ✅ | — |
+| Registrar guardias | — | ✅ (propio) | ✅ (propio) | ✅ | ✅ | — |
+| Gestionar tareas internas | — | — | ✅ (propio) | ✅ | ✅ | — |
+| Publicar avisos | — | — | — | ✅ | ✅ | — |
+| Gestionar equipos docentes (asignaciones) | — | — | — | ✅ | ✅ | — |
+| Gestionar estructura académica (carreras, cohortes, materias) | — | — | — | — | ✅ | — |
+| Gestionar usuarios del tenant | — | — | — | — | ✅ | — |
+| Ver auditoría | — | — | — | ✅ (propio) | ✅ | ✅ |
+| Operar grilla salarial | — | — | — | — | — | ✅ |
+| Calcular / cerrar liquidaciones | — | — | — | — | — | ✅ |
+| Gestionar facturas | — | — | — | — | — | ✅ |
+| Configurar el tenant | — | — | — | — | ✅ | — |
+
+> ⚠️ Esta matriz es el **punto de partida** del diseño de permisos. El equipo de implementación debe modelarla como datos (catálogo rol × permiso administrable), no hardcodearla.
+
+---
+
+## 4. Impersonación (suplantación legítima)
+
+El sistema **puede** permitir que un usuario autorizado (típicamente soporte o ADMIN) opere temporalmente "en nombre de" otro usuario, para diagnóstico o asistencia. Esta capacidad es **opcional, peligrosa y debe estar fuertemente controlada**:
+
+- Requiere el permiso explícito `impersonacion:usar`.
+- Genera una sesión claramente distinguible de una sesión normal.
+- **Toda acción realizada bajo impersonación queda atribuida al actor real** (quién impersona), no a la persona impersonada — para no romper la trazabilidad.
+- Cada inicio y fin de impersonación se **registra en la auditoría**: quién, a quién, desde cuándo, hasta cuándo.
+
+> La impersonación **nunca** puede activarse alterando un dato de la petición. Es siempre una acción explícita, permisada y auditada.
+
+---
+
+## 5. Vigencia temporal de las asignaciones
+
+Los permisos de un usuario sobre un contexto académico (una materia, una comisión) están condicionados por la **vigencia** de su asignación:
+
+- Cada asignación rol↔contexto tiene una fecha **desde** y una fecha **hasta** (esta última puede ser abierta).
+- Una asignación está **vigente** si la fecha actual cae dentro de su rango.
+- Un usuario **solo** ejerce los permisos de una asignación mientras esté vigente. Una asignación vencida no otorga acceso, pero **se conserva en el histórico** (no se borra) para auditoría y para clonado entre períodos.
+
+Esto permite la rotación natural de docentes entre cuatrimestres sin perder el registro histórico.
+
+---
+
+## 6. Acceso anónimo (no autenticado)
+
+Las únicas operaciones accesibles **sin sesión iniciada** son las del flujo de autenticación:
+
+- Pantalla de inicio de sesión (login).
+- Solicitud y confirmación de recuperación de contraseña.
+
+**Cualquier otra operación exige una sesión autenticada válida.** No existe ninguna ruta, parámetro ni atajo que otorgue acceso a datos o acciones sin pasar por la autenticación. El flujo de login está en [07 — Flujos Principales](07_flujos_principales.md) y su implementación en [`docs/ARQUITECTURA.md` §5.1](../docs/ARQUITECTURA.md).
+
+---
+
+## 7. Resumen para el equipo de implementación
+
+1. **Multi-tenant**: todo dato y todo permiso vive dentro de un tenant; nunca se cruzan.
+2. **Identidad desde la sesión, jamás desde la petición** — regla de seguridad #1.
+3. **RBAC con permisos finos** (`modulo:accion`), no flags binarios; catálogo rol × permiso administrable como datos.
+4. **Roles del dominio**: ALUMNO, TUTOR, PROFESOR, COORDINADOR, NEXO, ADMIN, FINANZAS.
+5. **Vigencia temporal** acota qué asignaciones están activas; el histórico se conserva.
+6. **Impersonación** solo permisada, distinguible y auditada.

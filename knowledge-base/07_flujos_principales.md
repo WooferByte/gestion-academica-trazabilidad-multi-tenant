@@ -1,286 +1,298 @@
 # 07 — Flujos Principales
 
-Flujos extremo a extremo observados o inferidos de la herramienta.
+> **Propósito**: describir los flujos extremo a extremo más relevantes del sistema, en términos de dominio (actor → acción → resultado). Cada flujo es una secuencia de pasos de negocio que un equipo puede implementar en cualquier arquitectura o stack. Los detalles técnicos de autenticación, sesiones y seguridad viven en [`docs/ARQUITECTURA.md` §5](../docs/ARQUITECTURA.md).
 
 ---
 
 ## FL-01 — Autenticación
 
-```
-[Usuario] → login.php (no observada)
-         → credenciales (legajo + password — supuesto)
-         → sesión PHP en cookie
-         → redirect a index.php
-         → menú renderizado según rol
-         ...
-         → logout.php → destruye sesión → redirect a login
-```
+**Flujo principal (login):**
 
-**Suposición:** el campo de autenticación es `legajo` (es la natural key del docente).
+1. El usuario accede a la pantalla de inicio de sesión del sistema.
+2. Ingresa su **email** y **contraseña**.
+3. El sistema valida las credenciales contra el registro del tenant correspondiente.
+4. Si son válidas, el sistema emite una **sesión autenticada** (token de acceso de vida corta + token de refresco con rotación). La identidad del usuario, sus roles y su tenant quedan **exclusivamente en la sesión** — ningún dato de la petición puede alterarlos.
+5. El usuario accede al sistema y el menú/interfaz se adapta a los permisos de su sesión.
+6. Cuando el usuario cierra sesión, la sesión se invalida y los tokens quedan revocados.
 
-> ⚠️ **Corrección para activia-trace** — este flujo es el del sistema VIEJO. NO replicar:
-> - Login por **email + password (hash Argon2id) + 2FA opcional (TOTP)**, NUNCA por legajo. El legajo es atributo de negocio, no credencial. ([RF-01](../docs/PRD.md#auth-roles-y-tenants))
-> - Sesión = **JWT firmado** (access 15 min + refresh con rotación), no cookie de sesión PHP. ([RNF-09](../docs/PRD.md#seguridad))
-> - La identidad y el tenant salen **exclusivamente del JWT verificado**. Ningún `?leg=X`, id en query/body/header puede cambiar quién sos → así se mata [P11](../docs/PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver).
-> - Recuperación de contraseña por email con token de un solo uso. ([RF-02](../docs/PRD.md#auth-roles-y-tenants))
->
-> Detalle en [`docs/ARQUITECTURA.md` §5](../docs/ARQUITECTURA.md).
+**Variante 2FA (opcional por configuración del tenant):**
+
+- Luego del paso 3 y antes del paso 4, el sistema exige un segundo factor (TOTP u otro mecanismo configurable).
+- Si el segundo factor no se supera, la sesión no se emite.
+
+**Flujo de recuperación de contraseña:**
+
+1. El usuario solicita recuperar su contraseña indicando su **email**.
+2. El sistema genera un **token de un solo uso** y lo envía al email registrado.
+3. El usuario sigue el enlace del email y establece una nueva contraseña.
+4. El token queda invalidado tras su uso o por vencimiento.
+
+> 🔑 **Regla de oro**: la identidad y el tenant del usuario salen **exclusivamente de la sesión autenticada**. Ningún parámetro de la URL, campo de formulario ni encabezado puede cambiar quién es el usuario ni qué permisos tiene. Ver modelo de seguridad completo en [03 — Actores y Roles §1](03_actores_y_roles.md) y en [`docs/ARQUITECTURA.md` §5](../docs/ARQUITECTURA.md).
 
 ---
 
-## FL-02 — Importar calificaciones y detectar atrasados (flujo central del PROFESOR)
+## FL-02 — Importar calificaciones y detectar alumnos atrasados (flujo central del PROFESOR)
 
-```
-[Profesor: Cortez Alberto]
-  1. Login → index.php
-  2. Selecciona materia (ej: Programación I — PROG_I, id=3)
-       → URL: index.php?materia_id=3
-       → se despliegan secciones 1.a, 1.b, 2.a, 2.b, 3, 4
+Este es el flujo de mayor uso del sistema para el rol PROFESOR. Permite analizar el estado académico de una comisión a partir de los datos exportados del LMS.
 
-  3. Sección 1.a — Sube .xlsx exportado de Moodle
-       → click "Generar preview"
-       → sistema parsea con PHPExcel
-       → detecta columnas (Real) [RN-01]
-       → detecta valores textuales [RN-02]
-       → muestra lista de actividades para seleccionar
+1. **Inicio de sesión**: el PROFESOR inicia sesión y accede a la gestión de su comisión (materia + período).
 
-  4. Profesor selecciona actividades a analizar
-       → confirma
+2. **Selección de comisión**: selecciona la materia y cohorte que quiere analizar. La vista muestra todas las secciones de trabajo disponibles.
 
-  5. Profesor configura umbral (Sección 1.a "Umbral global")
-       → default 60% [RN-03]
-       → "Guardar umbral (%)"
+3. **Importación de calificaciones** (`calificaciones:importar`):
+   - El PROFESOR sube el archivo exportado del LMS con las calificaciones de la comisión.
+   - El sistema procesa el archivo, detecta las columnas de actividades con valores reales numéricos ([RN-01]) y los valores textuales como "aprobada", "no entregado", etc. ([RN-02]).
+   - El sistema muestra una lista de actividades detectadas para que el PROFESOR seleccione cuáles incluir en el análisis.
 
-  6. Sistema computa:
-       - Sección 3: Estudiantes atrasados (faltantes o < umbral) [RN-06]
-       - Sección 4: Ranking de aprobadas [RN-09]
-       - Sección 2.a: Reportes rápidos
-       - Sección 2.b: Notas finales agrupadas
+4. **Configuración del umbral** (`calificaciones:importar`):
+   - El PROFESOR establece el umbral de aprobación en porcentaje (valor por defecto: 60 % [RN-03]).
+   - Confirma la configuración.
 
-  7. Sección 1.b — Sube reporte de finalización Moodle
-       → click "Analizar correcciones"
-       → sistema cruza con calificaciones
-       → genera tabla "Posibles TPs sin corregir" [RN-07, RN-08]
+5. **Cómputo automático**: el sistema calcula y presenta:
+   - Alumnos atrasados: los que tienen actividades faltantes o calificación por debajo del umbral ([RN-06]).
+   - Ranking de actividades aprobadas ([RN-09]).
+   - Reportes rápidos de estado por comisión.
+   - Notas finales agrupadas.
 
-  8. Exportar Excel de TPs sin corregir (acción opcional)
+6. **Detección de entregas sin corregir** (opcional, `atrasados:ver`):
+   - El PROFESOR sube el reporte de finalización de actividades del LMS.
+   - El sistema cruza ese reporte con las calificaciones y genera la tabla "posibles entregas sin corregir" ([RN-07], [RN-08]).
+   - Se puede exportar un listado de esas entregas para seguimiento externo.
 
-  9. Click sobre un alumno atrasado
-       → modal "Alumnos"
-       → modal "Previsualización del email" con Asunto + Cuerpo HTML
-       → confirma envío
-       → email pasa a estado "Pend" en cola
+7. **Comunicación con alumnos atrasados** (`comunicacion:enviar`):
+   - El PROFESOR selecciona uno o más alumnos atrasados.
+   - El sistema genera una previsualización del mensaje (asunto + cuerpo) personalizado por alumno.
+   - El PROFESOR confirma el envío.
+   - Cada mensaje ingresa a la cola de envío en estado **Pendiente** ([RN-15]).
 
-  10. (Worker en background)
-        Pend → Send → OK / Fail / Canc [RN-15]
-```
+8. **Despacho de mensajes** (proceso asincrónico del sistema):
+   - Los mensajes Pendientes pasan a estado **Enviando**, y luego a **OK**, **Fallido** o **Cancelado** según el resultado ([RN-15]).
 
-**Loggeable**: cada uno de los pasos 3, 5, 7, 9 genera un registro en AuditLog ([RN-23](05_reglas_de_negocio.md#rn-23)).
+**Auditoría**: los pasos 3, 4, 6 y 7 generan un registro en el log de auditoría ([RN-23](05_reglas_de_negocio.md#rn-23)).
 
 ---
 
 ## FL-03 — Setup de inicio de cuatrimestre (COORDINADOR)
 
-```
-1. Coordinador → admin_cohortes.php
-     → crea nueva cohorte (ej: AGO-2026, 2026, vig_desde, vig_hasta)
+Flujo que el COORDINADOR ejecuta al comienzo de cada período académico para preparar la estructura del nuevo cuatrimestre.
 
-2. → admin_reportes.php (Equipos)
-     → opción "Clonar equipo docente"
-     → selecciona equipo origen (materia X / carrera TUPAD / cohorte MAR-2026)
-     → selecciona destino (misma materia X / TUPAD / nueva cohorte AGO-2026)
-     → confirma
-     → todas las asignaciones se duplican con las fechas del nuevo período [RN-12]
+1. **Crear la nueva cohorte** (`estructura:gestionar`):
+   - Define el identificador, nombre, fechas de vigencia (inicio y fin del período).
 
-3. → admin_asignaciones.php
-     → ajusta asignaciones faltantes (profes nuevos, materias huérfanas)
-     → puede usar "Asignación masiva" para alta bulk [F4.4]
+2. **Clonar el equipo docente** (`equipos:asignar`):
+   - Selecciona un equipo docente de un período anterior (materia × carrera × cohorte origen).
+   - Selecciona el destino (misma materia × carrera × nueva cohorte).
+   - El sistema duplica todas las asignaciones vigentes con las fechas del nuevo período ([RN-12]).
 
-4. → admin_reportes.php
-     → "Modificar vigencia general del equipo" si las fechas necesitan ajuste
+3. **Ajuste de asignaciones** (`equipos:asignar`):
+   - El COORDINADOR completa las asignaciones faltantes (docentes nuevos, materias sin asignar).
+   - Puede usar la operación de alta masiva para asignar varios docentes de una sola vez ([F4.4]).
 
-5. → programas_materias.php
-     → sube los PDF actualizados para cada materia × cohorte
+4. **Ajuste de vigencias** (`equipos:asignar`):
+   - Modifica las fechas de vigencia del equipo si el período difiere del estándar.
 
-6. → fechas_parciales.php
-     → carga las fechas de parciales/TP/coloquios del nuevo cuatrimestre
+5. **Carga de programas de materia** (`estructura:gestionar`):
+   - Sube los documentos de programa actualizados para cada materia × cohorte.
 
-7. → admin_avisos.php
-     → publica aviso de bienvenida con scope=cohorte AGO-2026, role_target=ALL
+6. **Carga de fechas de evaluaciones** (`estructura:gestionar`):
+   - Registra las fechas de parciales, trabajos prácticos y coloquios del nuevo cuatrimestre.
 
-8. → admin_monitor.php
-     → importa el padrón inicial (Listado + Actividades) cuando empieza el cursado
-```
+7. **Publicar aviso de bienvenida** (`avisos:publicar`):
+   - Crea un aviso con alcance a la nueva cohorte, dirigido a todos los roles, anunciando el inicio del período.
+
+8. **Importación del padrón inicial** (`padron:importar`):
+   - Cuando comienza el cursado, importa el listado de alumnos y actividades del período.
 
 ---
 
 ## FL-04 — Envío masivo de recordatorios con aprobación
 
-```
-[Profesor] → index.php?materia_id=X
-  1. Importa calificaciones [FL-02 pasos 3-6]
-  2. Identifica N alumnos atrasados
-  3. Genera mails masivos (acción no observada en detalle — botón implícito)
-  4. Cada mail va a estado "Pend"
+Flujo para comunicaciones a escala que requieren una etapa de revisión antes del despacho efectivo.
 
-[Admin de mails] → admin_mail_approval.php
-  5. Ve cola pendiente
-  6. Aprueba lote o cancela
-  7. Aprobados pasan a "Send" → worker despacha → "OK" o "Fail"
-  8. Cancelados quedan en "Canc"
+**Parte A — Generación (PROFESOR):**
 
-[Profesor] → admin.php
-  9. Tabla "Estado de comunicaciones" muestra OK/Fail por materia
-```
+1. El PROFESOR importa las calificaciones de su comisión ([FL-02], pasos 3–5).
+2. El sistema identifica los alumnos atrasados del período.
+3. El PROFESOR dispara el envío masivo de recordatorios.
+4. Cada mensaje ingresa a la cola en estado **Pendiente** (`comunicacion:enviar`).
 
-**Suposición:** la aprobación es por **lote** o **por destinatario** — no observado en detalle.
+**Parte B — Aprobación (COORDINADOR o rol con `comunicacion:aprobar`):**
+
+5. El aprobador accede a la cola de mensajes pendientes.
+6. Aprueba el lote completo o lo cancela (también puede aprobar o cancelar por destinatario individual).
+7. Los mensajes aprobados pasan a estado **Enviando** → el sistema los despacha → quedan en **OK** o **Fallido**.
+8. Los mensajes cancelados quedan en estado **Cancelado**.
+
+**Parte C — Seguimiento (PROFESOR / COORDINADOR):**
+
+9. El panel de estado de comunicaciones muestra el resultado por materia y destinatario (OK / Fallido / Cancelado).
 
 ---
 
-## FL-05 — Workflow de Tareas (coordinación ↔ profesor)
+## FL-05 — Workflow de Tareas (coordinación ↔ docente)
 
-```
-[Coordinador] → admin_tareas.php
-  1. Crea tarea: define materia, profesor asignado, descripción
-  2. Tarea aparece en estado "abierta" (inferido)
+Flujo de coordinación interna mediante tareas asignadas entre roles.
 
-[Profesor] → mis_tareas.php
-  3. Ve tarea asignada
-  4. Cambia estado (en progreso, completada, etc.)
-  5. Agrega comentario
+**Alta de tarea (COORDINADOR):**
 
-[Coordinador] → admin_tareas.php
-  6. Filtra por estado, lee último comentario
-  7. Aprueba cierre o devuelve para ajustes
-```
+1. El COORDINADOR crea una tarea: define la materia asociada, el docente asignado, descripción y criterio de cierre.
+2. La tarea queda en estado **Abierta** y aparece en el panel del docente asignado.
 
-**Volumen actual**: 443 tareas en admin → herramienta de alto uso.
+**Gestión de la tarea (PROFESOR / TUTOR):**
+
+3. El docente ve la tarea asignada en su panel.
+4. Actualiza el estado (en progreso, completada, etc.) según avanza.
+5. Puede agregar comentarios o evidencias al hilo de la tarea.
+
+**Revisión y cierre (COORDINADOR):**
+
+6. El COORDINADOR filtra las tareas por estado, materia o docente y lee los comentarios.
+7. Aprueba el cierre de la tarea o la devuelve al docente para ajustes con una observación.
+
+> ℹ️ Este es un módulo de **alto uso**: la plataforma gestiona varios cientos de tareas en simultáneo durante el período activo.
 
 ---
 
 ## FL-06 — Encuentros recurrentes con grabaciones
 
-```
-[Profesor] → encuentros.php
-  1. "Crear encuentro" → modo recurrente
-  2. Define: materia, día semana = Miércoles, hora = 14:00, desde = 2026-03-04, 16 semanas
-  3. Sistema genera 16 instancias automáticamente [RN-13]
+Flujo para planificar, registrar y publicar los encuentros sincrónicos de una comisión.
 
-(día del encuentro)
-  4. Profesor accede a la instancia
-  5. Edita: cambia estado a "realizado", pega URL del video grabado
+**Planificación (PROFESOR):**
 
-[Coordinador] → encuentros.php → "Vista admin"
-  6. Auditoría: ve qué encuentros se realizaron, cuáles no
+1. El PROFESOR accede al módulo de encuentros de su comisión.
+2. Crea una serie recurrente: define materia, día de la semana, horario, fecha de inicio y cantidad de semanas.
+3. El sistema genera automáticamente todas las instancias de la serie ([RN-13]).
 
-[Profesor] → "HTML para Moodle"
-  7. Copia snippet HTML con los slots
-  8. Pega en aula virtual de Moodle (acción manual fuera del sistema)
-```
+**Registro posterior a cada encuentro (PROFESOR):**
+
+4. El PROFESOR accede a la instancia del día.
+5. Marca el encuentro como realizado y pega la URL del video grabado.
+
+**Supervisión (COORDINADOR):**
+
+6. El COORDINADOR accede a la vista de administración del módulo y audita qué encuentros se realizaron y cuáles no.
+
+**Exportación para el LMS (PROFESOR):**
+
+7. El sistema genera un bloque HTML con el calendario de encuentros y sus grabaciones.
+8. El PROFESOR copia ese bloque y lo embebe en el aula virtual del LMS (acción manual fuera del sistema).
 
 ---
 
 ## FL-07 — Coloquio: convocatoria a evaluación
 
-```
-[Profesor] → coloquios/index.php
-  1. "Importar alumnos" → importar.php
-  2. Carga padrón de candidatos a coloquio
+Flujo para convocar a alumnos a una instancia de evaluación final y gestionar las reservas de turnos.
 
-  3. "Nueva evaluación" → convocatoria_form.php
-  4. Define: materia, instancia (ej: "Coloquio Final"), días disponibles, cupos por día
-  5. Sistema crea la evaluación con slots de reserva
+**Preparación (PROFESOR):**
 
-(luego: alumnos reservan — flujo no observado, presumiblemente externo)
+1. El PROFESOR importa el padrón de candidatos al coloquio (alumnos habilitados).
+2. Crea la convocatoria: define materia, nombre de la instancia (ej. "Coloquio Final"), días disponibles y cupos por día.
+3. El sistema crea los turnos reservables con sus cupos.
 
-  6. Tabla muestra: convocados, reservas, cupos libres
+**Reserva de turno (ALUMNO):**
 
-[Coordinador] → admin_coloquios.php
-  7. Ve agenda consolidada de reservas activas
-  8. Ve registro académico consolidado (notas finales)
-```
+4. Los alumnos habilitados ven la convocatoria y reservan su turno en un día disponible con cupo.
+
+**Seguimiento (PROFESOR / COORDINADOR):**
+
+5. La vista de la convocatoria muestra: convocados, reservas realizadas y cupos libres.
+6. El COORDINADOR accede a la agenda consolidada de reservas activas de todas las comisiones.
+7. El COORDINADOR puede consultar el registro académico consolidado con las notas finales de coloquio.
 
 ---
 
 ## FL-08 — Liquidación de honorarios
 
-```
-[Admin financiero] → liquidaciones.php
-  1. Selecciona período
-  2. Sistema calcula por docente:
-     - Base (según rol/grilla salarios)
-     - Plus (por comisiones extra)
-     - Total = Base + Plus [RN-21]
-  3. "Vista previa" → verifica tabla
-  4. "Exportar Excel" → genera planilla para presentar/pagar
-  5. "Cerrar liquidación" → inmutabiliza el período [RN-22]
-  6. "Historial" → audita liquidaciones anteriores
-```
+Flujo exclusivo del rol FINANZAS para calcular y cerrar las liquidaciones de honorarios docentes.
+
+1. **Selección de período** (`liquidaciones:calcular`): el usuario FINANZAS selecciona el período a liquidar.
+2. **Cálculo automático**: el sistema calcula por docente:
+   - Monto base (según la grilla salarial del rol).
+   - Plus por comisiones adicionales.
+   - Total = Base + Plus ([RN-21]).
+3. **Vista previa** (`liquidaciones:ver`): el usuario verifica la tabla antes de cualquier acción irreversible.
+4. **Exportación** (`liquidaciones:exportar`): genera la planilla de liquidación para uso externo (pago o presentación).
+5. **Cierre de liquidación** (`liquidaciones:cerrar`): el período queda **inmutabilizado** — no puede modificarse ([RN-22]).
+6. **Historial** (`liquidaciones:ver`): consulta y audita liquidaciones de períodos anteriores.
 
 ---
 
 ## FL-09 — Publicación de aviso del sistema
 
-```
-[Coordinador] → admin_avisos.php
-  1. Click en formulario "Nuevo aviso"
-  2. Define:
-     - scope (global/materia/cohorte)
-     - materia_slug, cohorte_id (si aplica)
-     - role_target
-     - severity
-     - título + cuerpo (HTML)
-     - start_at, end_at (ventana)
-     - sort (prioridad)
-     - active (toggle)
-     - require_ack (si exige confirmación)
-  3. Publica
+Flujo para comunicar novedades institucionales a grupos de usuarios de forma controlada.
 
-[Usuarios target] (al loguearse o navegar)
-  4. Ven aviso según matching de rol/scope/cohorte [RN-20]
-  5. Si require_ack=true → deben confirmar (contador ACK aumenta)
-  6. Si vencen → fuera de ventana start_at..end_at → no se muestran [RN-18]
-```
+**Creación del aviso (COORDINADOR o ADMIN):**
 
----
+1. El publicador accede al módulo de avisos y completa el formulario:
+   - **Alcance**: global, por materia o por cohorte.
+   - **Contexto**: materia y/o cohorte específica si el alcance no es global.
+   - **Roles destinatarios**: a qué roles se muestra el aviso.
+   - **Severidad**: informativo, advertencia, urgente, etc.
+   - **Contenido**: título y cuerpo del aviso (puede contener formato enriquecido).
+   - **Ventana de visibilidad**: fecha/hora de inicio y fin de la publicación.
+   - **Orden de prioridad**: para controlar qué aviso aparece primero si hay varios activos.
+   - **Estado activo/inactivo**: permite preparar el aviso antes de publicarlo.
+   - **Requiere confirmación**: si los destinatarios deben acusar recibo del aviso.
+2. Publica el aviso.
 
-## FL-10 — Mensajería interna del docente
+**Visualización por los destinatarios:**
 
-```
-[Sistema] → genera mensaje (avisos personalizados, respuesta de alumno, notificación de coordinación)
-  → inbox del docente
-
-[Docente] → perfil.php
-  1. Ve threads en su inbox
-  2. Abre un mensaje
-  3. Responde con reply_subject + reply_body
-  4. "Enviar respuesta"
-```
-
-**Suposición:** este inbox es paralelo al sistema de emails a alumnos — es para comunicación interna entre roles del sistema.
+3. Al acceder al sistema o navegar, los usuarios ven los avisos que coinciden con su rol, alcance y cohorte ([RN-20]).
+4. Si el aviso requiere confirmación (`require_ack = true`), el usuario debe acusar recibo para que el aviso deje de mostrarse y el contador de confirmaciones se incremente.
+5. Un aviso fuera de su ventana de visibilidad no se muestra, aunque siga existiendo en el sistema ([RN-18]).
 
 ---
 
-## FL-11 — Auditoría de actividad por docente (panel admin)
+## FL-10 — Mensajería interna entre usuarios del sistema
 
-```
-[Coordinador/Admin] → admin.php
-  1. Filtra por rango from/to + materia + legajo + inactive
-  2. Ve:
-     - "Acciones por día" (gráfico/serie)
-     - "Estado de comunicaciones" (Pend/Send/OK/Fail/Canc por docente × materia)
-     - "Interacciones por docente & materia" (métricas detalladas)
-     - "Últimas acciones" (log con IP/UA, máx. 200)
-  3. Identifica docentes inactivos → toma acción (mensaje, reasignación, etc.)
-```
+Flujo de comunicación interna entre roles del sistema (distinto de los emails automáticos a alumnos).
+
+**Generación del mensaje (Sistema / otro usuario):**
+
+1. El sistema o un usuario con permisos genera un mensaje hacia el inbox de un docente u otro rol: puede ser un aviso personalizado, una notificación de coordinación o una respuesta de un alumno.
+
+**Gestión del inbox (PROFESOR / destinatario):**
+
+2. El destinatario accede a su inbox y ve los hilos activos.
+3. Abre un mensaje para leerlo.
+4. Responde con asunto y cuerpo de respuesta si la conversación lo permite.
+5. Envía la respuesta, que se agrega al hilo.
+
+> ℹ️ Este módulo es **paralelo** al sistema de emails a alumnos: los emails a alumnos son comunicaciones salientes del sistema hacia externos; el inbox interno es la mensajería entre usuarios registrados del sistema.
 
 ---
 
-## Flujos no observados pero probables
+## FL-11 — Auditoría de actividad por docente (panel de supervisión)
 
-- **Login**: no recorrido (usuario ya estaba logueado).
-- **Recuperar contraseña**: no observado — supuesto.
-- **Alta de guardia**: solo se vio el listado, no el form de creación.
-- **Cómo el alumno reserva un coloquio**: posiblemente desde Moodle o un módulo externo.
-- **Aprobación de mail masivo en detalle**: `admin_mail_approval.php` no accesible con el rol observado.
-- **Definición de la grilla de salarios**: `salarios.php` no accesible.
-- **Configuración inicial del sistema** (creación del primer admin, seed inicial): no observado.
+Flujo para que COORDINADOR o ADMIN supervisen la actividad de los docentes en el sistema.
+
+1. El supervisor accede al panel de auditoría (`auditoria:ver`).
+2. Aplica filtros: rango de fechas, materia, usuario, estado de actividad (activo/inactivo).
+3. El sistema presenta:
+   - **Acciones por día**: serie temporal de actividad por usuario.
+   - **Estado de comunicaciones**: distribución de estados (Pendiente / Enviando / OK / Fallido / Cancelado) por docente y materia.
+   - **Interacciones por docente y materia**: métricas detalladas de uso de las funcionalidades.
+   - **Registro de últimas acciones**: log detallado con fecha, hora, acción, IP y agente de usuario (limitado a un máximo configurable de registros por consulta).
+4. El supervisor identifica docentes inactivos o con comunicaciones fallidas y toma acción (mensaje directo, reasignación, etc.).
+
+---
+
+## FL-12 — Configuración inicial del sistema (primer ADMIN del tenant)
+
+Flujo para la puesta en marcha de un nuevo tenant en el sistema.
+
+1. Un operador autorizado del sistema crea el tenant con su identificador y configuración base.
+2. Se provisionan las credenciales del primer usuario ADMIN del tenant.
+3. El ADMIN inicial configura la estructura académica: carreras, cohortes, materias.
+4. El ADMIN crea los primeros usuarios del tenant y asigna roles.
+5. El ADMIN configura la grilla salarial base y los parámetros de notificaciones.
+6. El sistema queda listo para operar el primer período académico.
+
+---
+
+## Consideraciones generales para implementadores
+
+- **Identidad desde la sesión**: en todo flujo, la identidad del actor, su tenant y sus permisos se resuelven desde la sesión autenticada. Ningún parámetro externo puede suplantarlos. Ver [03 — Actores y Roles §1](03_actores_y_roles.md).
+- **Auditoría**: toda acción significativa (importaciones, envíos, cambios de estado, cierres) genera un registro de auditoría con actor, acción, timestamp y contexto ([RN-23](05_reglas_de_negocio.md#rn-23)).
+- **Colas asincrónicas**: los envíos de mensajes y el despacho de comunicaciones masivas operan de forma asincrónica. Los estados de transición (Pendiente → Enviando → OK / Fallido / Cancelado) son parte del modelo de dominio ([RN-15]).
+- **Multi-tenant**: toda operación está acotada al tenant del usuario autenticado. No existe ningún flujo que cruce datos entre tenants.

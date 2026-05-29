@@ -1,106 +1,120 @@
 # 02 — Descripción General
 
-## Stack tecnológico (inferido)
+> **Propósito**: describir QUÉ es el sistema, en qué contexto opera, qué integraciones externas tiene y cuáles son sus propiedades de seguridad fundacionales. Escrito en lenguaje de dominio, agnóstico de tecnología y de implementación. El detalle técnico de arquitectura, stack y despliegue vive en [`docs/ARQUITECTURA.md`](../docs/ARQUITECTURA.md).
 
-| Capa | Tecnología detectada | Evidencia |
-|------|---------------------|-----------|
-| **Backend** | PHP | Todas las rutas terminan en `.php`; título del repo "Importar calificaciones (PHPExcel) + Reportes" |
-| **Librería Excel** | PHPExcel (o derivado PhpSpreadsheet) | Mencionada explícitamente en el title HTML |
-| **DB** | MySQL/MariaDB (suposición) | Stack típico de aplicaciones PHP en producción de este perfil |
-| **Frontend** | HTML server-rendered + Bootstrap-like | Clases `card-header`, `btn`, `nav-link`, modales tipo BS |
-| **JS** | Vanilla / jQuery (suposición) | Modales, AJAX para autocompletes, no se ven indicios de framework SPA |
-| **Servidor web** | Apache o Nginx (suposición) | Producción típica para PHP |
-| **Hosting** | olsoft.online | Dominio propio |
-| **Auth** | Sesión PHP server-side | El logout es `logout.php` (sin JWT visible) |
-| **CSRF** | Token CSRF por formulario | Campos `csrf:hidden` en cada POST detectado |
+---
 
-## Arquitectura general
+## 1. Qué es el sistema
 
-El sistema sigue un patrón **MPA (Multi-Page Application) clásico de PHP**:
-- 1 archivo `.php` = 1 endpoint = 1 vista renderizada server-side.
-- No hay router central; cada `.php` maneja su propio GET (render) y POST (acción).
-- Formularios siempre apuntan a `(self)` (mismo `.php`) y diferencian acción por un campo `action`/`accion` hidden.
-- Cada POST lleva su `csrf` token.
+**Activia-Trace** es una plataforma de gestión académica y trazabilidad de actividades estudiantiles. Complementa y extiende la operatoria del LMS institucional —**Moodle**—, centraliza los datos de actividad académica y habilita flujos de seguimiento, comunicación y liquidación que Moodle por sí solo no cubre.
 
-### Convención de nombres de URLs observada
+> A lo largo de este documento, "el LMS" se refiere a **Moodle**, que es el sistema de gestión de aprendizaje con el que Activia-Trace se integra (importación de calificaciones, padrones, reportes de finalización, Web Services).
 
-| Patrón | Significado |
-|--------|-------------|
-| `index.php` | Home + Procesos Moodle (POR USUARIO) |
-| `mis_*.php` | Vista del usuario logueado (mis_equipos, mis_guardias, mis_tareas) |
-| `admin_*.php` | Vista de coordinación/administración (global, multi-docente) |
-| `admin_monitor_*.php` | Sub-vistas específicas de monitor |
-| Sin prefijo (`encuentros.php`, `perfil.php`, etc.) | Funcionalidades transversales |
-| Subdirectorios (`coloquios/index.php`) | Módulos funcionales aislados |
+El sistema opera en modo **multi-institución (multi-tenant)**: cada institución es un tenant aislado con sus propios datos, configuración, usuarios y catálogos. Los datos de un tenant jamás son accesibles desde otro.
 
-### Sub-módulos detectados
+---
 
-```
-/evalia/
-├── mood/          ← módulo principal documentado (Moodle integration)
-│   ├── coloquios/ ← sub-módulo de coloquios
-│   └── ...
-└── corrector/     ← módulo externo "Correct-IA" (fuera de alcance)
-```
+## 2. Contexto de uso
 
-## Integraciones externas
+El sistema está pensado para instituciones que:
 
-### 1. Moodle (entrada de datos)
-- **Bidireccional? No**: el flujo es solo **Moodle → PulseUPs** (vía exportación manual de Excel).
-- **Archivos importados**:
-  - Excel de calificaciones (`.xlsx`) — vía `index.php` sección 1.a.
-  - Reporte de finalización (`.xlsx` o `.csv` tabulado) — `index.php` sección 1.b.
-  - Padrón de participantes — `monitor_evalia.php`.
-  - Padrón de actividades — `admin_monitor.php`.
-- **Detección automática de columnas**:
-  - Columnas que terminan en `(Real)` → toman notas numéricas redondeadas.
-  - Valores "Satisfactorio" / "Supera lo esperado" → se guardan en `nota_texto` y cuentan como aprobado.
-- **Salida hacia Moodle**: hay secciones "HTML para Moodle" en `encuentros.php` y `fechas_parciales.php` — generan snippets HTML para que el profe pegue manualmente en el aula virtual.
+- Usan un LMS como fuente primaria de calificaciones y registro de actividad de los alumnos.
+- Tienen equipos docentes con roles diferenciados (profesores, tutores, coordinadores).
+- Necesitan detectar alumnos con entregas pendientes o en riesgo académico.
+- Requieren flujos de comunicación controlados hacia los alumnos (con aprobación previa al envío masivo).
+- Gestionan honorarios y liquidaciones de docentes.
 
-### 2. Google Meet (encuentros)
-- Cada slot/instancia tiene un campo `meet` (URL) y `video` (URL del video grabado).
-- El sistema no crea reuniones — solo guarda el link manual.
+El sistema **no reemplaza al LMS**: lo complementa. Los datos académicos se originan en el LMS y se importan hacia Activia-Trace para habilitar los flujos de seguimiento que el LMS no provee.
 
-### 3. Email (saliente)
-- Hay un worker/queue de envío con estados: **Pend, Send, OK, Fail, Canc**.
-- Modal "Previsualización del email" con Asunto + Cuerpo HTML antes de envío.
-- Existe un proceso de **aprobación** (`admin_mail_approval.php`) antes del envío masivo.
-- Métricas por docente: Emails OK / Emails FAIL / Batches.
+---
 
-### 4. Sistema bancario (liquidaciones)
-- Se guarda banco, CBU, alias CBU por docente.
-- Liquidación calcula Base + Plus por comisión.
-- No se observa integración directa con bancos — exporta a Excel.
+## 3. Integraciones externas
 
-## Universos de materias paralelos (DISCREPANCIA DETECTADA)
+### 3.1 LMS — Moodle (fuente de datos académicos)
 
-El sistema maneja **dos catálogos de materias distintos** que no se cruzan visualmente:
+La integración con Moodle es **unidireccional entrante**: Moodle es la fuente de verdad de calificaciones y actividad; Activia-Trace los consume —vía Moodle Web Services y, como respaldo, importación manual de archivos exportados— pero no escribe de vuelta a Moodle de forma automática.
 
-### Catálogo A — Procesos Moodle (`index.php`)
-19 materias con código tipo `(AYSO)`, `(PROG_I)`:
-- IAD, AYSO, DB_I, DB_II, GDP, ING_I, ING_II, LEGIS, MATH, MET_I, MET_II, OE, PYE, PROG_I, PROG_II, PROG_III, PROG_IV, PF, SYS
+Los datos que se importan desde el LMS incluyen:
 
-### Catálogo B — Monitor EVALIA (`monitor_evalia.php`)
-12 materias con IDs distintos, nombres descriptivos:
-- Análisis de Datos [ID 1], Bases de Datos Relacionales [ID 15], Estadisticas [ID 13], Gestión desarrollo de software [ID 18], Metodologia de sistemas I [ID 14], Metodología de Sistemas II [ID 19], Pre Nivelatorio [ID 17], Programación - C Sharp [ID 6], Programación - Java [ID 5], Programación - JavaScript [ID 8], Programación - Python [ID 4], Sistemas Operativos [ID 10]
+- **Calificaciones**: notas numéricas y calificaciones textuales (ej.: "Satisfactorio", "Supera lo esperado") por alumno y por actividad evaluativa.
+- **Reporte de finalización de actividades**: indica qué actividades completó cada alumno.
+- **Padrón de participantes**: listado de alumnos por comisión.
+- **Padrón de actividades**: catálogo de actividades evaluativas de cada materia.
 
-**Suposición:** son dos cohortes/programas diferentes (TUPAD malla vieja vs nueva, o cursos abiertos vs carrera), pero el sistema NO los une — son tablas o instancias separadas. Esto se confirma con que los IDs son completamente diferentes (PROG_I es id=3 en catálogo A, pero Programación - Python es id=4 en catálogo B).
+**Reglas de interpretación al importar calificaciones**:
+- Las columnas que representan notas numéricas reales se redondean al valor entero más próximo.
+- Los valores textuales de aprobación reconocidos (ej.: "Satisfactorio", "Supera lo esperado") se almacenan como calificación textual y cuentan como aprobado a efectos de las reglas de negocio.
 
-→ Ver pregunta abierta en [10_preguntas_abiertas.md](10_preguntas_abiertas.md#PA-01).
+**Salida hacia el LMS**: el sistema puede generar contenido formateado (ej.: fragmentos HTML) para que el docente lo copie manualmente en el aula virtual del LMS. No existe escritura automática hacia el LMS.
 
-## Seguridad observable
+### 3.2 Videollamadas y grabaciones (encuentros)
 
-- **CSRF tokens** en todos los POST.
-- **Control de roles a nivel ruta**: `admin_mail_approval.php` → silently redirect, `salarios.php` → "No autorizado" explícito.
-- **Auditoría completa** en `admin.php`: cada acción con timestamp, legajo, materia, código de acción, rows, IP, User-Agent.
-- **Sesión por servidor**: `logout.php` y cookies de sesión PHP.
-- **Datos sensibles redactados en accessibility tree**: los hidden inputs muestran `[value redacted]`.
+Cada instancia de encuentro puede tener asociados:
+- Un enlace a la sala de videollamada.
+- Un enlace al video grabado de la sesión.
 
-> 🔴 **Falla crítica observada (NO replicar)**: existe **impersonation por URL `?leg=X`** que permite cambiar de identidad (incluido super-admin) — Broken Access Control, OWASP A01. activia-trace lo elimina de raíz: identidad **solo desde JWT firmado**, RBAC fino, multi-tenant, impersonation auditada. Ver [P11](../docs/PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver) y [`ARQUITECTURA.md` §5](../docs/ARQUITECTURA.md).
+El sistema almacena estos enlaces; no crea ni gestiona las salas de videollamada directamente.
 
-## Branding
+### 3.3 Comunicaciones por correo electrónico
 
-- Marca: **PulseUPs®** (con registro ®)
-- Sub-marca: **Gestión académica**
-- Autor: **OscarLondero®** ("by OscarLondero®" en el footer)
-- Footer literal: "Gestor de Rendimiento Académico & Recordatorios — by OscarLondero®"
+El sistema gestiona el ciclo completo de envío de comunicaciones a alumnos:
+
+- **Composición**: el docente redacta asunto y cuerpo del mensaje.
+- **Vista previa**: visualización del mensaje antes de enviarlo.
+- **Aprobación**: los envíos masivos requieren aprobación por parte de un rol con permiso `comunicacion:aprobar` antes de ejecutarse (ver [03 — Actores y Roles](03_actores_y_roles.md)).
+- **Queue de envío**: las comunicaciones transitan por estados — Pendiente, En proceso, Enviado OK, Fallido, Cancelado.
+- **Métricas por docente**: cantidad de envíos exitosos, fallidos y lotes procesados.
+
+### 3.4 Liquidaciones y honorarios
+
+El sistema gestiona los datos necesarios para el cálculo y cierre de liquidaciones de honorarios docentes:
+
+- Datos bancarios del docente (banco, CBU, alias).
+- Grilla salarial: base más adicionales por comisión.
+- Cálculo y cierre de liquidación por período.
+
+No se integra directamente con sistemas bancarios; la liquidación cerrada puede exportarse para su procesamiento externo.
+
+---
+
+## 4. Catálogo de materias por tenant
+
+Cada tenant mantiene **un único catálogo de materias**, administrado por el rol ADMIN. No existen catálogos paralelos ni instancias separadas por programa o cohorte: si una institución tiene programas o cohortes distintos, todos los mapean al mismo catálogo de materias con sus respectivos atributos (carrera, cohorte, malla curricular).
+
+Esto garantiza consistencia en los reportes cruzados y en la asignación de docentes. La gestión del catálogo está cubierta en [05 — Reglas de Negocio](05_reglas_de_negocio.md) y en [04 — Modelo de Datos](04_modelo_de_datos.md).
+
+---
+
+## 5. Propiedades de seguridad del sistema
+
+Estas propiedades son **requisitos no funcionales de primera clase**, no opcionales ni postergables. El cómo se implementan técnicamente vive en [`docs/ARQUITECTURA.md` §5](../docs/ARQUITECTURA.md); aquí se describen como propiedades de dominio que cualquier implementación debe garantizar.
+
+### 5.1 Multi-tenancy y aislamiento de datos
+
+Todo dato, usuario, configuración y catálogo pertenece a un tenant. El sistema garantiza que ninguna consulta, operación ni derivación de datos puede cruzar el límite de tenant. El tenant al que pertenece un usuario se determina exclusivamente por su sesión autenticada.
+
+### 5.2 Identidad desde la sesión, nunca desde la petición
+
+La identidad del usuario, sus roles y su tenant se derivan **exclusivamente de su sesión autenticada**. Ningún parámetro de URL, campo de formulario, encabezado ni cualquier otro dato de la petición puede modificar quién es el usuario ni qué permisos tiene. Esta regla es la base del modelo de seguridad y no admite excepciones.
+
+### 5.3 RBAC con permisos finos
+
+La autorización se basa en permisos finos por capacidad (`modulo:accion`), agrupados en roles administrables. No existe un flag binario de superusuario. Cada acción protegida exige un permiso explícito. El modelo completo de roles y permisos está en [03 — Actores y Roles](03_actores_y_roles.md).
+
+### 5.4 Auditoría de acciones significativas
+
+Toda acción relevante (importación de datos, envío de comunicaciones, modificación de calificaciones, cierre de liquidaciones, inicio/fin de impersonación, cambios de configuración) queda registrada en el log de auditoría con: quién la ejecutó, desde qué tenant, sobre qué recurso, cuándo, y el resultado. La auditoría es inmutable y no puede ser borrada por ningún rol de usuario.
+
+### 5.5 Protección de formularios y operaciones de escritura
+
+Toda operación de escritura que se origine en un formulario debe estar protegida contra falsificación de petición entre sitios (CSRF). El mecanismo técnico concreto lo define [`docs/ARQUITECTURA.md`](../docs/ARQUITECTURA.md).
+
+### 5.6 Impersonación controlada y auditada
+
+Si el sistema habilita la suplantación de identidad para soporte o diagnóstico, esta capacidad es siempre explícita, permisada y auditada. Ver [03 — Actores y Roles §4](03_actores_y_roles.md#4-impersonación-suplantación-legítima).
+
+---
+
+## 6. Acceso anónimo
+
+Las únicas operaciones disponibles sin sesión iniciada son las del flujo de autenticación (login y recuperación de contraseña). Cualquier otra operación exige una sesión autenticada válida. Ver [07 — Flujos Principales](07_flujos_principales.md).

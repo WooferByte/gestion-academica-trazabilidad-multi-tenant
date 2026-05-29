@@ -1,47 +1,45 @@
 # Arquitectura — activia-trace
 
 **Producto**: activia-trace
-**Versión del documento**: 0.1 (draft inicial)
+**Versión del documento**: 0.3
 **Fecha**: 2026-05-28
 **Estado**: Draft — arquitectura objetivo (target), aún sin implementación
-**Referencias**: [PRD](./PRD.md) · [KB — arquitectura observada de PulseUPs](../knowledge-base/08_arquitectura_propuesta.md) · [Modelo de datos](../knowledge-base/04_modelo_de_datos.md)
-
-> ⚠️ **Diferencia clave con `knowledge-base/08`**: ese archivo documenta la arquitectura **observada de PulseUPs** (PHP MPA monolítico — el sistema que reemplazamos). **Este** documento define la arquitectura **objetivo de activia-trace**, que NO comparte nada con el stack viejo salvo el dominio.
+**Referencias**: [PRD](./PRD.md) · [Arquitectura (resumen en la KB)](../knowledge-base/08_arquitectura_propuesta.md) · [Modelo de datos](../knowledge-base/04_modelo_de_datos.md)
 
 ---
 
 ## 1. Propósito y filosofía
 
-activia-trace adopta **el mismo stack y los mismos patrones que [active-ia](https://github.com/) (correción automática)** — un sistema hermano ya en producción, probado, con Clean Architecture. No reinventamos: clonamos lo que funciona y le sumamos lo que activia-trace necesita de más (multi-tenancy real, modelo de roles rico, auth a prueba de balas, integración Moodle por Web Services).
+activia-trace es una plataforma de gestión académica y trazabilidad de actividades estudiantiles, diseñada para integrarse con **Moodle** como LMS y operar de forma multi-tenant desde el origen. Las decisiones de arquitectura responden directamente a los requisitos del producto.
 
 **Principios rectores:**
 
-1. **CONCEPTOS > CÓDIGO** — la arquitectura se diseña antes de tipear. Este doc es el contrato.
+1. **CONCEPTOS > CÓDIGO** — la arquitectura se diseña antes de tipear. Este documento es el contrato.
 2. **Separación estricta de capas** — la lógica de negocio nunca toca HTTP ni SQL directamente.
-3. **La identidad jamás se deriva de un parámetro de request** — la lección #1 que aprendimos destripando PulseUPs ([P11](./PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver)).
+3. **La identidad jamás se deriva de un parámetro de request** — el usuario y el tenant se resuelven exclusivamente desde la sesión autenticada (JWT verificado).
 4. **Multi-tenant desde el día 0** — no es un retrofit; es la raíz del modelo.
-5. **Todo audita** — el nombre del producto es *trace*. Cada acción significativa queda atribuida.
+5. **Todo audita** — el nombre del producto es *trace*. Cada acción significativa queda atribuida a un actor real, en un tenant, con timestamp.
 
 ---
 
 ## 2. Stack tecnológico
 
-Clonado de active-ia salvo los **deltas** marcados (lo que activia-trace agrega).
+El stack es una decisión propia del producto, seleccionado por idoneidad técnica para los requisitos de seguridad, rendimiento y mantenibilidad.
 
 ### Backend
 
 | Componente | Tecnología | Notas |
 |------------|-----------|-------|
-| Lenguaje | **Python 3.13** | Igual que active-ia |
+| Lenguaje | **Python 3.13** | |
 | Framework | **FastAPI** | API REST async |
 | ORM | **SQLAlchemy 2.0** (async) | Mapeo + queries en repositories |
 | Migraciones | **Alembic** | Una migración por cambio de schema |
 | Base de datos | **PostgreSQL** | JSONB para criterios/scores configurables |
 | Validación | **Pydantic v2** | DTOs request/response (schemas) |
-| Auth | **JWT** (access corto + refresh rotation) + **Argon2id** para hashing de passwords | 🔶 *delta*: active-ia usa JWT simple; acá endurecemos (ver §5) |
+| Auth | **JWT** (access corto + refresh rotation) + **Argon2id** para hashing de passwords | |
 | Cifrado en reposo | **AES-256** | Para PII sensible (CBU, DNI) y secretos |
-| Background jobs | **Worker async** (cola de mails) | 🔶 *delta vs active-ia*: PulseUPs tenía worker Pend→Send→OK/Fail; lo replicamos |
-| Integraciones | **N8N** + **Moodle Web Services** | 🔶 *delta*: Moodle WS (`core_grades_get_grades`, etc.) es nuevo |
+| Background jobs | **Worker async** (cola de comunicaciones) | Estados Pend → Send → OK/Fail y Pend → Canc |
+| Integraciones | **N8N** + **Moodle Web Services** | Cliente dedicado `moodle_ws.py` |
 | Testing | **pytest** + coverage | ≥80% líneas, ≥90% reglas de negocio ([RNF-15](./PRD.md#mantenibilidad)) |
 
 ### Frontend
@@ -61,7 +59,7 @@ Clonado de active-ia salvo los **deltas** marcados (lo que activia-trace agrega)
 | Componente | Tecnología |
 |------------|-----------|
 | Contenedores | **Docker** + docker-compose (local y prod) |
-| Deploy | **Easypanel** (igual que active-ia) |
+| Deploy | **Easypanel** |
 | Observabilidad | Logs estructurados JSON + **OpenTelemetry** ([RNF-17](./PRD.md#mantenibilidad)) |
 | CI/CD | build + test + lint + deploy automatizado ([RNF-16](./PRD.md#mantenibilidad)) |
 
@@ -69,7 +67,7 @@ Clonado de active-ia salvo los **deltas** marcados (lo que activia-trace agrega)
 
 ## 3. Arquitectura backend — Clean Architecture
 
-Idéntico patrón a active-ia. El flujo de una request es **unidireccional** y cada capa tiene una sola responsabilidad:
+El flujo de una request es **unidireccional** y cada capa tiene una sola responsabilidad:
 
 ```
 REQUEST
@@ -94,7 +92,7 @@ REQUEST
    PostgreSQL
 ```
 
-**Reglas no negociables** (heredadas de active-ia, ampliadas):
+**Reglas no negociables:**
 
 - **Nunca** lógica de negocio en Routers.
 - **Nunca** acceso directo a DB desde Services (siempre vía Repository).
@@ -110,7 +108,7 @@ REQUEST
   | No autenticado | `HTTPException 401` |
   | Sin permiso (authz) | `HTTPException 403` |
   | No encontrado | `HTTPException 404` |
-  | Error IA / N8N / Moodle | `HTTPException 502` + retry |
+  | Error de integración externa | `HTTPException 502` + retry |
   | Interno | `HTTPException 500` + log detallado |
 
 ---
@@ -128,7 +126,7 @@ backend/
 │   │   ├── config.py            # Settings (env vars)
 │   │   ├── security.py          # JWT, Argon2, AES-256
 │   │   ├── permissions.py       # RBAC: matriz rol × permiso
-│   │   ├── tenancy.py           # 🔶 NUEVO: resolución y aislamiento de tenant
+│   │   ├── tenancy.py           # Resolución y aislamiento de tenant
 │   │   ├── dependencies.py      # DI: get_current_user, get_tenant, require_permission
 │   │   └── exceptions.py
 │   ├── models/                  # SQLAlchemy ORM
@@ -137,8 +135,8 @@ backend/
 │   ├── services/                # Lógica de negocio
 │   ├── integrations/
 │   │   ├── n8n_client.py
-│   │   └── moodle_ws.py         # 🔶 NUEVO: cliente Moodle Web Services
-│   └── workers/                 # 🔶 NUEVO: worker de cola de mails
+│   │   └── moodle_ws.py         # Cliente Moodle Web Services
+│   └── workers/                 # Worker de cola de comunicaciones
 ├── alembic/                     # Migraciones
 └── tests/
 ```
@@ -162,9 +160,7 @@ frontend/src/
 
 ---
 
-## 5. Modelo de seguridad — el corazón de activia-trace
-
-> Esta sección existe porque **el pecado original de PulseUPs era de seguridad** ([P11](./PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver)). Si fallamos acá, fallamos en todo.
+## 5. Modelo de seguridad
 
 ### 5.1 Autenticación
 
@@ -176,20 +172,21 @@ frontend/src/
 
 ### 5.2 Autorización (RBAC)
 
-- Roles ricos ([RF-04](./PRD.md#auth-roles-y-tenants)): **ALUMNO, TUTOR, PROFESOR, COORDINADOR, ADMIN, FINANZAS**. (Reemplaza el flag binario `is_admin` opaco de PulseUPs, [P10](./PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver)).
+- Roles del dominio ([RF-04](./PRD.md#auth-roles-y-tenants)): **ALUMNO, TUTOR, PROFESOR, COORDINADOR, NEXO, ADMIN, FINANZAS**.
 - **Permisos finos por feature**, no por rol monolítico. Matriz rol × permiso en `core/permissions.py`.
 - Cada endpoint declara el permiso requerido vía dependency (`require_permission("entregas:write")`). Sin él → `403`.
 
-### 5.3 Cómo activia-trace MATA la vuln `?leg=X` (P11)
+### 5.3 Principios de control de acceso
 
-| Vector en PulseUPs | Defensa en activia-trace |
-|--------------------|--------------------------|
-| La identidad salía de un **parámetro de URL** (`?leg=1`) | La identidad **solo** sale del JWT firmado y verificado. Ningún parámetro de request puede alterar quién sos. |
-| Cambio de identidad **sin re-autenticar** | Cambiar de identidad es imposible sin un nuevo login (o sin la feature de impersonation permisada — ver abajo). |
-| Privilegio derivado de `is_admin` binario | RBAC con permisos finos resueltos server-side en cada request. |
-| Impersonation **silenciosa, no auditada** | La impersonation legítima (soporte/admin) es una **feature explícita**: requiere permiso `impersonation:use`, genera un **token de impersonation distinguible**, y **registra en el audit log** quién impersona a quién, desde cuándo y hasta cuándo ([RF-05](./PRD.md#auth-roles-y-tenants), [RNF-12](./PRD.md#seguridad)). Toda acción bajo impersonation queda atribuida al actor real, no a la víctima. |
+El control de acceso de activia-trace se rige por los siguientes principios, que son invariantes del sistema:
 
-> **Regla de oro grabada en piedra**: *la identidad y el tenant del request se derivan EXCLUSIVAMENTE del JWT verificado. Cualquier `id`, `legajo` o `tenant` que venga en query string, body o header se trata como dato de entrada a validar contra los permisos del usuario actual — NUNCA como su identidad.*
+| Principio | Descripción |
+|-----------|-------------|
+| **Identidad desde la sesión** | El usuario y el tenant se derivan **exclusivamente** del JWT verificado server-side. Ningún parámetro de query string, body ni header puede alterar o reemplazar la identidad del actor. Cualquier identificador que llegue en la request se trata como dato de entrada a validar contra los permisos del usuario actual, nunca como su identidad. |
+| **RBAC fino y explícito** | La autorización se resuelve en cada endpoint a partir de la matriz rol × permiso. No existe un flag binario de "super usuario": las capacidades se otorgan permiso a permiso. |
+| **Impersonation permisada y auditada** | La impersonación legítima (soporte / administración) es una feature explícita: requiere el permiso `impersonation:use`, genera un token de impersonation distinguible y registra en el audit log quién impersona a quién, desde cuándo y hasta cuándo ([RF-05](./PRD.md#auth-roles-y-tenants), [RNF-12](./PRD.md#seguridad)). Toda acción bajo impersonation queda atribuida al actor real, no al usuario impersonado. |
+| **Aislamiento de tenant** | Los repositories filtran por `tenant_id` por defecto. Un query sin scope de tenant es un bug que debe fallar en code review. Los datos nunca cruzan tenants. |
+| **Fail-closed** | Ante cualquier ambigüedad de permisos, el sistema deniega. |
 
 ### 5.4 Otras defensas transversales
 
@@ -197,15 +194,15 @@ frontend/src/
 - **PII cifrada en reposo** (CBU, DNI) con AES-256 ([RNF-08](./PRD.md#seguridad)).
 - **CSRF protection** en endpoints state-changing ([RNF-10](./PRD.md#seguridad)).
 - **Rate limiting** por IP y por usuario ([RNF-11](./PRD.md#seguridad)).
-- **Audit log append-only** (idealmente write-once), sin límite de retención ([RNF-12](./PRD.md#seguridad), [RF-38](./PRD.md#auditoría)) — corrige el cap de 200 de PulseUPs.
+- **Audit log append-only** (idealmente write-once), sin límite de retención ([RNF-12](./PRD.md#seguridad), [RF-38](./PRD.md#auditoría)).
 
 ---
 
 ## 6. Multi-tenancy
 
-🔶 **Esto NO existe en active-ia ni en PulseUPs** — es nativo de activia-trace ([RF-03](./PRD.md#auth-roles-y-tenants), [RNF-22](./PRD.md#multi-tenancy)).
+Multi-tenancy es nativo en activia-trace desde el día 0 ([RF-03](./PRD.md#auth-roles-y-tenants), [RNF-22](./PRD.md#multi-tenancy)).
 
-- **Tenant** es el primer nivel del modelo (una institución = un tenant; TUPAD es el primero).
+- **Tenant** es el primer nivel del modelo: una institución = un tenant.
 - **Estrategia (a decidir en ADR-002, ver §10)**: row-level security como mínimo (columna `tenant_id` en toda tabla + filtro automático en cada repository), database-per-tenant si el negocio lo justifica.
 - El `tenant_id` se resuelve del JWT (§5.1) y se inyecta vía dependency. **Los repositories filtran por tenant por defecto** — un query sin scope de tenant es un bug que debe fallar en code review.
 - **Los datos jamás cruzan tenants.** Test obligatorio: un usuario del tenant A nunca puede leer/escribir datos del tenant B.
@@ -215,36 +212,42 @@ frontend/src/
 
 ## 7. Integraciones
 
-### 7.1 Moodle (Web Services) — 🔶 nuevo
+### 7.1 Moodle Web Services
 
-- Sync vía Moodle WS: `core_grades_get_grades`, `core_user_get_users_by_field`, etc. ([RF-06](./PRD.md#ingesta-y-datos)).
-- **Sync nocturna automática** + sync on-demand.
-- **Fallback**: import manual `.xlsx`/`.csv` para tenants sin acceso WS ([RF-07](./PRD.md#ingesta-y-datos)) — preserva el flujo conocido de PulseUPs.
+activia-trace se integra con **Moodle** (el LMS) a través de su API de Web Services ([RF-06](./PRD.md#ingesta-y-datos)):
+
+- **Funciones utilizadas**: `core_grades_get_grades`, `core_enrol_get_enrolled_users`, `core_user_get_users`, `gradereport_user_get_grade_items`, entre otras según la versión de Moodle del tenant.
+- **Sync nocturna automática** + sync on-demand desde la interfaz.
+- La columna `(Real)` en los reportes de calificaciones refleja el dato importado directamente desde Moodle, sin transformación.
+- El snippet HTML de Moodle SSO (embedding en páginas de Moodle) usa el token de sesión para identificar al usuario sin re-login.
+- **Fallback**: import manual `.xlsx`/`.csv` para tenants sin acceso a Moodle Web Services, o para carga inicial de datos históricos ([RF-07](./PRD.md#ingesta-y-datos)).
 - Cliente aislado en `integrations/moodle_ws.py`; los errores mapean a `502 + retry`.
+- Variables de entorno por tenant: `MOODLE_WS_TOKEN`, `MOODLE_WS_URL` (ver §9).
+- El scope de commits para esta integración es `moodle`.
 
-### 7.2 Cola de mails (worker async) — 🔶 nuevo
+### 7.2 Cola de comunicaciones (worker async)
 
-- Replica el modelo probado de PulseUPs: estados **Pend → Send → OK/Fail** y **Pend → Canc** ([RF-18](./PRD.md#comunicación)).
+- Ciclo de vida de mensajes con estados **Pend → Send → OK/Fail** y **Pend → Canc** ([RF-18](./PRD.md#comunicación)).
 - **Preview obligatorio** antes de encolar ([RF-17](./PRD.md#comunicación)).
 - **Aprobación humana opcional por tenant** ([RF-19](./PRD.md#comunicación)).
 - Plantillas con variables `{{alumno.nombre}}`, `{{materia.nombre}}` ([RF-20](./PRD.md#comunicación)).
 
 ### 7.3 N8N
 
-- Igual que active-ia: orquestación de flujos. Se evalúa si activia-trace lo necesita en MVP o si el worker propio alcanza.
+- Orquestación de flujos externos. Se evalúa si activia-trace lo necesita en MVP o si el worker propio alcanza (ADR-003).
 
 ---
 
 ## 8. Persistencia y modelo de datos
 
-- PostgreSQL. Modelo detallado heredado/evolucionado de [`knowledge-base/04`](../knowledge-base/04_modelo_de_datos.md).
+- PostgreSQL. Modelo detallado en [`knowledge-base/04`](../knowledge-base/04_modelo_de_datos.md).
 - **JSONB** para estructuras configurables (criterios, escalas, scores).
-- Cambios estructurales clave vs PulseUPs (ver [PRD §9](./PRD.md)):
-  - `Tenant` como raíz.
-  - **Padrón con historial** (versionado, no upsert destructivo — corrige [P2](./PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver)).
-  - **Catálogo único de materias** por tenant (corrige [P1](./PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver)).
-  - Audit log append-only sin cap.
-- **Identidad de docente**: PulseUPs usaba `legajo` como natural key visible en URLs ([RN-25](../knowledge-base/05_reglas_de_negocio.md#rn-25)) — parte de la causa de P11. activia-trace usa **id interno (UUID) para identidad/auth** y conserva `legajo` solo como **atributo de negocio**, nunca como credencial ni como selector de identidad.
+- Decisiones estructurales clave del modelo:
+  - `Tenant` como raíz de toda entidad.
+  - **Padrón con historial** (versionado, no upsert destructivo — [RF-08](./PRD.md#ingesta-y-datos)).
+  - **Catálogo único de materias** por tenant ([RF-09](./PRD.md#ingesta-y-datos)).
+  - Audit log append-only sin límite de registros.
+- **Identidad de usuario**: la identificación interna es un **UUID**, que es el único selector válido para autenticación y autorización. El número de legajo, cuando existe, es un **atributo de negocio** (visible en pantallas, buscable) pero nunca actúa como credencial, como PK de identidad ni como parámetro de sesión.
 
 ---
 
@@ -256,7 +259,6 @@ frontend/src/
 
 - **Types**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
 - **Scopes**: `auth`, `tenancy`, `users`, `alumnos`, `materias`, `comisiones`, `entregas`, `comunicacion`, `equipos`, `encuentros`, `coloquios`, `liquidaciones`, `auditoria`, `moodle`, `api`, `ui`
-- **Sin** atribución AI / `Co-Authored-By`.
 
 ### Código
 
@@ -271,7 +273,8 @@ frontend/src/
 | `SECRET_KEY` | Firma JWT (mín. 32 chars) |
 | `ENCRYPTION_KEY` | AES-256 para PII/secretos (exactamente 32 chars) |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Expiración access token (default 15) |
-| `MOODLE_WS_TOKEN` / `MOODLE_WS_URL` | Acceso a Moodle Web Services (por tenant) |
+| `MOODLE_WS_TOKEN` | Token de acceso a Moodle Web Services (por tenant) |
+| `MOODLE_WS_URL` | URL base de la instancia Moodle (por tenant) |
 | `N8N_WEBHOOK_URL` | Servicio N8N |
 
 ---
@@ -280,23 +283,22 @@ frontend/src/
 
 | ADR | Decisión | Estado |
 |-----|----------|--------|
-| ADR-001 | ¿Auth propio (email+pass) vs federado con Moodle SSO? | Abierto — ligado a [OQ-04](./PRD.md#12-open-questions-a-resolver-antes-de-cerrar-el-prd) |
-| ADR-002 | Multi-tenancy: row-level (`tenant_id`) vs database-per-tenant | Abierto — ligado a [OQ-06](./PRD.md#12-open-questions-a-resolver-antes-de-cerrar-el-prd) |
-| ADR-003 | Worker propio (asyncio/Celery/ARQ) vs N8N para la cola de mails | Abierto |
-| ADR-004 | ¿Verificar si `?leg=X` de PulseUPs es pre-auth (full bypass) o solo escalada post-login? | Abierto — ligado a [PA-21](../knowledge-base/10_preguntas_abiertas.md#pa-21) / P11 |
+| ADR-001 | ¿Auth propio (email+pass) vs federado con SSO de Moodle? | Abierto — ligado a [OQ-04](./PRD.md#open-questions) |
+| ADR-002 | Multi-tenancy: row-level (`tenant_id`) vs database-per-tenant | Abierto — ligado a [OQ-06](./PRD.md#open-questions) |
+| ADR-003 | Worker propio (asyncio/Celery/ARQ) vs N8N para la cola de comunicaciones | Abierto |
+| ADR-004 | Impersonation: token de sesión separado vs claim adicional en JWT | Abierto — afecta a [RF-05](./PRD.md#auth-roles-y-tenants) |
 
 ---
 
-## 11. Resumen — deltas vs active-ia
+## 11. Capacidades propias del producto
 
-Lo que activia-trace **construye de más** sobre la base de active-ia:
+Las siguientes capacidades son decisiones de diseño propias de activia-trace, reflejadas en el modelo y la arquitectura:
 
-1. **Multi-tenancy nativo** (§6).
-2. **Modelo de roles rico + RBAC fino** (§5.2) en vez de `is_admin` binario.
-3. **Auth endurecida**: Argon2id, 2FA, access 15 min + refresh rotation, impersonation auditada (§5).
-4. **Integración Moodle por Web Services** + fallback manual (§7.1).
-5. **Worker de cola de mails** con preview y aprobación (§7.2).
-6. **Audit log append-only sin límite** (§5.4).
-7. **Padrón versionado** y **catálogo único de materias** (§8).
-
-Todo lo demás —Clean Architecture, FastAPI, SQLAlchemy, React/Vite/Tailwind/React Query, Docker/Easypanel— es **clonado tal cual de active-ia**.
+1. **Multi-tenancy nativo** — `Tenant` como raíz del modelo; aislamiento garantizado a nivel de repository (§6).
+2. **Modelo de roles rico + RBAC fino** — roles ALUMNO, TUTOR, PROFESOR, COORDINADOR, NEXO, ADMIN, FINANZAS con permisos finos por feature (§5.2).
+3. **Auth endurecida** — Argon2id, 2FA TOTP, access token 15 min + refresh rotation, impersonation permisada y auditada (§5.1, §5.3).
+4. **Integración con Moodle Web Services** (`core_grades_get_grades`, etc.) + fallback de import manual (§7.1).
+5. **Worker de cola de comunicaciones** con ciclo de vida, preview y aprobación humana opcional (§7.2).
+6. **Audit log append-only sin límite** — toda acción queda atribuida al actor real (§5.4).
+7. **Padrón versionado** y **catálogo único de materias** — sin upserts destructivos (§8).
+8. **Identidad por UUID interno** — el legajo es atributo de negocio, nunca credencial ni selector de sesión (§8).

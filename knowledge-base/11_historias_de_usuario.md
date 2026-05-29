@@ -1,73 +1,73 @@
 # 11 — Historias de Usuario
 
-Historias de usuario derivadas del análisis funcional. Formato **Connextra** (Como / Quiero / Para) con criterios de aceptación (CA) y referencias a [Features (06)](06_funcionalidades.md) y [Reglas de Negocio (05)](05_reglas_de_negocio.md).
+> **Propósito**: describir los requerimientos del sistema desde la perspectiva de cada actor, en formato Connextra (Como / Quiero / Para) con criterios de aceptación (CA). Es agnóstico de tecnología: describe QUÉ debe hacer el sistema, no CÓMO se implementa. El detalle técnico de implementación vive en [`docs/ARQUITECTURA.md`](../docs/ARQUITECTURA.md). Las reglas de negocio referenciadas están en [05 — Reglas de Negocio](05_reglas_de_negocio.md) y las capacidades en [06 — Funcionalidades](06_funcionalidades.md).
 
 **Convenciones**:
-- ID `HU-XX` para cada historia.
-- Prioridad: 🔴 Alta · 🟡 Media · 🟢 Baja (derivada del impacto observado en producción).
-- Estado: ✅ Implementada (visible en producción) · 🔧 Parcial · ❓ Inferida.
+- ID `HU-XX` para cada historia. Los códigos son estables y se usan como referencia cruzada entre archivos.
+- Prioridad: 🔴 Alta · 🟡 Media · 🟢 Baja.
+- Estado: ✅ Definida · 🔧 Parcialmente especificada · ❓ Pendiente de detalle.
 
 ---
 
-## Épica 1 — Ingesta de Datos desde Moodle
+## Épica 1 — Ingesta de Datos desde el LMS
 
 ### HU-01 🔴 ✅ — Importar calificaciones por materia
 **Como** PROFESOR
-**Quiero** subir el Excel de calificaciones exportado de Moodle de mi materia
+**Quiero** subir el archivo de calificaciones exportado del LMS correspondiente a mi materia
 **Para** consolidar todas las notas de las actividades en un solo lugar y poder analizarlas.
 
 **CA**:
-- Debo poder seleccionar la materia desde un dropdown antes de subir.
-- El sistema acepta solo archivos `.xlsx`.
-- Al darle "Generar preview" veo la lista de actividades detectadas y elijo cuáles analizar.
-- Las columnas terminadas en `(Real)` se interpretan como nota numérica redondeada ([RN-01](05_reglas_de_negocio.md#rn-01)).
-- Los valores "Satisfactorio" y "Supera lo esperado" se guardan como `nota_texto` y cuentan como aprobado ([RN-02](05_reglas_de_negocio.md#rn-02)).
-- La acción queda registrada en el audit log ([RN-23](05_reglas_de_negocio.md#rn-23)).
+- Debo poder seleccionar la materia antes de iniciar la importación.
+- El sistema acepta el formato estándar de exportación del LMS (planilla de cálculo).
+- Al solicitar "previsualización" veo la lista de actividades detectadas y elijo cuáles analizar.
+- Las columnas de nota numérica se interpretan como nota redondeada ([RN-01](05_reglas_de_negocio.md#rn-01)).
+- Los valores cualitativos ("Satisfactorio", "Supera lo esperado") se almacenan como nota textual y cuentan como aprobado ([RN-02](05_reglas_de_negocio.md#rn-02)).
+- La acción queda registrada en el registro de auditoría ([RN-23](05_reglas_de_negocio.md#rn-23)).
 
-→ Ref: [F1.1](06_funcionalidades.md#f11--importar-excel-de-calificaciones-por-materia)
+→ Ref: [F1.1](06_funcionalidades.md#f11--importar-planilla-de-calificaciones-por-materia)
 
 ---
 
 ### HU-02 🔴 ✅ — Detectar entregas finalizadas sin corregir
 **Como** PROFESOR
-**Quiero** subir el reporte de finalización de Moodle
+**Quiero** subir el reporte de finalización de actividades del LMS
 **Para** que el sistema me marque qué trabajos están entregados pero todavía no califiqué.
 
 **CA**:
-- Acepta archivos `.xlsx` o `.csv/.tsv` directamente de Moodle.
+- El sistema acepta los formatos de exportación estándar del LMS.
 - Se obtiene una tabla "Posibles TPs sin corregir" agrupada por actividad.
-- Solo se listan actividades de **escala textual** ([RN-08](05_reglas_de_negocio.md#rn-08)).
-- Puedo exportar la tabla a Excel.
-- Si no hay pendientes, se muestra "No se detectaron pendientes para corregir 🎉".
+- Solo se listan actividades de escala textual ([RN-08](05_reglas_de_negocio.md#rn-08)).
+- Puedo exportar la tabla resultante.
+- Si no hay pendientes, se muestra un mensaje confirmatorio.
 
 → Ref: [F1.2](06_funcionalidades.md#f12--importar-reporte-de-finalización-para-detectar-tp-sin-corregir), [RN-07](05_reglas_de_negocio.md#rn-07)
 
 ---
 
-### HU-03 🟡 ✅ — Importar padrón de alumnos EVALIA
+### HU-03 🟡 ✅ — Importar padrón de alumnos por materia
 **Como** PROFESOR
-**Quiero** cargar el padrón de participantes desde Moodle para una materia EVALIA
+**Quiero** cargar el padrón de participantes exportado del LMS para una materia
 **Para** tener la lista actualizada de alumnos contra la cual cruzar las actividades.
 
 **CA**:
-- Subo el archivo y selecciono la materia.
-- El sistema toma Nombre, Apellido(s), Email y Grupos.
-- La nueva carga **reemplaza** el padrón anterior — no hay merge ([RN-05](05_reglas_de_negocio.md#rn-05)).
-- Recibo confirmación visible del resultado.
+- Selecciono la materia antes de importar.
+- El sistema toma Nombre, Apellido(s), Email y Grupos del archivo.
+- La nueva carga reemplaza el padrón anterior para esa materia — no hay merge ([RN-05](05_reglas_de_negocio.md#rn-05)).
+- Recibo confirmación visible del resultado de la importación.
 
-→ Ref: [F1.3](06_funcionalidades.md#f13--importar-padrón-evalia)
+→ Ref: [F1.3](06_funcionalidades.md#f13--importar-padrón-de-alumnos)
 
 ---
 
 ### HU-04 🟡 ✅ — Vaciar mis datos de una materia
 **Como** PROFESOR
-**Quiero** un botón para borrar mis datos de una materia
-**Para** poder empezar de cero sin afectar a los otros profesores de esa misma materia.
+**Quiero** borrar mis datos de una materia específica
+**Para** poder empezar de cero sin afectar a los otros docentes asignados a esa misma materia.
 
 **CA**:
-- El borrado afecta solo a mi `(profesor_legajo, materia_id)`, no a otros docentes ([RN-04](05_reglas_de_negocio.md#rn-04)).
-- Se muestra leyenda explicativa antes del confirm.
-- El POST lleva token CSRF.
+- El borrado afecta exclusivamente a la combinación (mi usuario, materia seleccionada), no a otros docentes ([RN-04](05_reglas_de_negocio.md#rn-04)).
+- Se muestra una leyenda explicativa antes de solicitar confirmación.
+- La acción requiere confirmación explícita.
 
 → Ref: [F1.5](06_funcionalidades.md#f15--vaciar-datos-por-materia)
 
@@ -81,9 +81,9 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 **Para** ajustar el criterio a las pautas pedagógicas de cada materia.
 
 **CA**:
-- El valor default es 60% ([RN-03](05_reglas_de_negocio.md#rn-03)).
-- Se guarda por `(profesor_legajo, materia_id)`.
-- El cambio impacta inmediatamente en la sección "Estudiantes atrasados" y rankings.
+- El valor por defecto es 60% ([RN-03](05_reglas_de_negocio.md#rn-03)).
+- La configuración se guarda por (usuario docente, materia).
+- El cambio impacta inmediatamente en la sección "Estudiantes atrasados" y en los rankings.
 
 → Ref: [F2.1](06_funcionalidades.md#f21--configurar-umbral-por-materia)
 
@@ -91,42 +91,42 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 
 ### HU-06 🔴 ✅ — Ver lista de alumnos atrasados
 **Como** PROFESOR
-**Quiero** ver qué alumnos están atrasados (sin entregas o con nota < umbral)
-**Para** decidir a quiénes mandar recordatorios.
+**Quiero** ver qué alumnos están atrasados (sin entregas o con nota por debajo del umbral)
+**Para** decidir a quiénes enviar recordatorios.
 
 **CA**:
-- La sección 3 muestra cantidad de alumnos y la tabla detallada.
-- Definición: faltantes o `nota < umbral` ([RN-06](05_reglas_de_negocio.md#rn-06)).
-- Si no hay atrasados se muestra "¡No hay atrasados! 🎉".
+- La vista muestra cantidad de alumnos y la tabla detallada.
+- Definición de atrasado: ausencia de entrega o nota inferior al umbral configurado ([RN-06](05_reglas_de_negocio.md#rn-06)).
+- Si no hay atrasados se muestra un mensaje positivo de confirmación.
 
 → Ref: [F2.2](06_funcionalidades.md#f22--visualizar-estudiantes-atrasados)
 
 ---
 
-### HU-07 🟡 ✅ — Ver ranking de alumnos por aprobadas
+### HU-07 🟡 ✅ — Ver ranking de alumnos por actividades aprobadas
 **Como** PROFESOR
 **Quiero** un ranking de alumnos por cantidad de actividades aprobadas
 **Para** identificar quiénes están más adelantados y quiénes necesitan apoyo.
 
 **CA**:
 - Solo se listan alumnos con al menos 1 actividad aprobada ([RN-09](05_reglas_de_negocio.md#rn-09)).
-- Si no hay datos suficientes se muestra mensaje aclaratorio.
+- Si no hay datos suficientes se muestra un mensaje aclaratorio.
 
 → Ref: [F2.3](06_funcionalidades.md#f23--ranking-de-aprobadas)
 
 ---
 
-### HU-08 🟡 ✅ — Generar notas finales agrupadas para Excel
+### HU-08 🟡 ✅ — Generar notas finales agrupadas para exportación
 **Como** PROFESOR
 **Quiero** definir agrupaciones de actividades para producir la nota final del alumno
 **Para** exportar el reporte oficial de la materia.
 
 **CA**:
-- Se puede configurar qué actividades entran en cada grupo.
-- Output exportable a Excel.
-- Si no hay actividades configuradas se muestra el placeholder explicativo.
+- Puedo configurar qué actividades integran cada grupo.
+- El resultado es exportable como planilla de cálculo.
+- Si no hay actividades configuradas se muestra un mensaje orientador.
 
-→ Ref: [F2.5](06_funcionalidades.md#f25--notas-finales-agrupación-para-excel)
+→ Ref: [F2.5](06_funcionalidades.md#f25--notas-finales-agrupación-para-exportación)
 
 ---
 
@@ -136,53 +136,53 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 **Para** ubicar rápidamente a alumnos en riesgo a nivel institucional.
 
 **CA**:
-- Los filtros se aplican vía GET (URL compartible).
-- Acción "Exportar" descarga la vista filtrada.
-- Existe modal "Criterio de clasificación" para ajustar reglas (→ [PA-11](10_preguntas_abiertas.md#pa-11)).
+- Los filtros producen una URL compartible (estado de la vista en la URL).
+- La acción "Exportar" descarga la vista filtrada.
+- Existe un panel de criterios de clasificación para ajustar reglas (→ [PA-11](10_preguntas_abiertas.md#pa-11)).
 
-→ Ref: [F2.7](06_funcionalidades.md#f27--monitor-general-de-alumnos-vista-admin)
+→ Ref: [F2.7](06_funcionalidades.md#f27--monitor-general-de-alumnos-vista-coordinador)
 
 ---
 
 ## Épica 3 — Comunicación con Alumnos
 
-### HU-10 🔴 ✅ — Previsualizar mail antes de enviarlo
+### HU-10 🔴 ✅ — Previsualizar un correo antes de enviarlo
 **Como** PROFESOR
-**Quiero** ver el Asunto + Cuerpo HTML renderizado de cada mail antes del envío
+**Quiero** ver el asunto y el cuerpo renderizado de cada correo antes del envío
 **Para** evitar errores de formato o variables sin reemplazar.
 
 **CA**:
-- Se abre un modal "Previsualización del email" con render HTML real.
-- El mail NO se envía hasta que confirmo desde el preview ([RN-16](05_reglas_de_negocio.md#rn-16)).
+- Se muestra una previsualización con render real del cuerpo del mensaje.
+- El correo no se envía hasta que confirmo desde la previsualización ([RN-16](05_reglas_de_negocio.md#rn-16)).
 
-→ Ref: [F3.1](06_funcionalidades.md#f31--preview-del-email-antes-de-enviar)
+→ Ref: [F3.1](06_funcionalidades.md#f31--preview-del-correo-antes-de-enviar)
 
 ---
 
 ### HU-11 🔴 ✅ — Enviar recordatorios masivos a alumnos atrasados
 **Como** PROFESOR
 **Quiero** disparar un envío masivo a todos los alumnos atrasados detectados
-**Para** comunicar el estado y motivar la regularización sin escribir mails uno por uno.
+**Para** comunicar su estado y motivar la regularización sin redactar mensajes individuales.
 
 **CA**:
-- Los mails entran a la cola en estado `Pend` ([RN-15](05_reglas_de_negocio.md#rn-15)).
-- Cada mail es personalizado por alumno (no copy-paste).
-- Veo el conteo de OK/Fail/Canc en el panel de interacciones (`admin.php`).
+- Los mensajes ingresan a la cola en estado pendiente ([RN-15](05_reglas_de_negocio.md#rn-15)).
+- Cada mensaje es personalizado por alumno.
+- Puedo ver el conteo de estados (pendiente / enviado / fallido / cancelado) en el panel de interacciones.
 
 → Ref: [F3.2](06_funcionalidades.md#f32--envío-masivo-con-cola)
 
 ---
 
-### HU-12 🔴 ❓ — Aprobar mails masivos antes de despacho
-**Como** ADMIN (o rol con permiso de aprobación)
-**Quiero** revisar y aprobar la cola de mails pendientes
+### HU-12 🔴 ✅ — Aprobar envíos masivos antes del despacho
+**Como** usuario con el permiso `comunicacion:aprobar`
+**Quiero** revisar y aprobar la cola de correos pendientes
 **Para** evitar envíos accidentales o no autorizados desde la institución.
 
 **CA**:
-- Acceso restringido al endpoint `admin_mail_approval.php`.
-- Roles sin permiso reciben silently-redirect al index.
-- Al aprobar, el mail pasa de `Pend` → `Send` y el worker lo despacha.
-- Al cancelar, queda en estado `Canc` ([RN-17](05_reglas_de_negocio.md#rn-17)).
+- El acceso está restringido a quienes tienen el permiso `comunicacion:aprobar` ([03 — Actores y Roles](03_actores_y_roles.md)).
+- Los usuarios sin ese permiso no pueden alcanzar esta funcionalidad.
+- Al aprobar, el mensaje pasa de estado pendiente a enviado y el mecanismo de despacho lo procesa.
+- Al cancelar, queda en estado cancelado ([RN-17](05_reglas_de_negocio.md#rn-17)).
 
 → Ref: [F3.3](06_funcionalidades.md#f33--aprobación-de-envíos-masivos), [PA-03](10_preguntas_abiertas.md#pa-03)
 
@@ -190,28 +190,28 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 
 ### HU-13 🟡 ✅ — Recibir y responder mensajes internos
 **Como** DOCENTE (PROFESOR o COORDINADOR)
-**Quiero** ver mi inbox y responder mensajes desde el perfil
+**Quiero** ver mi bandeja de entrada y responder mensajes internos desde mi perfil
 **Para** mantener comunicación interna con coordinación y el sistema.
 
 **CA**:
-- En `perfil.php` veo los threads abiertos.
-- Puedo responder con asunto + cuerpo.
-- La respuesta queda asociada al thread original.
+- Desde mi perfil accedo a los hilos de conversación activos.
+- Puedo responder indicando asunto y cuerpo.
+- La respuesta queda asociada al hilo original.
 
 → Ref: [F3.4](06_funcionalidades.md#f34--mensajería-interna-inbox-del-docente)
 
 ---
 
-### HU-14 🟡 ✅ — Publicar aviso del sistema con scope y vigencia
+### HU-14 🟡 ✅ — Publicar aviso del sistema con alcance y vigencia
 **Como** COORDINADOR
-**Quiero** publicar avisos segmentados por materia, cohorte y rol con ventana de vigencia
-**Para** comunicar novedades a los docentes pertinentes sin spamear al resto.
+**Quiero** publicar avisos segmentados por materia, cohorte y rol, con una ventana de vigencia
+**Para** comunicar novedades a los docentes pertinentes sin impactar al resto.
 
 **CA**:
-- Defino scope (global / materia / cohorte), `materia_slug`, `cohorte_id`, `role_target`, severity.
-- Defino `start_at` y `end_at` — solo se muestra dentro de la ventana ([RN-18](05_reglas_de_negocio.md#rn-18)).
-- Puedo marcar `require_ack` si necesito confirmación obligatoria ([RN-19](05_reglas_de_negocio.md#rn-19)).
-- El listado muestra contadores Vistos / ACK.
+- Defino el alcance: global, por materia, por cohorte; el rol destino; y la severidad del aviso.
+- Defino fecha y hora de inicio y de fin — el aviso solo se muestra dentro de esa ventana ([RN-18](05_reglas_de_negocio.md#rn-18)).
+- Puedo requerir acuse de recibo obligatorio (`require_ack`) ([RN-19](05_reglas_de_negocio.md#rn-19)).
+- El listado muestra contadores de vistos y de acuses recibidos.
 
 → Ref: [F3.5](06_funcionalidades.md#f35--avisos-del-sistema-tablón)
 
@@ -219,12 +219,12 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 
 ### HU-15 🟢 ✅ — Acusar recibo de un aviso obligatorio
 **Como** DOCENTE
-**Quiero** confirmar que leí un aviso marcado `require_ack`
+**Quiero** confirmar que leí un aviso marcado con acuse obligatorio
 **Para** dejar registro de cumplimiento ante la institución.
 
 **CA**:
-- El sistema cuenta mi ACK en el contador agregado del aviso.
-- Una vez ACK, el aviso queda marcado como leído por mí.
+- El sistema registra mi confirmación en el contador agregado del aviso.
+- Una vez confirmado, el aviso queda marcado como leído para mí.
 
 → Ref: [RN-19](05_reglas_de_negocio.md#rn-19)
 
@@ -232,19 +232,19 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 
 ## Épica 4 — Gestión de Equipos Docentes
 
-### HU-16 🔴 ✅ — Dar de alta un profesor
-**Como** COORDINADOR
-**Quiero** registrar un nuevo profesor con sus datos personales y bancarios
+### HU-16 🔴 ✅ — Dar de alta un usuario docente
+**Como** COORDINADOR o ADMIN
+**Quiero** registrar un nuevo usuario con sus datos personales y bancarios
 **Para** que pueda recibir asignaciones y liquidaciones.
 
 **CA**:
-- Campos requeridos: legajo, nombre, dni, banco, cbu, alias_cbu, regional, email.
-- Campos opcionales: legajo_profesional.
-- Flags: `estado` (activo/inactivo), `is_admin`.
-- El legajo es la natural key — debe ser único ([D2](09_decisiones_y_supuestos.md#d2)).
-- POST con CSRF.
+- Datos requeridos: nombre completo, DNI, banco, CBU, alias CBU, regional, email institucional.
+- Datos opcionales: identificador profesional (por ejemplo, matrícula), documentación adicional.
+- El sistema asigna un identificador interno único (no editable) al crear el usuario.
+- El estado inicial puede ser activo o inactivo.
+- Los roles se asignan desde el módulo de permisos, no como un flag binario ([03 — Actores y Roles](03_actores_y_roles.md)).
 
-→ Ref: [F4.1](06_funcionalidades.md#f41--abm-de-profesores)
+→ Ref: [F4.1](06_funcionalidades.md#f41--abm-de-usuarios-docentes)
 
 ---
 
@@ -255,8 +255,8 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 
 **CA**:
 - La tabla muestra Carrera | Cohorte | Rol | Comisiones | Vigencia | Estado.
-- El Estado se deriva del rango de vigencia ([RN-10](05_reglas_de_negocio.md#rn-10)).
-- Puedo filtrar por estado/materia/rol/carrera/cohorte.
+- El estado (vigente / vencido) se deriva del rango de fechas de la asignación ([RN-10](05_reglas_de_negocio.md#rn-10)).
+- Puedo filtrar por estado, materia, rol, carrera y cohorte.
 
 → Ref: [F4.2](06_funcionalidades.md#f42--mis-equipos-vista-propia)
 
@@ -268,10 +268,9 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 **Para** acelerar el setup de inicio de cuatrimestre.
 
 **CA**:
-- Selecciono materia, carrera, cohorte, rol, fechas desde/hasta y comisiones.
-- Puedo seleccionar múltiples legajos con checkboxes o con búsqueda bulk ([RN-30](05_reglas_de_negocio.md#rn-30)).
-- Puedo indicar uno o varios "responde_legs" (jerarquía coordinador→profesor) ([RN-11](05_reglas_de_negocio.md#rn-11)).
-- El POST lleva CSRF.
+- Selecciono materia, carrera, cohorte, rol, fechas de vigencia y comisiones.
+- Puedo seleccionar múltiples docentes con checkboxes o mediante búsqueda en volumen ([RN-30](05_reglas_de_negocio.md#rn-30)).
+- Puedo indicar uno o varios responsables jerárquicos (quién coordina a quién dentro del equipo) ([RN-11](05_reglas_de_negocio.md#rn-11)).
 
 → Ref: [F4.4](06_funcionalidades.md#f44--asignación-masiva)
 
@@ -280,12 +279,12 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 ### HU-19 🔴 ✅ — Clonar equipo docente entre cohortes
 **Como** COORDINADOR
 **Quiero** copiar todas las asignaciones de una materia/carrera/cohorte origen a otra cohorte destino
-**Para** no recrear manualmente el equipo al cambiar cuatrimestre.
+**Para** no recrear manualmente el equipo al cambiar de cuatrimestre.
 
 **CA**:
-- Defino origen (materia × carrera × cohorte) y destino (idem).
-- El sistema duplica las asignaciones con las fechas del destino ([RN-12](05_reglas_de_negocio.md#rn-12)).
-- Se confirma con preview o mensaje de éxito.
+- Defino el origen (materia × carrera × cohorte) y el destino (ídem).
+- El sistema duplica las asignaciones con las fechas correspondientes al destino ([RN-12](05_reglas_de_negocio.md#rn-12)).
+- Se confirma la operación con un resumen o mensaje de éxito.
 
 → Ref: [F4.5](06_funcionalidades.md#f45--clonar-equipo-docente)
 
@@ -293,13 +292,13 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 
 ### HU-20 🟡 ✅ — Modificar vigencia general de un equipo
 **Como** COORDINADOR
-**Quiero** cambiar las fechas `desde/hasta` de todas las asignaciones de un equipo en bloque
+**Quiero** cambiar las fechas de vigencia de todas las asignaciones de un equipo en bloque
 **Para** ajustar el período cuando cambia el calendario académico.
 
 **CA**:
 - Selecciono el equipo (materia × carrera × cohorte).
-- Defino nueva `vigenciaDesdeEquipo` y `vigenciaHastaEquipo`.
-- El cambio se aplica a TODAS las asignaciones vigentes del equipo.
+- Defino las nuevas fechas de inicio y fin de vigencia.
+- El cambio se aplica a todas las asignaciones vigentes del equipo.
 
 → Ref: [F4.6](06_funcionalidades.md#f46--modificar-vigencia-general-del-equipo)
 
@@ -308,57 +307,58 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 ## Épica 5 — Estructura Académica
 
 ### HU-21 🟡 ✅ — Administrar carreras
-**Como** COORDINADOR
+**Como** COORDINADOR o ADMIN
 **Quiero** crear, editar y desactivar carreras (código + nombre)
 **Para** mantener actualizado el catálogo institucional.
 
 **CA**:
-- Campos: código (único, ej "TUPAD") y nombre largo.
-- Estados: Activa / Inactiva.
-- POST con CSRF.
+- Campos requeridos: código único (ej. "TUPAD") y nombre completo.
+- Estados posibles: Activa / Inactiva.
+- No se puede eliminar una carrera con cohortes o asignaciones asociadas; solo desactivar.
 
 → Ref: [F5.1](06_funcionalidades.md#f51--abm-de-carreras)
 
 ---
 
 ### HU-22 🔴 ✅ — Administrar cohortes
-**Como** COORDINADOR
-**Quiero** crear cohortes con nombre, año, vig_desde, vig_hasta
-**Para** que las asignaciones y avisos puedan asociarse a periodos específicos.
+**Como** COORDINADOR o ADMIN
+**Quiero** crear cohortes con nombre, año, fecha de inicio y fecha de fin
+**Para** que las asignaciones y avisos puedan asociarse a períodos específicos.
 
 **CA**:
-- Campos: nombre (ej "MAR-2026"), año, fecha desde, fecha hasta (opcional), estado.
-- Se puede desactivar sin borrar histórico.
+- Campos requeridos: nombre (ej. "MAR-2026"), año, fecha de inicio.
+- La fecha de fin es opcional (cohorte abierta).
+- Se puede desactivar una cohorte sin perder el histórico.
 
 → Ref: [F5.2](06_funcionalidades.md#f52--abm-de-cohortes)
 
 ---
 
-### HU-23 🟡 ✅ — Subir programa de materia (PDF)
+### HU-23 🟡 ✅ — Subir programa de materia
 **Como** COORDINADOR
-**Quiero** subir el PDF del programa de cada materia por carrera + cohorte
+**Quiero** subir el programa de cada materia por carrera y cohorte
 **Para** que los docentes y la institución tengan la versión oficial centralizada.
 
 **CA**:
-- Selecciono materia + carrera + cohorte + título + archivo PDF.
+- Selecciono materia + carrera + cohorte + título + archivo (formato PDF).
 - Puedo listar, descargar y reemplazar programas existentes.
-- Filtrable por materia/carrera/cohorte.
+- La vista es filtrable por materia, carrera y cohorte.
 
-→ Ref: [F5.3](06_funcionalidades.md#f53--programas-de-materias-pdf)
+→ Ref: [F5.3](06_funcionalidades.md#f53--programas-de-materias)
 
 ---
 
-### HU-24 🟡 ✅ — Gestionar fechas de parciales/TP/coloquios
+### HU-24 🟡 ✅ — Gestionar fechas de evaluaciones
 **Como** COORDINADOR
-**Quiero** cargar las fechas clave de evaluación por materia + cohorte
+**Quiero** cargar las fechas clave de evaluación (parciales, TPs, coloquios) por materia y cohorte
 **Para** que los docentes y alumnos sepan cuándo es cada instancia.
 
 **CA**:
-- Campos: materia, tipo (Parcial/TP/Coloquio), número, fecha, cohorte, título.
-- Vistas: tabla lineal y Calendario de evaluaciones.
-- Hay sección "HTML para Moodle" para pegar el cronograma en el aula virtual.
+- Campos: materia, tipo de evaluación (Parcial / TP / Coloquio), número de instancia, fecha, cohorte, título.
+- Vistas disponibles: tabla lineal y calendario de evaluaciones.
+- Existe una función para generar el cronograma en formato embebible en el LMS.
 
-→ Ref: [F5.4](06_funcionalidades.md#f54--fechas-de-parciales--tp--coloquios)
+→ Ref: [F5.4](06_funcionalidades.md#f54--fechas-de-evaluaciones)
 
 ---
 
@@ -370,9 +370,9 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 **Para** que el sistema genere automáticamente todas las instancias del cuatrimestre.
 
 **CA**:
-- Modo recurrente: día semana + hora + fecha desde + cantidad de semanas ([RN-13](05_reglas_de_negocio.md#rn-13)).
+- Modo recurrente: día de la semana + hora + fecha de inicio + cantidad de semanas ([RN-13](05_reglas_de_negocio.md#rn-13)).
 - Se generan N instancias automáticamente.
-- Cada instancia hereda materia, título y URL de Meet.
+- Cada instancia hereda materia, título y enlace de videoconferencia.
 
 → Ref: [F6.1](06_funcionalidades.md#f61--crear-slot-de-encuentro-recurrente)
 
@@ -384,7 +384,7 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 **Para** los casos especiales (recuperatorios, charlas, eventos puntuales).
 
 **CA**:
-- Modo único: una sola fecha + hora + título + meet.
+- Modo único: una sola fecha + hora + título + enlace de videoconferencia.
 
 → Ref: [F6.2](06_funcionalidades.md#f62--crear-encuentro-único)
 
@@ -392,39 +392,39 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 
 ### HU-27 🟡 ✅ — Editar instancia individual de encuentro
 **Como** PROFESOR
-**Quiero** editar el estado, URL de Meet, URL del video grabado y comentarios de cada instancia
+**Quiero** editar el estado, enlace de videoconferencia, enlace de grabación y comentarios de cada instancia
 **Para** llevar registro de lo que efectivamente ocurrió ([RN-14](05_reglas_de_negocio.md#rn-14)).
 
 **CA**:
-- Edito instancia por ID, sin afectar el slot recurrente original.
-- El campo `video_url` queda disponible post-encuentro.
+- Edito la instancia individualmente, sin afectar el slot recurrente original.
+- El campo de enlace de grabación queda disponible para completar post-encuentro.
 
 → Ref: [F6.3](06_funcionalidades.md#f63--editar-instancia-de-encuentro)
 
 ---
 
-### HU-28 🟢 ✅ — Generar HTML de encuentros para Moodle
+### HU-28 🟢 ✅ — Generar cronograma de encuentros embebible en el LMS
 **Como** PROFESOR
-**Quiero** obtener un snippet HTML con mis slots/instancias
+**Quiero** obtener un fragmento de contenido con mis slots/instancias
 **Para** pegarlo en el aula virtual sin formatearlo manualmente.
 
 **CA**:
-- Botón/sección "HTML para Moodle" devuelve el snippet listo para copiar.
+- El sistema genera un fragmento en el formato adecuado para el LMS, listo para copiar y pegar.
 
-→ Ref: [F6.4](06_funcionalidades.md#f64--generar-html-para-moodle)
+→ Ref: [F6.4](06_funcionalidades.md#f64--generar-cronograma-embebible)
 
 ---
 
 ### HU-29 🟡 ✅ — Ver mis guardias realizadas
-**Como** TUTOR / PROFESOR
+**Como** TUTOR o PROFESOR
 **Quiero** ver el historial de mis guardias con día, horario, estado y comentarios
 **Para** llevar registro de mi disponibilidad efectiva.
 
 **CA**:
-- Tabla con # | Tutor | Materia | Carrera/Cohorte | Día | Horario | Estado | Comentarios | Creada.
-- Estado mínimo confirmado: "finalizado".
-- Puedo exportar a Excel.
-- (→ [PA-05](10_preguntas_abiertas.md#pa-05): no se observó el flujo de alta de guardia).
+- Tabla con: responsable | materia | carrera/cohorte | día | horario | estado | comentarios | fecha de registro.
+- Estado mínimo esperado: "finalizado".
+- Puedo exportar el historial.
+- (→ [PA-05](10_preguntas_abiertas.md#pa-05): el flujo de alta de guardia está pendiente de detalle.)
 
 → Ref: [F6.6](06_funcionalidades.md#f66--registro-de-guardias)
 
@@ -432,13 +432,13 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 
 ## Épica 7 — Coloquios
 
-### HU-30 🟡 ✅ — Importar alumnos para coloquio
+### HU-30 🟡 ✅ — Importar alumnos para una instancia de coloquio
 **Como** PROFESOR
 **Quiero** cargar el padrón de alumnos elegibles para una instancia de coloquio
-**Para** convocar solo a los que corresponde.
+**Para** convocar solo a quienes corresponde.
 
 **CA**:
-- Endpoint dedicado `importar.php` dentro de `coloquios/`.
+- Existe un flujo dedicado para la importación del padrón de coloquio, separado del padrón general.
 
 → Ref: [F7.2](06_funcionalidades.md#f72--importar-alumnos-a-coloquios)
 
@@ -450,10 +450,10 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 **Para** que los alumnos puedan reservar lugar.
 
 **CA**:
-- Form en `convocatoria_form.php`.
-- El listado posterior muestra Convocados, Reservas y Cupos libres.
+- Se completan los datos de la convocatoria (materia, instancia, días, cupos por franja).
+- El listado posterior muestra Convocados, Reservas activas y Cupos disponibles.
 
-→ Ref: [F7.3](06_funcionalidades.md#f73--nueva-evaluación-de-coloquio)
+→ Ref: [F7.3](06_funcionalidades.md#f73--nueva-convocatoria-de-coloquio)
 
 ---
 
@@ -463,10 +463,9 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 **Para** anticipar carga operativa y solapamientos.
 
 **CA**:
-- Sección "Agenda de reservas activas" en `admin_coloquios.php`.
-- Filtros: materia, tutor, desde, hasta, búsqueda libre.
+- Vista de agenda con filtros: materia, responsable, rango de fechas y búsqueda libre.
 
-→ Ref: [F7.5](06_funcionalidades.md#f75--admin-de-coloquios)
+→ Ref: [F7.5](06_funcionalidades.md#f75--administración-de-coloquios)
 
 ---
 
@@ -476,9 +475,9 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 **Para** auditar resultados y generar reportes oficiales.
 
 **CA**:
-- Sección "Registro académico consolidado" en `admin_coloquios.php`.
+- Vista de registro académico con las notas finales de todas las instancias de coloquio.
 
-→ Ref: [F7.5](06_funcionalidades.md#f75--admin-de-coloquios)
+→ Ref: [F7.5](06_funcionalidades.md#f75--administración-de-coloquios)
 
 ---
 
@@ -490,34 +489,34 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 **Para** organizar mi trabajo administrativo.
 
 **CA**:
-- Listado en `mis_tareas.php` filtrable por contexto.
-- Veo descripción, último comentario y estado.
+- Listado filtrable por contexto (materia, estado).
+- Veo descripción, último comentario y estado de cada tarea.
 
 → Ref: [F8.1](06_funcionalidades.md#f81--mis-tareas-vista-profesor)
 
 ---
 
-### HU-35 🟡 ✅ — Delegar una tarea a otro profesor
+### HU-35 🟡 ✅ — Delegar una tarea a otro docente
 **Como** PROFESOR
 **Quiero** asignar una tarea a un colega
 **Para** delegar trabajo de coordinación interna entre el equipo.
 
 **CA**:
-- Botón "Asignar (Profe)" disponible desde `mis_tareas.php`.
+- Desde la vista de mis tareas puedo reasignar una tarea a otro docente del tenant.
 
-→ Ref: [F8.2](06_funcionalidades.md#f82--asignar-tarea-profe--otro-profe)
+→ Ref: [F8.2](06_funcionalidades.md#f82--asignar-tarea-entre-docentes)
 
 ---
 
 ### HU-36 🔴 ✅ — Administrar todas las tareas (coordinación)
 **Como** COORDINADOR
-**Quiero** ver, filtrar y actualizar estado de todas las tareas del sistema
+**Quiero** ver, filtrar y actualizar el estado de todas las tareas del sistema
 **Para** dar seguimiento al workflow del equipo docente.
 
 **CA**:
-- Listado en `admin_tareas.php` con filtros por profesor asignado, asignador, materia, estado y búsqueda libre.
-- Puedo cambiar estado y agregar comentario en cada tarea.
-- (→ [PA-08](10_preguntas_abiertas.md#pa-08): ciclo de vida del estado no documentado).
+- Listado con filtros por docente asignado, asignador, materia, estado y búsqueda libre.
+- Puedo cambiar el estado y agregar un comentario en cada tarea.
+- (→ [PA-08](10_preguntas_abiertas.md#pa-08): el ciclo de vida completo del estado de tarea está pendiente de documentar.)
 
 → Ref: [F8.3](06_funcionalidades.md#f83--administrar-tareas-coordinación)
 
@@ -527,12 +526,12 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 
 ### HU-37 🔴 ✅ — Ver panel de interacciones por docente
 **Como** COORDINADOR
-**Quiero** ver acciones por día, estado de comunicaciones y métricas por docente × materia
+**Quiero** ver acciones por período, estado de comunicaciones y métricas por docente × materia
 **Para** identificar docentes inactivos o con problemas operativos.
 
 **CA**:
-- Filtros: from/to, materia, legajo, "inactive".
-- Tablas: Estado de comunicaciones (Pend/Send/OK/Fail/Canc) + Interacciones por docente & materia (Preview/Import/Env./Reset/Umbral/Emails OK/Emails FAIL/Batches).
+- Filtros: rango de fechas, materia, docente, "inactivos".
+- Tablas: estado de comunicaciones (pendiente / enviado / OK / fallido / cancelado) e interacciones por docente y materia (previsualización, importación, envío, reset, umbral, envíos exitosos, fallidos, batches).
 - Última actividad por docente visible.
 
 → Ref: [F9.1](06_funcionalidades.md#f91--panel-de-interacciones)
@@ -540,13 +539,13 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 ---
 
 ### HU-38 🔴 ✅ — Auditar acciones individuales
-**Como** COORDINADOR / ADMIN
-**Quiero** ver el log de las últimas 200 acciones con timestamp, legajo, materia, código de acción, filas afectadas, IP y User-Agent
-**Para** investigar incidentes y dejar trazabilidad regulatoria.
+**Como** COORDINADOR o ADMIN
+**Quiero** ver el registro de las últimas acciones con timestamp, usuario, materia, código de acción, registros afectados, IP de origen y agente de usuario
+**Para** investigar incidentes y mantener trazabilidad regulatoria.
 
 **CA**:
-- Tabla "Últimas acciones (máx. 200)" en `admin.php` ([RN-23](05_reglas_de_negocio.md#rn-23)).
-- Códigos de acción tipo `MOD_MIS_EQUIPOS`.
+- El registro de auditoría muestra las acciones más recientes (con un límite configurable) ([RN-23](05_reglas_de_negocio.md#rn-23)).
+- Cada entrada incluye un código semántico de acción (ej. `ASIGNACION_EQUIPO`).
 
 → Ref: [F9.2](06_funcionalidades.md#f92--log-de-auditoría-completo)
 
@@ -555,43 +554,43 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 ## Épica 10 — Liquidaciones y Honorarios
 
 ### HU-39 🔴 ✅ — Ver vista previa de liquidación del período
-**Como** ADMIN FINANCIERO
+**Como** FINANZAS
 **Quiero** ver la liquidación calculada por docente con Base + Plus + Total
 **Para** validar antes de cerrar el período ([RN-21](05_reglas_de_negocio.md#rn-21)).
 
 **CA**:
-- Tabla con columnas Leg | Docente | Rol | Comisiones | Base | Plus | Total.
-- Botón "Vista previa" antes del cierre.
-- Puedo exportar a Excel sin cerrar.
+- Tabla con columnas: Docente | Rol | Comisiones | Base | Plus | Total.
+- Puedo ver la previsualización antes de confirmar el cierre.
+- Puedo exportar la previsualización sin cerrar el período.
 
 → Ref: [F10.1](06_funcionalidades.md#f101--vista-de-liquidaciones)
 
 ---
 
 ### HU-40 🔴 ✅ — Cerrar liquidación de un período
-**Como** ADMIN FINANCIERO
+**Como** FINANZAS
 **Quiero** cerrar la liquidación calculada
 **Para** inmutabilizar los montos del período y proceder al pago ([RN-22](05_reglas_de_negocio.md#rn-22)).
 
 **CA**:
-- Acción "Cerrar liquidación" con confirmación explícita.
-- Una vez cerrada, no se puede modificar.
-- Aparece en "Historial" para auditoría posterior.
+- La acción de cierre requiere confirmación explícita.
+- Una vez cerrada, la liquidación no puede modificarse.
+- Queda disponible en el historial para auditoría posterior.
 
 → Ref: [F10.2](06_funcionalidades.md#f102--cerrar-liquidación)
 
 ---
 
 ### HU-41 🟡 ✅ — Mantener la grilla de salarios
-**Como** ADMIN FINANCIERO
+**Como** FINANZAS
 **Quiero** mantener la grilla maestra de salarios (por rol y posibles dimensiones adicionales)
-**Para** que el cálculo automático de Base sea consistente ([S5](09_decisiones_y_supuestos.md#s5)).
+**Para** que el cálculo automático del salario base sea consistente ([S5](09_decisiones_y_supuestos.md#s5)).
 
 **CA**:
-- Acceso restringido a `salarios.php` (devuelve "No autorizado" para roles no autorizados).
-- (→ [PA-06](10_preguntas_abiertas.md#pa-06): fórmula exacta no documentada).
+- El acceso está restringido al permiso `liquidaciones:administrar-grilla`.
+- (→ [PA-06](10_preguntas_abiertas.md#pa-06): la fórmula exacta de cálculo está pendiente de documentar.)
 
-→ Ref: [F10.4](06_funcionalidades.md#f104--abm-de-salarios-grilla)
+→ Ref: [F10.4](06_funcionalidades.md#f104--abm-de-grilla-salarial)
 
 ---
 
@@ -603,143 +602,140 @@ Historias de usuario derivadas del análisis funcional. Formato **Connextra** (C
 **Para** que las liquidaciones lleguen a la cuenta correcta y mis datos estén al día.
 
 **CA**:
-- Campos editables: nombre, dni, sexo, banco, cbu, alias_cbu, regional, email, factura (checkbox), legajo_profesional.
-- `cuil_view` es solo lectura ([S6](09_decisiones_y_supuestos.md#s6)).
-- POST con CSRF.
+- Campos editables: nombre completo, DNI, género, banco, CBU, alias CBU, regional, email, condición frente al impuesto (monotributista o no), identificador profesional opcional.
+- El CUIL es de solo lectura (lo gestiona el ADMIN del tenant) ([S6](09_decisiones_y_supuestos.md#s6)).
 
 → Ref: [F11.1](06_funcionalidades.md#f111--editar-perfil)
 
 ---
 
 ### HU-43 🟢 ✅ — Cerrar sesión
-**Como** USUARIO
-**Quiero** cerrar sesión desde el menú
+**Como** cualquier USUARIO autenticado
+**Quiero** cerrar mi sesión desde el menú
 **Para** proteger mi acceso cuando termino de trabajar.
 
 **CA**:
-- Link "Salir" en menú llama a `logout.php`.
-- La sesión PHP se destruye server-side.
-- Redirect a pantalla de login (→ [PA-04](10_preguntas_abiertas.md#pa-04)).
+- La acción de cierre de sesión revoca el token de refresco del lado del servidor.
+- El token de acceso activo se descarta en el cliente.
+- El usuario es redirigido a la pantalla de inicio de sesión.
+- La acción queda registrada en la auditoría.
 
-> ⚠️ **Corrección para activia-trace**: no hay "sesión PHP". Cerrar sesión **revoca el refresh token** (rotación) y descarta el access JWT en el cliente. Ver [RF-46](../docs/PRD.md#perfil) y [`ARQUITECTURA.md` §5.1](../docs/ARQUITECTURA.md).
-
-→ Ref: [F11.3](06_funcionalidades.md#f113--logout)
+→ Ref: [F11.3](06_funcionalidades.md#f113--logout), [`ARQUITECTURA.md` §5.1](../docs/ARQUITECTURA.md)
 
 ---
 
-## Épica 12 — Integraciones Externas
+## Épica 12 — Integraciones con Servicios Externos
 
-### HU-44 🟢 ✅ — Acceder a Correct-IA
+### HU-44 🟢 ✅ — Acceder a un servicio externo de corrección asistida
 **Como** PROFESOR
-**Quiero** acceder al corrector automático Correct-IA desde el menú
+**Quiero** acceder desde el sistema a un servicio externo de corrección asistida por IA
 **Para** apoyarme en correcciones automatizadas.
 
 **CA**:
-- Link en menú Procesos → `https://olsoft.online/evalia/corrector/index.php`.
-- Es un módulo externo — su comportamiento no está documentado en esta KB.
+- El sistema provee un punto de acceso (enlace o integración) al servicio externo configurado para el tenant.
+- El comportamiento del servicio externo no es responsabilidad de este sistema.
+- La URL del servicio es configurable por tenant (no está hardcodeada).
 
-→ Ref: [F12.1](06_funcionalidades.md#f121--acceso-a-correct-ia)
+→ Ref: [F12.1](06_funcionalidades.md#f121--integración-con-servicio-externo-de-corrección)
 
 ---
 
----
-
-## Épica 13 — Facturación de monotributistas (descubierta en segunda pasada)
+## Épica 13 — Facturación de Monotributistas
 
 ### HU-48 🔴 ✅ — Gestionar facturas de docentes monotributistas
-**Como** ADMIN FINANCIERO / super-admin
+**Como** FINANZAS
 **Quiero** ver, filtrar y marcar como abonadas las facturas que presentan los docentes monotributistas
 **Para** llevar control del pago paralelo a la liquidación general.
 
 **CA**:
-- Listado con filtros: profesor, estado (pendiente/abonada), rango de fechas, búsqueda libre.
-- Cada factura tiene: Fecha carga, Docente, Mes (YYYY-MM), Detalle (texto libre), Archivo PDF descargable, Tamaño, Estado, Pago, Acción.
-- Estados: `pendiente` ([RN-39](05_reglas_de_negocio.md#rn-39)) → `abonada`.
-- POST con CSRF para cambiar estado.
+- Listado con filtros: docente, estado (pendiente / abonada), rango de fechas, búsqueda libre.
+- Cada factura muestra: fecha de carga, docente, período (AAAA-MM), detalle en texto libre, archivo adjunto descargable, tamaño, estado y fecha de pago.
+- Estados: pendiente ([RN-39](05_reglas_de_negocio.md#rn-39)) → abonada.
+- El cambio de estado requiere confirmación explícita.
 
-→ Ref: [F10.5](06_funcionalidades.md#f105--gestión-de-facturas-descubierto-en-segunda-pasada)
+→ Ref: [F10.5](06_funcionalidades.md#f105--gestión-de-facturas-monotributistas)
 
 ---
 
 ### HU-49 ❓ — Docente sube su factura mensual
 **Como** PROFESOR monotributista
-**Quiero** subir mi factura mensual en PDF
+**Quiero** subir mi factura mensual en formato PDF
 **Para** que la administración la procese.
 
-**CA pendientes** (no observado el form de upload):
-- ¿Desde qué pantalla sube?
-- ¿Hay validación de monto vs. liquidación calculada equivalente?
-- ¿Notificación al admin cuando hay una nueva factura cargada?
+**CA pendientes** (→ [PA-06](10_preguntas_abiertas.md#pa-06)):
+- ¿Desde qué pantalla del perfil o panel docente se accede al formulario de carga?
+- ¿Hay validación del monto contra la liquidación calculada equivalente?
+- ¿Se genera una notificación al área de Finanzas cuando hay una nueva factura cargada?
 
 ---
 
-## Historias inferidas / pendientes de descubrimiento
+## Historias pendientes de detalle
 
-### HU-45 ❓ — Login del usuario
+### HU-45 ✅ — Iniciar sesión en la plataforma
 **Como** USUARIO con credenciales válidas
-**Quiero** loguearme en la plataforma
-**Para** acceder a mis pantallas según mi rol.
+**Quiero** iniciar sesión en la plataforma
+**Para** acceder a las funcionalidades correspondientes a mi rol.
 
-**CA pendientes** (observado en olsoft → [PA-04](10_preguntas_abiertas.md#pa-04)):
-- ¿Identificador es legajo o email?
-- ¿Hay 2FA, "recordarme", recuperación de password?
-- ¿Hay self-service signup o solo alta admin?
+**CA**:
+- El identificador de acceso es el email institucional (nunca un número de legajo ni otro identificador numérico).
+- La contraseña se valida de forma segura; la política de almacenamiento es responsabilidad de la arquitectura (ver [`ARQUITECTURA.md` §5.1](../docs/ARQUITECTURA.md)).
+- El segundo factor (2FA tipo TOTP) es opcional para el usuario; puede habilitarlo desde su perfil.
+- La recuperación de contraseña se realiza por email con un token de un solo uso y tiempo de expiración.
+- No existe auto-registro: el alta de usuarios es siempre administrativa.
+- La identidad y el tenant del usuario se derivan exclusivamente de la sesión autenticada; ningún parámetro de la petición puede modificarlos ([03 — Actores y Roles](03_actores_y_roles.md)).
 
-> ✅ **CA destino para activia-trace** (esto NO es pendiente — ya está decidido):
-> - Login por **email + password (Argon2id)** — nunca por legajo.
-> - **2FA opcional (TOTP)** + recuperación por email con token de un solo uso. Sin self-service signup en MVP (alta administrativa).
-> - Sesión = **JWT** (access 15 min + refresh rotation), no cookie de sesión PHP.
-> - Identidad/tenant **solo desde el JWT** — ningún `?leg=X` cambia de usuario ([P11](../docs/PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver)).
-> - Ref: [RF-01](../docs/PRD.md#auth-roles-y-tenants), [RNF-09](../docs/PRD.md#seguridad), [`ARQUITECTURA.md` §5](../docs/ARQUITECTURA.md).
+→ Ref: [F11.2](06_funcionalidades.md#f112--autenticación-y-sesión), [`ARQUITECTURA.md` §5](../docs/ARQUITECTURA.md)
 
 ---
 
-### HU-46 ❓ — Crear una guardia
-**Como** TUTOR / PROFESOR
+### HU-46 ❓ — Registrar una guardia
+**Como** TUTOR o PROFESOR
 **Quiero** registrar una nueva guardia
-**Para** que quede en mi historial.
+**Para** que quede en mi historial de disponibilidad.
 
 **CA pendientes** (→ [PA-05](10_preguntas_abiertas.md#pa-05)):
-- ¿Desde qué pantalla se crea?
-- ¿Es un sub-flujo de encuentros o tareas?
+- ¿Desde qué pantalla o flujo se inicia el alta de una guardia?
+- ¿Es un subflujo de encuentros, de tareas, o un módulo independiente?
 
 ---
 
-### HU-47 ❓ — Alumno reserva un coloquio
+### HU-47 ❓ — Alumno reserva una instancia de coloquio
 **Como** ALUMNO
-**Quiero** reservar un lugar en una instancia de coloquio
+**Quiero** reservar un lugar en una instancia de coloquio disponible
 **Para** rendir según mi disponibilidad.
 
 **CA pendientes** (→ [PA-14](10_preguntas_abiertas.md#pa-14)):
-- ¿La reserva ocurre dentro de este sistema o en Moodle?
-- ¿Hay UI dedicada para alumno?
+- ¿La reserva ocurre dentro de este sistema o en el LMS?
+- ¿Existe una interfaz dedicada para el rol ALUMNO?
 
 ---
 
 ## Resumen por épica
 
-| Épica | HUs | ✅ Implementadas | 🔧 Parciales | ❓ Inferidas |
-|-------|-----|------------------|--------------|--------------|
-| 1 — Ingesta Moodle | HU-01..04 | 4 | 0 | 0 |
-| 2 — Análisis | HU-05..09 | 5 | 0 | 0 |
-| 3 — Comunicación | HU-10..15 | 5 | 0 | 1 |
-| 4 — Equipos | HU-16..20 | 5 | 0 | 0 |
-| 5 — Estructura | HU-21..24 | 4 | 0 | 0 |
-| 6 — Encuentros | HU-25..29 | 5 | 0 | 0 |
-| 7 — Coloquios | HU-30..33 | 4 | 0 | 0 |
-| 8 — Tareas | HU-34..36 | 3 | 0 | 0 |
-| 9 — Auditoría | HU-37..38 | 2 | 0 | 0 |
-| 10 — Liquidaciones | HU-39..41 | 3 | 0 | 0 |
-| 11 — Perfil | HU-42..43 | 2 | 0 | 0 |
-| 12 — Externos | HU-44 | 1 | 0 | 0 |
-| 13 — Facturación monotributistas | HU-48..49 | 1 | 0 | 1 |
-| Pendientes descubrimiento | HU-45..47 | — | — | 3 |
-| **TOTAL** | **49 HU** | **44** | **0** | **5** |
+| Épica | HUs | ✅ Definidas | ❓ Pendientes de detalle |
+|-------|-----|-------------|--------------------------|
+| 1 — Ingesta LMS | HU-01..04 | 4 | 0 |
+| 2 — Análisis | HU-05..09 | 5 | 0 |
+| 3 — Comunicación | HU-10..15 | 5 | 1 |
+| 4 — Equipos | HU-16..20 | 5 | 0 |
+| 5 — Estructura | HU-21..24 | 4 | 0 |
+| 6 — Encuentros | HU-25..29 | 5 | 0 |
+| 7 — Coloquios | HU-30..33 | 4 | 0 |
+| 8 — Tareas | HU-34..36 | 3 | 0 |
+| 9 — Auditoría | HU-37..38 | 2 | 0 |
+| 10 — Liquidaciones | HU-39..41 | 3 | 0 |
+| 11 — Perfil y Sesión | HU-42..43, HU-45 | 3 | 0 |
+| 12 — Integraciones externas | HU-44 | 1 | 0 |
+| 13 — Facturación monotributistas | HU-48..49 | 1 | 1 |
+| Pendientes de detalle | HU-46..47 | — | 2 |
+| **TOTAL** | **49 HU** | **45** | **4** |
 
-## Convenciones para futuro
+---
 
-Si surgen nuevas HUs:
-- Continuar numeración `HU-48`, `HU-49`, …
-- Vincular siempre a una épica de [06_funcionalidades.md](06_funcionalidades.md) y a las RN aplicables.
+## Convenciones para futuras HUs
+
+Si surgen nuevas historias de usuario:
+- Continuar la numeración desde HU-50 en adelante.
+- Vincular siempre a una épica de [06 — Funcionalidades](06_funcionalidades.md) y a las reglas de negocio aplicables de [05 — Reglas de Negocio](05_reglas_de_negocio.md).
 - Marcar estado: ✅ / 🔧 / ❓.
-- Si una HU descubre una nueva regla de negocio, agregarla a [05_reglas_de_negocio.md](05_reglas_de_negocio.md) y referenciarla.
+- Si la HU implica una nueva regla de negocio, agregarla a [05 — Reglas de Negocio](05_reglas_de_negocio.md) y referenciarla desde la CA.

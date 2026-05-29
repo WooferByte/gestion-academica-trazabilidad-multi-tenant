@@ -174,10 +174,10 @@ let body = `
 <div class="cover">
   <div style="font-size: 10pt; color: #888; letter-spacing: 4pt; margin-bottom: 8mm;">DOCUMENTACIÓN INTEGRAL</div>
   <h1>activia-trace</h1>
-  <div class="subtitle">Base de Conocimiento de PulseUPs + Product Requirements Document</div>
+  <div class="subtitle">Base de Conocimiento + Product Requirements Document + Arquitectura</div>
   <div class="meta">
     Generado el ${today}<br/>
-    Fuente: análisis directo de https://olsoft.online/evalia/mood/<br/>
+    Plataforma de gestión académica y trazabilidad de actividades estudiantiles<br/>
     ${files.length} secciones · 1 PDF consolidado
   </div>
 </div>

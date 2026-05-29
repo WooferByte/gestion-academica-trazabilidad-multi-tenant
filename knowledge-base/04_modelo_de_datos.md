@@ -1,475 +1,671 @@
 # 04 — Modelo de Datos
 
-> Todo este modelo está **inferido a partir de UI**. Los nombres reales de tablas/columnas pueden diferir.
+> **Propósito**: describir el modelo conceptual de datos del sistema en lenguaje de dominio, agnóstico de tecnología y motor de base de datos. Define las entidades, sus atributos (con tipos genéricos) y las relaciones entre ellas. Es la referencia para cualquier equipo que diseñe el esquema de persistencia, independientemente de la tecnología elegida. El detalle técnico de implementación (motor, migraciones, índices, estrategia de tenant isolation) vive en [`docs/ARQUITECTURA.md` §6 y §8](../docs/ARQUITECTURA.md).
 
-> ⚠️ **Corrección estructural para activia-trace** — este modelo refleja PulseUPs/olsoft (sistema viejo). El modelo destino corrige tres cosas de raíz (ver [`ARQUITECTURA.md` §6 y §8](../docs/ARQUITECTURA.md)):
-> 1. **`Tenant` es la raíz de todo el modelo**: cada entidad lleva `tenant_id` y los repositories filtran por tenant por defecto. Los datos jamás cruzan instituciones ([RNF-22](../docs/PRD.md#multi-tenancy)).
-> 2. **Identidad de auth = UUID interno**, no el `legajo`. El `legajo` queda como atributo de negocio (corrige [P11](../docs/PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver) / [RN-25](05_reglas_de_negocio.md#rn-25--legajo-es-la-natural-key-del-docente)).
-> 3. **Padrón versionado** (no upsert destructivo) y **catálogo único de materias** por tenant (corrige [P2](../docs/PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver) y [P1](../docs/PRD.md#12-problemas-observados-en-pulseups-que-activia-trace-debe-resolver)).
+---
 
-## Entidades principales detectadas
+## Supuestos base del modelo
+
+1. **Tenant como raíz**: toda entidad del sistema lleva `tenant_id`. Los repositorios filtran por tenant por defecto; ninguna consulta puede cruzar datos entre instituciones ([03 — Actores y Roles](03_actores_y_roles.md) §1).
+2. **Identidad de usuario = UUID interno**: el sistema identifica a cada usuario con un identificador interno opaco (UUID). El número de legajo, si existe, es un **atributo de negocio opcional**, no una clave de identidad ni credencial de acceso.
+3. **Padrón versionado**: la carga de un nuevo padrón no destruye el anterior; se registra como una versión nueva con marca temporal, conservando el historial completo.
+4. **Catálogo único de materias por tenant**: una sola fuente de verdad para las materias; no existen catálogos paralelos ni duplicados.
+5. **Datos sensibles cifrados en reposo**: los atributos marcados con `[cifrado]` deben almacenarse cifrados (el algoritmo concreto vive en [`docs/ARQUITECTURA.md`](../docs/ARQUITECTURA.md)).
+6. **Auditoría obligatoria**: toda acción significativa genera un registro en el log de auditoría (E-AUD).
+
+---
+
+## Entidades principales
 
 ### E1 — Carrera
-**Fuente**: `admin_carreras.php`
+
+Representa un programa académico ofrecido por la institución.
+
 ```
 Carrera {
-  id          : int       (PK)         # ej: 1
-  codigo      : varchar   (UNIQUE)     # ej: "TUPAD"
-  nombre      : text                   # ej: "Tecnicatura Universitaria en Programación a Distancia"
-  estado      : enum                   # "Activa" / "Inactiva"
+  id          : UUID       — clave interna
+  tenant_id   : UUID       — FK → Tenant
+  codigo      : texto      — código corto único dentro del tenant (ej: "TUPAD")
+  nombre      : texto      — nombre completo del programa
+  estado      : enum       — Activa | Inactiva
 }
 ```
+
+**Reglas**:
+- El par `(tenant_id, codigo)` es único.
+- Una carrera inactiva no admite nuevas inscripciones ni cohortes abiertas.
+
+---
 
 ### E2 — Cohorte
-**Fuente**: `admin_cohortes.php`
+
+Representa una cohorte (camada / ingreso) de estudiantes dentro de una carrera.
+
 ```
 Cohorte {
-  id          : int       (PK)         # ej: 2
-  nombre      : varchar                # ej: "AGO-2025", "MAR-2026"
-  anio        : int                    # ej: 2025
-  vig_desde   : date                   # ej: 2025-08-04
-  vig_hasta   : date       (NULL ok)
-  estado      : enum                   # "Activa" / "Inactiva"
+  id          : UUID       — clave interna
+  tenant_id   : UUID       — FK → Tenant
+  carrera_id  : UUID       — FK → Carrera
+  nombre      : texto      — denominación legible (ej: "AGO-2025", "MAR-2026")
+  anio        : entero     — año de inicio
+  vig_desde   : fecha      — inicio de vigencia
+  vig_hasta   : fecha      — fin de vigencia (nulo = abierta)
+  estado      : enum       — Activa | Inactiva
 }
 ```
-**Suposición:** Cohorte pertenece a una Carrera (FK no observada directamente, pero el contexto es solo TUPAD).
+
+**Reglas**:
+- El par `(tenant_id, carrera_id, nombre)` es único.
+
+---
 
 ### E3 — Materia
-**Fuente**: `index.php` (catálogo A) y `monitor_evalia.php` (catálogo B)
+
+Unidad del catálogo académico del tenant. Es la referencia única para todos los módulos que operan sobre materias (calificaciones, encuentros, guardias, etc.).
+
 ```
 Materia {
-  id          : int       (PK)
-  codigo      : varchar               # ej: "PROG_I", "DB_II"
-  nombre      : varchar               # ej: "Programación I"
-  catalogo    : enum                  # "MOOD" o "EVALIA" — INFERIDO
-}
-```
-**Discrepancia conocida**: existen dos catálogos paralelos sin relación visible (ver [02](02_descripcion_general.md#universos-de-materias-paralelos)).
-
-### E4 — Profesor
-**Fuente**: `admin_profesores.php`, `perfil.php`
-```
-Profesor {
-  legajo              : int    (PK)    # ej: 1683, 5178, 59149
-  nombre              : varchar         # ej: "Londero Oscar Alberto"
-  dni                 : varchar         # ej: "18221615"
-  sexo                : enum
-  cuil_view           : varchar         # calculado a partir de DNI + sexo? — suposición
-  banco               : varchar
-  cbu                 : varchar
-  alias_cbu           : varchar
-  regional            : varchar         # ej: "Gral.Pacheco"
-  email               : varchar
-  factura             : bool            # facturador o no
-  legajo_profesional  : varchar         # separado del legajo del sistema
-  estado              : bool            # Activo/Inactivo
-  is_admin            : bool
+  id          : UUID       — clave interna
+  tenant_id   : UUID       — FK → Tenant
+  codigo      : texto      — código único dentro del tenant (ej: "PROG_I")
+  nombre      : texto      — nombre completo (ej: "Programación I")
+  estado      : enum       — Activa | Inactiva
 }
 ```
 
-> ⚠️ **Corrección para activia-trace**: en el modelo destino, `legajo` deja de ser PK (la PK es un **UUID** de identidad); `is_admin` se reemplaza por **roles + permisos finos (RBAC)**; y la entidad lleva `tenant_id`. Datos sensibles (`cbu`, `dni`) van **cifrados en reposo (AES-256)** ([RNF-08](../docs/PRD.md#seguridad)). Ver [`ARQUITECTURA.md` §5](../docs/ARQUITECTURA.md).
+**Reglas**:
+- El par `(tenant_id, codigo)` es único.
+- Una misma materia puede pertenecer a distintas carreras y cohortes a través de la entidad Asignación (E5).
 
-### E5 — Asignación (Profesor ↔ Materia × Carrera × Cohorte × Comisión)
-**Fuente**: `admin_asignaciones.php`, `mis_equipos.php`
+---
+
+### E4 — Usuario (identidad base)
+
+Representa a cualquier persona que interactúa con el sistema, independientemente de su rol.
+
+```
+Usuario {
+  id               : UUID       — clave interna (identidad principal)
+  tenant_id        : UUID       — FK → Tenant
+  nombre           : texto
+  apellidos        : texto
+  email            : texto      — único dentro del tenant; [cifrado]
+  dni              : texto      — documento de identidad; [cifrado]
+  cuil             : texto      — identificador tributario; [cifrado]
+  cbu              : texto      — clave bancaria uniforme; [cifrado]
+  alias_cbu        : texto      — alias bancario; [cifrado]
+  banco            : texto
+  regional         : texto      — delegación o sede de pertenencia (opcional)
+  legajo           : texto      — número de legajo institucional (atributo de negocio, no PK; opcional)
+  legajo_profesional: texto     — legajo en el colegio/registro profesional (opcional)
+  facturador       : booleano   — indica si el usuario emite facturas (monotributo u otro)
+  estado           : enum       — Activo | Inactivo
+}
+```
+
+**Reglas**:
+- El par `(tenant_id, email)` es único.
+- Los roles se modelan en la entidad Asignación (E5) y en el catálogo de roles del tenant, no como un campo booleano en esta entidad.
+- Los datos marcados `[cifrado]` no deben exponerse en logs ni en texto plano en ninguna capa.
+
+---
+
+### E5 — Asignación (Usuario ↔ Rol ↔ Contexto académico)
+
+Vincula a un usuario con un rol dentro de un contexto académico concreto (materia, carrera, cohorte, comisión). Es el eje del modelo de autorización.
+
 ```
 Asignacion {
-  id              : int       (PK)
-  profesor_legajo : int       (FK → Profesor)
-  materia_id      : int       (FK → Materia)
-  carrera_id      : int       (FK → Carrera)
-  cohorte_id      : int       (FK → Cohorte)
-  rol             : enum                  # "PROFESOR", "COORDINADOR", ...
-  comisiones      : array<string>          # multi-select
-  responde_legs   : array<int>             # FK → Profesor (jerarquía: quién es el coordinador responsable)
-  desde           : date
-  hasta           : date
-  estado          : enum                   # "Vigente", "Vencida" — derivado por fechas
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  usuario_id      : UUID       — FK → Usuario
+  rol             : enum       — PROFESOR | TUTOR | COORDINADOR | NEXO | ADMIN | FINANZAS
+  materia_id      : UUID       — FK → Materia (nullable si el rol es de tenant global)
+  carrera_id      : UUID       — FK → Carrera (nullable)
+  cohorte_id      : UUID       — FK → Cohorte (nullable)
+  comisiones      : lista<texto> — comisiones incluidas (puede ser vacía)
+  responsable_id  : UUID       — FK → Usuario (quién supervisa: coordinador responsable; nullable)
+  desde           : fecha      — inicio de vigencia de la asignación
+  hasta           : fecha      — fin de vigencia (nulo = abierta)
+  estado_vigencia : enum       — Vigente | Vencida (derivado por fechas, no almacenado)
 }
 ```
 
-### E6 — Padrón / Alumno
-**Fuente**: `monitor_evalia.php`, `admin_monitor.php`
+**Reglas**:
+- Una asignación vencida no otorga permisos, pero se conserva en el histórico (ver [03 — Actores y Roles](03_actores_y_roles.md) §5).
+- Un usuario puede tener múltiples asignaciones con distintos roles, materias y períodos.
+- `responsable_id` modela la jerarquía docente: a quién rinde cuentas el asignado.
+
+---
+
+### E6 — Padrón (versiones de alumnos por materia)
+
+Registra los estudiantes habilitados para una materia en un período dado. El modelo es **versionado**: cada carga genera una nueva versión, conservando el histórico.
+
 ```
-Alumno {
-  id          : int       (PK)              # No visible, inferido
-  nombre      : varchar
-  apellidos   : varchar
-  email       : varchar
-  grupos      : varchar                     # tomado del Excel de Moodle (campo "Grupos")
-  materia_id  : int       (FK → Materia)    # el padrón se carga POR materia
-  comision    : varchar                     # inferido del campo "Grupos" o columna específica
-  regional    : varchar                     # ej: filtrable en monitor general
+VersionPadron {
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  materia_id      : UUID       — FK → Materia
+  cohorte_id      : UUID       — FK → Cohorte
+  cargado_por     : UUID       — FK → Usuario
+  cargado_at      : fecha-hora
+  activa          : booleano   — solo una versión activa por (materia, cohorte) en simultáneo
+}
+
+EntradaPadron {
+  id              : UUID       — clave interna
+  version_id      : UUID       — FK → VersionPadron
+  tenant_id       : UUID       — FK → Tenant
+  usuario_id      : UUID       — FK → Usuario (ALUMNO; puede ser nulo si aún no tiene cuenta)
+  nombre          : texto      — nombre del estudiante (desnormalizado para histórico)
+  apellidos       : texto
+  email           : texto      — [cifrado]
+  comision        : texto      — comisión a la que pertenece
+  regional        : texto      — sede / delegación
 }
 ```
-**Comportamiento conocido**: "La nueva carga reemplaza el padrón anterior de esa materia" → **NO HAY HISTORIAL DEL PADRÓN**, es upsert destructivo.
 
-### E7 — Actividad / Calificación
-**Fuente**: `index.php` (1.a), `admin_monitor.php` (sección 2)
+**Reglas**:
+- Al activar una nueva versión, la anterior se desactiva (no se borra).
+- Una `EntradaPadron` puede existir antes de que el alumno tenga cuenta de usuario en el sistema.
+
+---
+
+### E7 — Calificación
+
+Registra la nota o estado de un estudiante en una actividad evaluable de una materia.
+
 ```
 Calificacion {
-  id              : int       (PK)
-  alumno_id       : int       (FK → Alumno)
-  materia_id      : int       (FK → Materia)
-  actividad       : varchar                  # nombre de la columna en el Excel
-  nota_real       : decimal                  # si columna termina en "(Real)"
-  nota_texto      : varchar                  # ej: "Satisfactorio", "Supera lo esperado"
-  aprobado        : bool                     # derivado: nota_real >= umbral OR nota_texto ∈ aprobados
-  origen          : enum                     # "Moodle", "Manual" — suposición
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  entrada_padron_id: UUID      — FK → EntradaPadron
+  materia_id      : UUID       — FK → Materia
+  actividad       : texto      — nombre de la actividad evaluable
+  nota_numerica   : decimal    — valor numérico (nulo si solo hay nota textual)
+  nota_textual    : texto      — descripción cualitativa (ej: "Satisfactorio")
+  aprobado        : booleano   — derivado: nota_numerica >= umbral OR nota_textual ∈ conjunto aprobatorio
+  origen          : enum       — Importado | Manual
+  importado_at    : fecha-hora
 }
 ```
-**Reglas de derivación observadas** (literal en `index.php`):
-- Columnas que terminan en `(Real)` → `nota_real`.
-- `nota_texto` ∈ {"Satisfactorio", "Supera lo esperado"} → cuenta como aprobado.
 
-### E8 — Umbral por materia (configuración)
-**Fuente**: `index.php` (sección 1.a, "Umbral global")
+**Reglas de derivación del campo `aprobado`**:
+- Si existe `nota_numerica`: se compara con el umbral configurado para esa materia (E8).
+- Si solo existe `nota_textual`: se evalúa contra el conjunto de valores aprobatorios configurados (ej: "Satisfactorio", "Supera lo esperado").
+
+---
+
+### E8 — Umbral de aprobación por materia
+
+Configuración del criterio de aprobación de una materia, por asignación docente.
+
 ```
-Umbral {
-  profesor_legajo : int    (FK)            # por docente
-  materia_id      : int    (FK)
-  umbral_pct      : int                    # default 60
+UmbralMateria {
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  asignacion_id   : UUID       — FK → Asignacion
+  materia_id      : UUID       — FK → Materia
+  umbral_pct      : entero     — porcentaje mínimo de aprobación (defecto: 60)
+  valores_aprobatorios: lista<texto> — valores textuales que cuentan como aprobado
 }
 ```
-**Suposición:** un umbral por par (profesor, materia) — la pantalla dice "Borra sólo tus datos en esta materia. No afecta a otros profesores."
+
+**Reglas**:
+- El umbral aplica solo a los datos del docente asignado en esa materia; no afecta a otros docentes.
+- Si no existe umbral configurado, se usa el valor por defecto del tenant.
+
+---
 
 ### E9 — Slot de Encuentro
-**Fuente**: `encuentros.php`
+
+Plantilla que define la recurrencia de un encuentro sincrónico (clase virtual, reunión).
+
 ```
 SlotEncuentro {
-  id                : int       (PK)
-  profesor_legajo   : int       (FK)
-  materia_id        : int       (FK)
-  hora              : time
-  dow               : enum                  # día de la semana
-  fecha_desde       : date
-  cant_semanas      : int                   # genera N instancias
-  fecha_single      : date       (NULL ok)  # alternativa: slot único
-  titulo            : varchar
-  meet_url          : varchar
-  vigencia_desde    : date
-  vigencia_hasta    : date
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  asignacion_id   : UUID       — FK → Asignacion (quién crea el slot)
+  materia_id      : UUID       — FK → Materia
+  titulo          : texto
+  hora            : hora       — horario del encuentro
+  dia_semana      : enum       — Lunes | Martes | Miércoles | Jueves | Viernes | Sábado | Domingo
+  fecha_inicio    : fecha      — inicio de la recurrencia
+  cant_semanas    : entero     — cuántas instancias genera (0 si es fecha única)
+  fecha_unica     : fecha      — alternativa a recurrencia: un encuentro puntual (nullable)
+  meet_url        : texto      — enlace a la sala virtual
+  vig_desde       : fecha
+  vig_hasta       : fecha
 }
 ```
+
+---
 
 ### E10 — Instancia de Encuentro
-**Fuente**: `encuentros.php` (tabla detalle)
+
+Encuentro concreto, derivado de un slot o creado de forma independiente.
+
 ```
 InstanciaEncuentro {
-  id              : int       (PK)
-  slot_id         : int       (FK → SlotEncuentro, NULL ok si fue creado standalone)
-  fecha           : date
-  hora            : time
-  materia_id      : int       (FK)
-  titulo          : varchar
-  estado          : enum                    # "programado", "realizado", "cancelado" — inferido
-  meet_url        : varchar
-  video_url       : varchar
-  comentario      : text
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  slot_id         : UUID       — FK → SlotEncuentro (nullable si es independiente)
+  materia_id      : UUID       — FK → Materia
+  fecha           : fecha
+  hora            : hora
+  titulo          : texto
+  estado          : enum       — Programado | Realizado | Cancelado
+  meet_url        : texto
+  video_url       : texto      — grabación posterior (nullable)
+  comentario      : texto
 }
 ```
+
+---
 
 ### E11 — Guardia
-**Fuente**: `mis_guardias.php`
+
+Registro de una guardia de atención a alumnos, asignada a un tutor o docente.
+
 ```
 Guardia {
-  id                : int       (PK)        # ej: 288
-  tutor_legajo      : int       (FK → Profesor)
-  materia_id        : int       (FK → Materia)
-  carrera_id        : int       (FK → Carrera)
-  cohorte_id        : int       (FK → Cohorte)
-  dia               : enum                   # "Miercoles", ...
-  horario           : varchar                # ej: "14:00–14:45"
-  estado            : enum                   # "finalizado", (otros)
-  comentarios       : text
-  creada_at         : datetime
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  asignacion_id   : UUID       — FK → Asignacion (quién cubre la guardia)
+  materia_id      : UUID       — FK → Materia
+  carrera_id      : UUID       — FK → Carrera
+  cohorte_id      : UUID       — FK → Cohorte
+  dia             : enum       — día de la semana
+  horario         : texto      — rango horario (ej: "14:00–14:45")
+  estado          : enum       — Pendiente | Realizada | Cancelada
+  comentarios     : texto
+  creada_at       : fecha-hora
 }
 ```
 
-### E12 — Tarea (asignada profesor ↔ coordinación)
-**Fuente**: `mis_tareas.php`, `admin_tareas.php`
+---
+
+### E12 — Tarea interna
+
+Tarea de seguimiento asignada entre roles del equipo docente o de coordinación.
+
 ```
 Tarea {
-  id                : int       (PK)
-  materia_id        : int       (FK)
-  profesor_legajo   : int       (FK)         # asignado a
-  asignado_por      : int       (FK)         # quien asigna
-  estado            : enum                   # múltiples valores, no enumerados
-  descripcion       : text
-  ultimo_comentario : text                   # último de la conversación
-  ctx_id            : int                    # contexto — significado no claro
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  materia_id      : UUID       — FK → Materia (nullable si es de nivel institucional)
+  asignado_a      : UUID       — FK → Usuario (quien debe resolver)
+  asignado_por    : UUID       — FK → Usuario (quien asigna)
+  estado          : enum       — Pendiente | En progreso | Resuelta | Cancelada
+  descripcion     : texto
+  contexto_id     : UUID       — referencia opcional a otra entidad del dominio (nullable)
 }
-TareaComentario {
-  id        : int   (PK)
-  tarea_id  : int   (FK)
-  texto     : text
-  autor     : int
-  fecha     : datetime
+
+ComentarioTarea {
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  tarea_id        : UUID       — FK → Tarea
+  autor_id        : UUID       — FK → Usuario
+  texto           : texto
+  creado_at       : fecha-hora
 }
 ```
+
+---
 
 ### E13 — Aviso
-**Fuente**: `admin_avisos.php`
+
+Notificación institucional dirigida a uno o más segmentos de usuarios.
+
 ```
 Aviso {
-  id              : int       (PK)
-  scope           : enum                     # ej: global, por materia, por cohorte
-  materia_slug    : varchar    (NULL ok)
-  cohorte_id      : int        (NULL ok)
-  role_target     : enum                     # rol al que va dirigido
-  severity        : enum                     # info, warn, error — suposición
-  titulo          : varchar
-  cuerpo          : text                     # rich text
-  start_at        : datetime
-  end_at          : datetime
-  sort            : int                      # orden de prioridad
-  active          : bool
-  require_ack     : bool                     # exige acknowledgment del usuario
-  vistos          : int                      # contador (denormalizado)
-  ack_count       : int                      # contador (denormalizado)
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  alcance         : enum       — Global | PorMateria | PorCohorte | PorRol
+  materia_id      : UUID       — FK → Materia (nullable)
+  cohorte_id      : UUID       — FK → Cohorte (nullable)
+  rol_destino     : enum       — rol al que va dirigido (nullable = todos)
+  severidad       : enum       — Info | Advertencia | Crítico
+  titulo          : texto
+  cuerpo          : texto enriquecido
+  inicio_en       : fecha-hora — desde cuándo es visible
+  fin_en          : fecha-hora — hasta cuándo es visible
+  orden           : entero     — prioridad de presentación
+  activo          : booleano
+  requiere_ack    : booleano   — si el usuario debe confirmar haber visto el aviso
+}
+
+AcknowledgmentAviso {
+  id              : UUID       — clave interna
+  aviso_id        : UUID       — FK → Aviso
+  usuario_id      : UUID       — FK → Usuario
+  confirmado_at   : fecha-hora
 }
 ```
 
-### E14 — Evaluación / Coloquio
-**Fuente**: `coloquios/index.php`, `admin_coloquios.php`
+**Reglas**:
+- Los contadores de vistas y confirmaciones se derivan consultando `AcknowledgmentAviso`; no se almacenan como campos denormalizados.
+
+---
+
+### E14 — Evaluación (instancia de examen)
+
+Instancia de evaluación formal (parcial, coloquio, recuperatorio).
+
 ```
 Evaluacion {
-  id              : int       (PK)
-  materia_id      : int       (FK)
-  instancia       : varchar                  # ej: "Coloquio Final"
-  dias_disponibles: int
-  convocados      : int
-  reservas        : int
-  cupos_libres    : int                      # derivado
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  materia_id      : UUID       — FK → Materia
+  cohorte_id      : UUID       — FK → Cohorte
+  tipo            : enum       — Parcial | TP | Coloquio | Recuperatorio
+  instancia       : texto      — denominación libre (ej: "Coloquio Final")
+  dias_disponibles: entero     — ventana de inscripción en días
 }
-ReservaColoquio {
-  id              : int       (PK)
-  evaluacion_id   : int       (FK)
-  alumno_id       : int       (FK)
-  estado          : enum                     # activa, cancelada
-  fecha_hora      : datetime
+
+ReservaEvaluacion {
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  evaluacion_id   : UUID       — FK → Evaluacion
+  alumno_id       : UUID       — FK → Usuario (ALUMNO)
+  fecha_hora      : fecha-hora
+  estado          : enum       — Activa | Cancelada
 }
-RegistroAcademicoColoquio {
-  evaluacion_id   : int
-  alumno_id       : int
-  nota_final      : varchar / decimal
+
+ResultadoEvaluacion {
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  evaluacion_id   : UUID       — FK → Evaluacion
+  alumno_id       : UUID       — FK → Usuario
+  nota_final      : texto      — puede ser numérica o cualitativa
 }
 ```
 
-### E15 — Fecha Parcial / TP / Coloquio
-**Fuente**: `fechas_parciales.php`
+---
+
+### E15 — Fecha académica (parciales, TPs, coloquios)
+
+Calendarización de instancias evaluativas dentro de un período académico.
+
 ```
-FechaParcial {
-  id          : int       (PK)
-  materia_id  : int       (FK)
-  cohorte_id  : int       (FK)
-  tipo        : enum                         # Parcial, TP, Coloquio
-  numero      : int                          # 1er parcial, 2do parcial, etc.
-  periodo     : varchar                      # cuatrimestre/año
-  fecha       : date
-  titulo      : varchar
+FechaAcademica {
+  id          : UUID       — clave interna
+  tenant_id   : UUID       — FK → Tenant
+  materia_id  : UUID       — FK → Materia
+  cohorte_id  : UUID       — FK → Cohorte
+  tipo        : enum       — Parcial | TP | Coloquio | Recuperatorio
+  numero      : entero     — número de instancia (1er parcial, 2do parcial, etc.)
+  periodo     : texto      — cuatrimestre / año (ej: "2026-1")
+  fecha       : fecha
+  titulo      : texto
 }
 ```
 
-### E16 — Programa (PDF)
-**Fuente**: `programas_materias.php`
+---
+
+### E16 — Programa de materia (documento)
+
+Documento oficial del programa de una materia para una carrera y cohorte.
+
 ```
-Programa {
-  id          : int       (PK)
-  materia_id  : int       (FK)
-  carrera_id  : int       (FK)
-  cohorte_id  : int       (FK)
-  titulo      : varchar
-  archivo_pdf : path                         # path a PDF en disco
-  fecha       : datetime
+ProgramaMateria {
+  id          : UUID       — clave interna
+  tenant_id   : UUID       — FK → Tenant
+  materia_id  : UUID       — FK → Materia
+  carrera_id  : UUID       — FK → Carrera
+  cohorte_id  : UUID       — FK → Cohorte
+  titulo      : texto
+  referencia_archivo: texto — referencia al archivo en el servicio de almacenamiento
+  cargado_at  : fecha-hora
 }
 ```
 
-### E17 — Liquidación / Salario
-**Fuente**: `liquidaciones.php`, `salarios.php`
-```
-Liquidacion {
-  id              : int       (PK)
-  profesor_legajo : int       (FK)
-  periodo         : varchar
-  rol             : enum
-  comisiones      : varchar
-  base            : decimal
-  plus            : decimal
-  total           : decimal                  # base + plus
-  estado          : enum                     # abierta, cerrada
-}
-SalarioGrilla {
-  rol             : enum
-  base            : decimal
-  # ... estructura no observada en detalle
-}
-```
+---
 
-### E18 — Email (cola/historial de envío)
-**Fuente**: `admin.php` (Estado de comunicaciones)
-```
-Email {
-  id              : int       (PK)
-  profesor_legajo : int       (FK → quien envía)
-  materia_id      : int       (FK)
-  destinatario    : varchar (email del alumno)
-  asunto          : varchar
-  cuerpo_html     : text
-  estado          : enum                     # "Pend", "Send", "OK", "Fail", "Canc"
-  batch_id        : int                      # agrupa envíos masivos
-  enviado_at      : datetime
-}
-```
+### E17 — Grilla salarial base
 
-### E20 — SalarioBase (descubierto en segunda pasada)
-**Fuente**: `salarios.php`
+Define el monto base por rol docente con vigencia temporal.
+
 ```
 SalarioBase {
-  id           : int       (PK)
-  rol          : enum                # ALL | PROFESOR | TUTOR | NEXO | COORDINADOR
-  monto        : decimal
-  desde        : date
-  hasta        : date       (NULL = vigente sin fin = ∞)
+  id          : UUID       — clave interna
+  tenant_id   : UUID       — FK → Tenant
+  rol         : enum       — PROFESOR | TUTOR | NEXO | COORDINADOR (o ALL para valor global)
+  monto       : decimal
+  desde       : fecha      — inicio de vigencia
+  hasta       : fecha      — fin de vigencia (nulo = vigente sin límite)
 }
 ```
-Datos observados al 2026-05:
-- COORDINADOR: $800.000 (vigente desde 2026-02-01)
-- NEXO: $660.000
-- PROFESOR: $560.000
-- TUTOR: $420.000
 
-### E21 — SalarioPlus (descubierto en segunda pasada)
-**Fuente**: `salarios.php`
+**Reglas**:
+- Para calcular el salario base de un docente en un período, se busca el registro con `rol` coincidente y `desde <= período <= hasta`.
+- Solo puede haber una entrada vigente por rol en un instante dado.
+
+---
+
+### E18 — Plus salarial
+
+Complemento adicional al salario base, por grupo de materias y rol.
+
 ```
 SalarioPlus {
-  id           : int       (PK)
-  clave        : varchar             # ej: "PROG" — agrupador
-  rol          : enum                # PROFESOR | TUTOR | NEXO | COORDINADOR
-  descripcion  : varchar             # ej: "Plus Programación"
-  monto        : decimal
-  desde        : date
-  hasta        : date       (NULL ok)
+  id          : UUID       — clave interna
+  tenant_id   : UUID       — FK → Tenant
+  grupo       : texto      — clave del grupo de materias (ej: "PROG", "BD")
+  rol         : enum       — PROFESOR | TUTOR | NEXO | COORDINADOR
+  descripcion : texto      — descripción legible del plus
+  monto       : decimal
+  desde       : fecha
+  hasta       : fecha      — nullable
 }
 ```
-Datos observados:
-- PROG/COORDINADOR: $180.000 ("Plus Programación")
-- PROG/TUTOR: $140.000
-- PROG/PROFESOR: $120.000
 
-**Suposición:** la `clave` mapea a un grupo de materias (PROG = todas las de Programación). Puede haber otras claves (BD, ING, MAT, etc.) según el portfolio.
+**Reglas**:
+- Un docente puede acumular plus de distintos grupos si dicta materias de varios de ellos.
+- La clave `grupo` mapea a un conjunto de materias (definido en configuración del tenant).
 
-### E22 — Factura (descubierto en segunda pasada)
-**Fuente**: `admin_facturas.php`
-```
-Factura {
-  id              : int       (PK)
-  profesor_legajo : int       (FK → Profesor)        # con factura=true
-  mes             : varchar                          # formato "YYYY-MM"
-  detalle         : varchar                          # texto libre del docente
-  archivo_pdf     : path                             # PDF subido por el docente
-  tamano_kb       : decimal                          # tamaño del archivo
-  estado          : enum                             # "pendiente" | "abonada"
-  fecha_carga     : datetime
-  fecha_pago      : datetime    (NULL hasta abonar)
-}
-```
-Datos observados: Pellegrino Florencia (legajo 2878, 2026-05 "Factura Mayo", 29.6 KB, pendiente), Landra Manuel (legajo 5082, 2026-05 "Armado de aula legislación", 84.1 KB, pendiente).
+---
 
-### E23 — Liquidación (refinada con datos reales)
-> Reemplaza la definición previa de E17.
+### E19 — Liquidación
+
+Resumen de honorarios de un docente para un período, derivado de su grilla salarial.
+
 ```
 Liquidacion {
-  id              : int       (PK)
-  cohorte_id      : int       (FK → Cohorte)
-  mes             : varchar                          # YYYY-MM
-  profesor_legajo : int       (FK → Profesor)
-  rol             : enum                             # PROFESOR | TUTOR | NEXO | COORDINADOR
-  comisiones      : varchar / array                  # comisiones a las que aplica
-  base            : decimal                          # de SalarioBase vigente
-  plus            : decimal                          # suma de SalarioPlus aplicables
-  total           : decimal                          # Base + Plus
-  es_nexo         : bool                             # tabla separada en UI ([RN-36])
-  es_factura      : bool                             # docente monotributista — NO se paga acá ([RN-35])
-  estado          : enum                             # abierta | cerrada
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  cohorte_id      : UUID       — FK → Cohorte
+  periodo         : texto      — AAAA-MM
+  usuario_id      : UUID       — FK → Usuario (docente liquidado)
+  rol             : enum       — rol bajo el cual se liquida
+  comisiones      : lista<texto> — comisiones que dan lugar a la liquidación
+  monto_base      : decimal    — de SalarioBase vigente en el período
+  monto_plus      : decimal    — suma de SalarioPlus aplicables
+  total           : decimal    — monto_base + monto_plus
+  es_nexo         : booleano   — indica liquidación de tipo NEXO (tratamiento diferenciado)
+  excluido_por_factura: booleano — docente monotributista: no se paga por este canal
+  estado          : enum       — Abierta | Cerrada
 }
 ```
 
-### E19 — Log de auditoría
-**Fuente**: `admin.php` (Últimas acciones)
+**Reglas**:
+- Cuando `excluido_por_factura = true`, la liquidación no genera pago directo (el docente emite factura por su cuenta, ver E20).
+- Al cerrar una liquidación, no puede modificarse.
+
+---
+
+### E20 — Factura
+
+Documento de cobro emitido por docentes que facturan sus honorarios.
+
 ```
-AuditLog {
-  id              : int       (PK)
-  fecha           : datetime
-  legajo          : int       (FK → Profesor)
-  materia_id      : int       (FK, NULL ok)
-  accion          : varchar                  # ej: "MOD_MIS_EQUIPOS"
-  rows            : int                      # filas afectadas / cantidad
-  ip              : varchar
-  user_agent      : text
+Factura {
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  usuario_id      : UUID       — FK → Usuario (con facturador = true)
+  periodo         : texto      — AAAA-MM
+  detalle         : texto      — descripción libre del servicio facturado
+  referencia_archivo: texto    — referencia al PDF en el servicio de almacenamiento
+  tamano_kb       : decimal    — tamaño del archivo en KB
+  estado          : enum       — Pendiente | Abonada
+  cargada_at      : fecha-hora
+  abonada_at      : fecha-hora — nullable hasta que se abone
 }
 ```
+
+---
+
+### E21 — Cola de comunicaciones (emails)
+
+Historial y estado de los mensajes enviados a alumnos desde el sistema.
+
+```
+Comunicacion {
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  enviado_por     : UUID       — FK → Usuario (docente o coordinador que dispara el envío)
+  materia_id      : UUID       — FK → Materia
+  destinatario    : texto      — dirección de email del alumno; [cifrado]
+  asunto          : texto
+  cuerpo          : texto enriquecido
+  estado          : enum       — Pendiente | Enviando | Enviado | Error | Cancelado
+  lote_id         : UUID       — agrupa envíos masivos de una misma acción
+  enviado_at      : fecha-hora — nullable hasta que se procese
+}
+```
+
+---
+
+### E-AUD — Log de auditoría
+
+Registro inmutable de toda acción significativa realizada en el sistema.
+
+```
+AuditLog {
+  id              : UUID       — clave interna
+  tenant_id       : UUID       — FK → Tenant
+  fecha_hora      : fecha-hora
+  actor_id        : UUID       — FK → Usuario (quién realizó la acción)
+  impersonado_id  : UUID       — FK → Usuario (nulo si no hay impersonación activa)
+  materia_id      : UUID       — FK → Materia (nullable)
+  accion          : texto      — código de la acción (ej: "CALIFICACIONES_IMPORTAR")
+  detalle         : JSON       — contexto adicional de la acción
+  filas_afectadas : entero     — cantidad de registros involucrados
+  ip              : texto      — dirección IP del cliente
+  user_agent      : texto      — agente de usuario
+}
+```
+
+**Reglas**:
+- Ningún registro del log puede modificarse ni eliminarse.
+- Las acciones bajo impersonación registran tanto al actor real como al usuario impersonado (ver [03 — Actores y Roles](03_actores_y_roles.md) §4).
+
+---
 
 ## Relaciones (ERD simplificado)
 
 ```
+Tenant (1) ─── (N) Carrera
+Tenant (1) ─── (N) Cohorte
+Tenant (1) ─── (N) Materia
+Tenant (1) ─── (N) Usuario
+
 Carrera (1) ─── (N) Cohorte
 Carrera (1) ─── (N) Asignacion
+
 Cohorte (1) ─── (N) Asignacion
+Cohorte (1) ─── (N) VersionPadron
+Cohorte (1) ─── (N) Evaluacion
+Cohorte (1) ─── (N) FechaAcademica
+Cohorte (1) ─── (N) Liquidacion
+
 Materia (1) ─── (N) Asignacion
-Profesor (1) ─── (N) Asignacion
-Profesor (1) ─── (N) Asignacion (responde) ── (N) Profesor   # jerarquía
-
-Materia (1) ─── (N) Alumno (vía padrón)
-Alumno  (1) ─── (N) Calificacion
+Materia (1) ─── (N) VersionPadron
 Materia (1) ─── (N) Calificacion
-
-Profesor (1) ─── (N) Umbral por Materia
-Profesor (1) ─── (N) SlotEncuentro
-SlotEncuentro (1) ─── (N) InstanciaEncuentro
-Profesor (1) ─── (N) Guardia
-Profesor (1) ─── (N) Tarea (asignado a)
-Profesor (1) ─── (N) Tarea (asignado por)
-Tarea (1) ─── (N) TareaComentario
-
+Materia (1) ─── (N) UmbralMateria
+Materia (1) ─── (N) SlotEncuentro
+Materia (1) ─── (N) Guardia
+Materia (1) ─── (N) Tarea
 Materia (1) ─── (N) Aviso
-Cohorte (1) ─── (N) Aviso
-
 Materia (1) ─── (N) Evaluacion
-Evaluacion (1) ─── (N) ReservaColoquio
-Alumno (1) ─── (N) ReservaColoquio
+Materia (1) ─── (N) FechaAcademica
+Materia (1) ─── (N) ProgramaMateria
+Materia (1) ─── (N) Comunicacion
 
-Materia (1) ─── (N) FechaParcial
-Materia (1) ─── (N) Programa
+Usuario (1) ─── (N) Asignacion
+Usuario (1) ─── (N) UmbralMateria
+Usuario (1) ─── (N) SlotEncuentro
+Usuario (1) ─── (N) Guardia
+Usuario (1) ─── (N) Tarea (asignado a)
+Usuario (1) ─── (N) Tarea (asignado por)
+Usuario (1) ─── (N) Comunicacion
+Usuario (1) ─── (N) Liquidacion
+Usuario (1) ─── (N) Factura
+Usuario (1) ─── (N) AuditLog
+Usuario (1) ─── (N) AcknowledgmentAviso
+Usuario (1) ─── (N) ReservaEvaluacion
 
-Profesor (1) ─── (N) Liquidacion
-Profesor (1) ─── (N) Email
-Profesor (1) ─── (N) AuditLog
+VersionPadron (1) ─── (N) EntradaPadron
+EntradaPadron (1) ─── (N) Calificacion
+
+Asignacion (N) ─── (1) Asignacion   — jerarquía (responsable_id)
+Asignacion (1) ─── (N) UmbralMateria
+Asignacion (1) ─── (N) SlotEncuentro
+Asignacion (1) ─── (N) Guardia
+
+SlotEncuentro (1) ─── (N) InstanciaEncuentro
+
+Tarea (1) ─── (N) ComentarioTarea
+
+Aviso (1) ─── (N) AcknowledgmentAviso
+
+Evaluacion (1) ─── (N) ReservaEvaluacion
+Evaluacion (1) ─── (N) ResultadoEvaluacion
 ```
 
-## Datos seed observados
+---
 
-- **Carreras**: TUPAD (única activa).
-- **Cohortes**: MAR-2025, AGO-2025, MAR-2026 (al menos).
-- **Materias catálogo A**: 19 confirmadas (ver [02](02_descripcion_general.md#catálogo-a)).
-- **Materias catálogo B (EVALIA)**: 12 confirmadas.
-- **Programas cargados**: 14 (visible "Listado 14" en `programas_materias.php`).
-- **Guardias activas**: 250 registros.
-- **Tareas admin**: 443 registros.
-- **Acciones log**: capadas a 200 más recientes.
+## Datos de referencia (seed típico)
 
-## Códigos de acción observados (audit log)
+Estos valores son ejemplos de datos iniciales esperados en una instalación. No son exhaustivos ni deben considerarse fijos:
 
-- `MOD_MIS_EQUIPOS` (visible en log de admin.php)
-- (otros no observados — el log tiene patrones similares para cada acción)
+| Entidad | Ejemplo |
+|---------|---------|
+| Carrera | Una o más carreras activas por tenant |
+| Cohorte | Múltiples cohortes por carrera (típicamente 2 por año: inicio de primer y segundo cuatrimestre) |
+| Materia | El tenant define su catálogo completo; típicamente decenas de materias |
+| SalarioBase | Un registro por rol activo, con vigencia desde la fecha de acuerdo |
+| SalarioPlus | Uno o más registros por grupo de materias × rol |
 
-## Convenciones de nombres detectadas
+---
 
-| Patrón | Significado |
+## Códigos de acción del log de auditoría
+
+El campo `accion` del `AuditLog` usa un código textual estandarizado por módulo. Ejemplos representativos:
+
+| Código | Descripción |
 |--------|-------------|
-| `_id` | FK numérica |
-| `_legajo` / `legajo_*` | FK a Profesor (es el natural key del docente) |
-| `legs[]`, `responde_legs[]` | Arrays de legajos para selects múltiples |
-| `vig_desde` / `vig_hasta` | Vigencia temporal |
-| `start_at` / `end_at` | Período de validez (avisos) |
-| `csrf` | Token CSRF |
-| `accion` / `action` | Discriminador de operación en POST self |
+| `CALIFICACIONES_IMPORTAR` | Importación de calificaciones desde archivo externo |
+| `PADRON_CARGAR` | Carga de nueva versión del padrón |
+| `COMUNICACION_ENVIAR` | Envío de comunicación a alumnos |
+| `ASIGNACION_MODIFICAR` | Modificación de un equipo docente |
+| `LIQUIDACION_CERRAR` | Cierre de una liquidación mensual |
+| `IMPERSONACION_INICIAR` | Inicio de sesión de impersonación |
+| `IMPERSONACION_FINALIZAR` | Fin de sesión de impersonación |
+
+El catálogo completo de códigos es administrable y debe mantenerse en la documentación técnica.
+
+---
+
+## Convenciones del modelo
+
+| Convención | Significado |
+|------------|-------------|
+| `_id` | Clave foránea a otra entidad |
+| `tenant_id` | Toda entidad lo lleva; es la raíz del aislamiento |
+| `vig_desde` / `vig_hasta` | Rango de vigencia temporal; `vig_hasta` nulo = abierto |
+| `desde` / `hasta` | Igual que `vig_*`, en entidades que usan esa nomenclatura |
+| `estado` | Enum de ciclo de vida del registro |
+| `[cifrado]` | El atributo debe almacenarse cifrado en reposo |
+| `referencia_archivo` | Puntero opaco al servicio de almacenamiento (no un path de disco) |
