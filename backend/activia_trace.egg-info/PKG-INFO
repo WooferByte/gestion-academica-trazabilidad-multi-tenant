@@ -1,0 +1,25 @@
+Metadata-Version: 2.4
+Name: activia-trace
+Version: 0.1.0
+Summary: Plataforma de gestión académica y trazabilidad multi-tenant
+Requires-Python: >=3.13
+Requires-Dist: fastapi<1.0.0,>=0.115.0
+Requires-Dist: uvicorn[standard]<1.0.0,>=0.30.0
+Requires-Dist: sqlalchemy<3.0.0,>=2.0.35
+Requires-Dist: alembic<2.0.0,>=1.13.0
+Requires-Dist: asyncpg<1.0.0,>=0.30.0
+Requires-Dist: pydantic<3.0.0,>=2.8.0
+Requires-Dist: pydantic-settings<3.0.0,>=2.5.0
+Requires-Dist: argon2-cffi<24.0.0,>=23.1.0
+Requires-Dist: pyjwt<3.0.0,>=2.8.0
+Requires-Dist: passlib[argon2]<2.0.0,>=1.7.4
+Requires-Dist: pyotp<3.0.0,>=2.9.0
+Requires-Dist: opentelemetry-api<2.0.0,>=1.27.0
+Requires-Dist: opentelemetry-sdk<2.0.0,>=1.27.0
+Requires-Dist: opentelemetry-instrumentation-fastapi<1.0.0,>=0.48b0
+Requires-Dist: cryptography<45.0.0,>=44.0.0
+Provides-Extra: dev
+Requires-Dist: pytest<9.0.0,>=8.3.0; extra == "dev"
+Requires-Dist: pytest-asyncio<1.0.0,>=0.24.0; extra == "dev"
+Requires-Dist: httpx<1.0.0,>=0.27.0; extra == "dev"
+Requires-Dist: pytest-env<2.0.0,>=1.1.0; extra == "dev"
