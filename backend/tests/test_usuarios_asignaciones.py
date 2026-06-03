@@ -349,8 +349,8 @@ class TestAsignacionesAPI:
                     'usuario_id': uid,
                     'rol': 'TUTOR',
                     'materia_id': str(base_entities['materia'].id),
-                    'desde': (datetime.now(timezone.utc) - timedelta(days=60)).isoformat(),
-                    'hasta': (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
+                    'desde': (datetime.now(timezone.utc) - timedelta(days=90)).isoformat(),
+                    'hasta': (datetime.now(timezone.utc) - timedelta(days=61)).isoformat(),
                 },
             )
             assert vencida_resp.status_code == 201
