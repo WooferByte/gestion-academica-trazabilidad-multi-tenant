@@ -18,6 +18,11 @@ from app.models.umbral_materia import UmbralMateria
 from app.models.slot_encuentro import SlotEncuentro, DiaSemana
 from app.models.instancia_encuentro import InstanciaEncuentro, EstadoInstancia
 from app.models.guardia import Guardia, EstadoGuardia
+from app.models.evaluacion import Evaluacion, TipoEvaluacion, EstadoEvaluacion
+from app.models.turno_coloquio import TurnoColoquio
+from app.models.reserva_evaluacion import ReservaEvaluacion, EstadoReserva
+from app.models.resultado_evaluacion import ResultadoEvaluacion
+from app.models.coloquio_alumno import ColoquioAlumno
 
 __all__ = [
     'BaseModelMixin', 'Tenant', 'User', 'RefreshToken', 'PasswordResetToken',
@@ -28,4 +33,9 @@ __all__ = [
     'SlotEncuentro', 'DiaSemana',
     'InstanciaEncuentro', 'EstadoInstancia',
     'Guardia', 'EstadoGuardia',
+    'Evaluacion', 'TipoEvaluacion', 'EstadoEvaluacion',
+    'TurnoColoquio',
+    'ReservaEvaluacion', 'EstadoReserva',
+    'ResultadoEvaluacion',
+    'ColoquioAlumno',
 ]
