@@ -53,6 +53,8 @@ def create_app() -> FastAPI:
     app_instance.include_router(user_roles_router)
     app_instance.include_router(calificaciones_router)
     app_instance.include_router(umbral_router)
+    from app.api.v1.routers.analisis_router import router as analisis_router
+    app_instance.include_router(analisis_router)
     return app_instance
 
 
