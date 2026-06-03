@@ -9,9 +9,10 @@ from app.models.audit_log import AuditLog
 from app.models.carrera import Carrera
 from app.models.cohorte import Cohorte
 from app.models.materia import Materia
+from app.models.asignacion import Asignacion
 
 __all__ = [
     'BaseModelMixin', 'Tenant', 'User', 'RefreshToken', 'PasswordResetToken',
     'Role', 'Permission', 'RolePermission', 'UserRole', 'AuditLog',
-    'Carrera', 'Cohorte', 'Materia',
+    'Carrera', 'Cohorte', 'Materia', 'Asignacion',
 ]

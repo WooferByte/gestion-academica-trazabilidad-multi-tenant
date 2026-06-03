@@ -13,10 +13,22 @@ class User(Base, BaseModelMixin):
     __tablename__ = 'users'
 
     email: Mapped[str] = mapped_column(String(255), nullable=False)
+    email_cifrado: Mapped[str | None] = mapped_column(Text, nullable=True)
+    email_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    dni_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     nombre_cifrado: Mapped[str | None] = mapped_column(Text, nullable=True)
     apellido_cifrado: Mapped[str | None] = mapped_column(Text, nullable=True)
     dni_cifrado: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cuil_cifrado: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cbu_cifrado: Mapped[str | None] = mapped_column(Text, nullable=True)
+    alias_cbu_cifrado: Mapped[str | None] = mapped_column(Text, nullable=True)
+    banco: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    regional: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    legajo: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    legajo_profesional: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    facturador: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    estado: Mapped[str] = mapped_column(String(20), nullable=False, default='Activo')
     roles: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
     totp_secret_cifrado: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -30,7 +42,10 @@ class User(Base, BaseModelMixin):
 
     __table_args__ = (
         UniqueConstraint('email', 'tenant_id', name='uq_users_email_tenant'),
+        UniqueConstraint('tenant_id', 'email_hash', name='uq_users_email_hash_tenant'),
+        UniqueConstraint('tenant_id', 'dni_hash', name='uq_users_dni_hash_tenant'),
         Index('ix_users_email', 'email'),
+        Index('ix_users_email_hash', 'email_hash'),
     )
 
 

@@ -15,3 +15,4 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=15, ge=1)
     refresh_token_expire_days: int = Field(default=30, ge=1)
     debug: bool = Field(default=False, alias='DEBUG')
+    email_hash_salt: str = Field(default='activia-trace-email-hash-salt-dev')

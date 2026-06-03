@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import os
 from datetime import datetime, timedelta, timezone
 
@@ -6,6 +7,8 @@ import jwt
 from passlib.context import CryptContext
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+import hashlib
 
 from app.core.config import Settings
 from app.core.exceptions import EncryptionError
@@ -77,3 +80,19 @@ def create_2fa_token(user_id: str, tenant_id: str) -> str:
 def decode_token(token: str) -> dict:
     settings = Settings()
     return jwt.decode(token, settings.secret_key, algorithms=['HS256'])
+
+
+def hash_email(email: str) -> str:
+    settings = Settings()
+    normalized = email.strip().lower()
+    return hashlib.sha256(
+        (normalized + settings.email_hash_salt).encode()
+    ).hexdigest()
+
+
+def hash_dni(dni: str) -> str:
+    settings = Settings()
+    normalized = dni.strip()
+    return hashlib.sha256(
+        (normalized + settings.email_hash_salt).encode()
+    ).hexdigest()

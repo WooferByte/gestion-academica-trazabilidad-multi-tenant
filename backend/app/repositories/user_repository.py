@@ -18,3 +18,8 @@ class UserRepository(BaseRepository[User]):
         stmt = self._stmt_with_deleted().where(self._model.email == email)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_by_email_hash(self, email_hash: str) -> User | None:
+        stmt = self._stmt().where(self._model.email_hash == email_hash)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()

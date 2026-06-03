@@ -11,6 +11,7 @@ from app.core.security import (
     decode_token,
     decrypt,
     encrypt,
+    hash_email,
     hash_password,
     verify_password,
 )
@@ -34,9 +35,12 @@ class AuthService:
         self._reset_repo = PasswordResetTokenRepository(session, tenant_id)
 
     async def authenticate(self, email: str, password: str) -> User | None:
-        user = await self._user_repo.get_by_email(email)
+        email_hash_val = hash_email(email)
+        user = await self._user_repo.get_by_email_hash(email_hash_val)
         if not user:
-            return None
+            user = await self._user_repo.get_by_email(email)
+            if not user:
+                return None
         if user.deleted_at is not None:
             return None
         if not user.is_active:
@@ -140,8 +144,9 @@ class AuthService:
         if user.totp_secret_cifrado is not None:
             raise ValueError('2FA ya está activo. Desactivelo primero para re-enrolar.')
         secret = pyotp.random_base32()
+        user_email = decrypt(user.email_cifrado) if user.email_cifrado else user.email
         uri = pyotp.totp.TOTP(secret).provisioning_uri(
-            name=user.email, issuer_name='activia-trace',
+            name=user_email, issuer_name='activia-trace',
         )
         return {'secret': secret, 'uri': uri}
 
@@ -179,7 +184,10 @@ class AuthService:
         return await self.create_session(user)
 
     async def forgot_password(self, email: str) -> dict:
-        user = await self._user_repo.get_by_email(email)
+        email_hash_val = hash_email(email)
+        user = await self._user_repo.get_by_email_hash(email_hash_val)
+        if not user:
+            user = await self._user_repo.get_by_email(email)
         settings = Settings()
 
         if not user:
