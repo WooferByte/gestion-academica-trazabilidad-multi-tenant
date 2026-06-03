@@ -13,6 +13,7 @@ from app.models.asignacion import Asignacion
 from app.models.version_padron import VersionPadron
 from app.models.entrada_padron import EntradaPadron
 from app.models.calificacion import Calificacion
+from app.models.comunicacion import Comunicacion
 from app.models.umbral_materia import UmbralMateria
 
 __all__ = [
@@ -20,5 +21,5 @@ __all__ = [
     'Role', 'Permission', 'RolePermission', 'UserRole', 'AuditLog',
     'Carrera', 'Cohorte', 'Materia', 'Asignacion',
     'VersionPadron', 'EntradaPadron',
-    'Calificacion', 'UmbralMateria',
+    'Calificacion', 'Comunicacion', 'UmbralMateria',
 ]

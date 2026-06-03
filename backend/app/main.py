@@ -10,6 +10,7 @@ from app.api.v1.routers.auth_impersonation import router as auth_impersonation_r
 from app.api.v1.routers.carreras import router as carreras_router
 from app.api.v1.routers.cohortes import router as cohortes_router
 from app.api.v1.routers.equipos import router as equipos_router
+from app.api.v1.routers.comunicaciones import router as comunicaciones_router
 from app.api.v1.routers.health import router as health_router
 from app.api.v1.routers.materias import router as materias_router
 from app.api.v1.routers.padron import router as padron_router
@@ -37,6 +38,7 @@ async def lifespan(app_instance: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     app_instance = FastAPI(title='activia-trace', version='0.1.0', lifespan=lifespan)
+    app_instance.include_router(comunicaciones_router)
     app_instance.include_router(health_router)
     app_instance.include_router(auth_router)
     app_instance.include_router(auth_impersonation_router)
