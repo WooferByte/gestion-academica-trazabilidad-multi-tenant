@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.v1.routers.admin_usuarios import router as admin_usuarios_router
+from app.api.v1.routers.avisos import router as avisos_router
 from app.api.v1.routers.asignaciones import router as asignaciones_router
 from app.api.v1.routers.auth import router as auth_router
 from app.api.v1.routers.auth_impersonation import router as auth_impersonation_router
@@ -41,6 +42,7 @@ async def lifespan(app_instance: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     app_instance = FastAPI(title='activia-trace', version='0.1.0', lifespan=lifespan)
+    app_instance.include_router(avisos_router)
     app_instance.include_router(comunicaciones_router)
     app_instance.include_router(health_router)
     app_instance.include_router(auth_router)

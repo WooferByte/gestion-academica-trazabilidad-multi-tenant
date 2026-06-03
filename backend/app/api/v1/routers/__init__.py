@@ -1,4 +1,5 @@
 from app.api.v1.routers.auth import router as auth_router
+from app.api.v1.routers.avisos import router as avisos_router
 from app.api.v1.routers.carreras import router as carreras_router
 from app.api.v1.routers.cohortes import router as cohortes_router
 from app.api.v1.routers.equipos import router as equipos_router
@@ -12,6 +13,7 @@ from app.api.v1.routers.user_roles import router as user_roles_router
 
 __all__ = [
     'auth_router',
+    'avisos_router',
     'carreras_router',
     'cohortes_router',
     'equipos_router',

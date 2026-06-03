@@ -23,6 +23,8 @@ from app.models.turno_coloquio import TurnoColoquio
 from app.models.reserva_evaluacion import ReservaEvaluacion, EstadoReserva
 from app.models.resultado_evaluacion import ResultadoEvaluacion
 from app.models.coloquio_alumno import ColoquioAlumno
+from app.models.aviso import Aviso, AlcanceAviso, SeveridadAviso
+from app.models.acknowledgment_aviso import AcknowledgmentAviso
 
 __all__ = [
     'BaseModelMixin', 'Tenant', 'User', 'RefreshToken', 'PasswordResetToken',
@@ -38,4 +40,6 @@ __all__ = [
     'ReservaEvaluacion', 'EstadoReserva',
     'ResultadoEvaluacion',
     'ColoquioAlumno',
+    'Aviso', 'AlcanceAviso', 'SeveridadAviso',
+    'AcknowledgmentAviso',
 ]
