@@ -35,7 +35,7 @@ class Comunicacion(Base, BaseModelMixin):
     asunto: Mapped[str] = mapped_column(String(500), nullable=False)
     cuerpo: Mapped[str] = mapped_column(Text, nullable=False)
     estado: Mapped[EstadoComunicacion] = mapped_column(
-        Enum(EstadoComunicacion, name='estado_comunicacion'),
+        Enum(EstadoComunicacion, name='estado_comunicacion', values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         default=EstadoComunicacion.PENDIENTE,
     )

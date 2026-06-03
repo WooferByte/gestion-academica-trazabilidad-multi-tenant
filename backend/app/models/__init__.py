@@ -15,6 +15,9 @@ from app.models.entrada_padron import EntradaPadron
 from app.models.calificacion import Calificacion
 from app.models.comunicacion import Comunicacion
 from app.models.umbral_materia import UmbralMateria
+from app.models.slot_encuentro import SlotEncuentro, DiaSemana
+from app.models.instancia_encuentro import InstanciaEncuentro, EstadoInstancia
+from app.models.guardia import Guardia, EstadoGuardia
 
 __all__ = [
     'BaseModelMixin', 'Tenant', 'User', 'RefreshToken', 'PasswordResetToken',
@@ -22,4 +25,7 @@ __all__ = [
     'Carrera', 'Cohorte', 'Materia', 'Asignacion',
     'VersionPadron', 'EntradaPadron',
     'Calificacion', 'Comunicacion', 'UmbralMateria',
+    'SlotEncuentro', 'DiaSemana',
+    'InstanciaEncuentro', 'EstadoInstancia',
+    'Guardia', 'EstadoGuardia',
 ]
