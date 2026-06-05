@@ -36,6 +36,8 @@ from seed import (
     COHORTE_ADM_2025_ID,
     COHORTE_ING_2024_ID,
     COHORTE_ING_2025_ID,
+    COMENTARIO_TAREA_1_ID,
+    COMENTARIO_TAREA_2_ID,
     EVAL_1_ID,
     EVAL_2_ID,
     GUARDIA_1_ID,
@@ -61,6 +63,11 @@ from seed import (
     SLOT_1_ID,
     SLOT_2_ID,
     SLOT_3_ID,
+    TAREA_1_ID,
+    TAREA_2_ID,
+    TAREA_3_ID,
+    TAREA_4_ID,
+    TAREA_5_ID,
     TENANT_ID,
     TURNO_EVAL1_ID,
     TURNO_EVAL1B_ID,
@@ -1163,7 +1170,92 @@ async def test_all_endpoints_seeded(db_session: AsyncSession, async_client: Asyn
         token=admin_token,
     )
 
-    # ── 22. ERROR VERIFICATION ─────────────────────────────────────────
+    # ── 22. TAREAS ─────────────────────────────────────────────────────
+    # GET mis-tareas (admin has 0 assigned in seed)
+    await _call(
+        async_client, 'get', '/api/v1/tareas/mis-tareas',
+        token=admin_token,
+    )
+
+    # POST crear tarea
+    await _call(
+        async_client, 'post', '/api/v1/tareas',
+        json_body={
+            'asignado_a': str(USER_ANA_ID),
+            'descripcion': 'Revisar planificación del cuatrimestre',
+        },
+        token=admin_token,
+        verify=lambda b, s: isinstance(b, dict) and b.get('estado') == 'Pendiente' and b.get('asignado_por') == str(USER_ADMIN_ID),
+    )
+
+    # GET tarea by id
+    await _call(
+        async_client, 'get', f'/api/v1/tareas/{TAREA_1_ID}',
+        token=admin_token,
+        verify=lambda b, s: isinstance(b, dict) and b.get('descripcion', '').startswith('Revisar'),
+    )
+
+    # PATCH estado Pendiente → En progreso
+    await _call(
+        async_client, 'patch', f'/api/v1/tareas/{TAREA_2_ID}/estado',
+        json_body={'estado': 'En progreso'},
+        token=admin_token,
+        verify=lambda b, s: isinstance(b, dict) and b.get('estado') == 'En progreso',
+    )
+
+    # PATCH estado En progreso → Resuelta
+    await _call(
+        async_client, 'patch', f'/api/v1/tareas/{TAREA_2_ID}/estado',
+        json_body={'estado': 'Resuelta'},
+        token=admin_token,
+        verify=lambda b, s: isinstance(b, dict) and b.get('estado') == 'Resuelta',
+    )
+
+    # PATCH estado Cancelada on tarea 3
+    await _call(
+        async_client, 'patch', f'/api/v1/tareas/{TAREA_3_ID}/estado',
+        json_body={'estado': 'Cancelada'},
+        token=admin_token,
+        verify=lambda b, s: isinstance(b, dict) and b.get('estado') == 'Cancelada',
+    )
+
+    # POST comentario en tarea
+    await _call(
+        async_client, 'post', f'/api/v1/tareas/{TAREA_1_ID}/comentarios',
+        json_body={'texto': 'Revisando el avance del equipo'},
+        token=admin_token,
+        verify=lambda b, s: isinstance(b, dict) and b.get('texto') == 'Revisando el avance del equipo',
+    )
+
+    # GET tarea with comentarios (should have 1 added + 0 seed on TAREA_1)
+    await _call(
+        async_client, 'get', f'/api/v1/tareas/{TAREA_1_ID}',
+        token=admin_token,
+        verify=lambda b, s: isinstance(b, dict) and len(b.get('comentarios', [])) == 1,
+    )
+
+    # GET admin/tareas list
+    await _call(
+        async_client, 'get', '/api/v1/admin/tareas',
+        token=admin_token,
+        verify=lambda b, s: isinstance(b, dict) and b.get('total', 0) >= 5,
+    )
+
+    # GET admin/tareas with search filter
+    await _call(
+        async_client, 'get', '/api/v1/admin/tareas',
+        params={'search': 'Algebra'},
+        token=admin_token,
+        verify=lambda b, s: isinstance(b, dict) and b.get('total', 0) >= 1,
+    )
+
+    # DELETE tarea (soft delete)
+    await _call(
+        async_client, 'delete', f'/api/v1/tareas/{TAREA_5_ID}',
+        token=admin_token,
+    )
+
+    # ── 23. ERROR VERIFICATION ─────────────────────────────────────────
     # 404 on non-existent route
     await _call(
         async_client, 'get', '/api/v1/non-existent-route', token=admin_token,

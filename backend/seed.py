@@ -12,6 +12,7 @@ from app.core.security import encrypt, hash_email, hash_password
 from app.models.acknowledgment_aviso import AcknowledgmentAviso
 from app.models.asignacion import Asignacion
 from app.models.aviso import Aviso
+from app.models.tarea import Tarea, ComentarioTarea, EstadoTarea
 from app.models.calificacion import Calificacion
 from app.models.carrera import Carrera
 from app.models.cohorte import Cohorte
@@ -104,6 +105,15 @@ GUARDIA_5_ID = uuid.uuid5(NS, 'seed-guardia-5')
 EVAL_1_ID = uuid.uuid5(NS, 'seed-eval-1')
 EVAL_2_ID = uuid.uuid5(NS, 'seed-eval-2')
 
+TAREA_1_ID = uuid.uuid5(NS, 'seed-tarea-1')
+TAREA_2_ID = uuid.uuid5(NS, 'seed-tarea-2')
+TAREA_3_ID = uuid.uuid5(NS, 'seed-tarea-3')
+TAREA_4_ID = uuid.uuid5(NS, 'seed-tarea-4')
+TAREA_5_ID = uuid.uuid5(NS, 'seed-tarea-5')
+
+COMENTARIO_TAREA_1_ID = uuid.uuid5(NS, 'seed-comentario-tarea-1')
+COMENTARIO_TAREA_2_ID = uuid.uuid5(NS, 'seed-comentario-tarea-2')
+
 TURNO_EVAL1_ID = uuid.uuid5(NS, 'seed-turno-eval1-1')
 TURNO_EVAL1B_ID = uuid.uuid5(NS, 'seed-turno-eval1-2')
 TURNO_EVAL2_ID = uuid.uuid5(NS, 'seed-turno-eval2-1')
@@ -115,7 +125,7 @@ ALL_PERMISOS = [
     'equipos:asignar', 'padron:cargar', 'calificaciones:importar',
     'atrasados:ver', 'comunicacion:enviar', 'comunicacion:aprobar',
     'avisos:publicar', 'encuentros:gestionar', 'coloquios:gestionar',
-    'coloquios:reservar',
+    'coloquios:reservar', 'tareas:gestionar',
 ]
 
 ALUMNOS = [
@@ -486,6 +496,38 @@ async def run_seed(session: AsyncSession) -> None:
                             evaluacion_id=EVAL_1_ID, alumno_id=USER_ALUMNO_COL_2,
                             nota_final='Satisfactorio'),
     ])
+
+    # ── 15. Tareas internas (5+) ──────────────────────────────────────────
+    tareas_data = [
+        (TAREA_1_ID, MATERIA_ALGEBRA_ID, USER_ANA_ID, USER_ADMIN_ID, EstadoTarea.PENDIENTE,
+         'Revisar entregas de Álgebra - TP1', None),
+        (TAREA_2_ID, MATERIA_PROG1_ID, USER_CARLOS_ID, USER_ADMIN_ID, EstadoTarea.EN_PROGRESO,
+         'Preparar enunciado del parcial de Programación I', None),
+        (TAREA_3_ID, MATERIA_BD_ID, USER_PEDRO_ID, USER_ADMIN_ID, EstadoTarea.PENDIENTE,
+         'Corregir trabajos prácticos de Base de Datos', None),
+        (TAREA_4_ID, None, USER_MARIA_ID, USER_ANA_ID, EstadoTarea.RESUELTA,
+         'Actualizar planilla de seguimiento de tutorías', uuid.uuid5(NS, 'seed-contexto-tarea-4')),
+        (TAREA_5_ID, MATERIA_ALGEBRA_ID, USER_ANA_ID, USER_MARIA_ID, EstadoTarea.PENDIENTE,
+         'Organizar horario de consultas para Álgebra', None),
+    ]
+    for tid, mat_id, asig_a, asig_por, estado, desc, ctx_id in tareas_data:
+        session.add(Tarea(
+            id=tid, tenant_id=TENANT_ID,
+            materia_id=mat_id, asignado_a=asig_a, asignado_por=asig_por,
+            estado=estado, descripcion=desc, contexto_id=ctx_id,
+        ))
+    await session.flush()
+
+    comentarios_data = [
+        (COMENTARIO_TAREA_1_ID, TAREA_1_ID, USER_ADMIN_ID, 'Ya están subidas las entregas, revisar antes del viernes.'),
+        (COMENTARIO_TAREA_2_ID, TAREA_2_ID, USER_ADMIN_ID, 'Asegurate de incluir ejercicios de recursión.'),
+    ]
+    for cid, tid, autor, texto in comentarios_data:
+        session.add(ComentarioTarea(
+            id=cid, tenant_id=TENANT_ID,
+            tarea_id=tid, autor_id=autor, texto=texto,
+            creado_at=now,
+        ))
 
     await session.flush()
 

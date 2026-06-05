@@ -12,6 +12,7 @@ from app.repositories.evaluacion_repository import (
 )
 from app.repositories.materia import MateriaRepository
 from app.repositories.role import RoleRepository
+from app.repositories.tarea_repository import TareaRepository, ComentarioTareaRepository
 from app.repositories.permission import PermissionRepository
 from app.repositories.role_permission import RolePermissionRepository
 from app.repositories.user_role import UserRoleRepository
@@ -31,6 +32,8 @@ __all__ = [
     'ColoquioAlumnoRepository',
     'MateriaRepository',
     'RoleRepository',
+    'TareaRepository',
+    'ComentarioTareaRepository',
     'PermissionRepository',
     'RolePermissionRepository',
     'UserRoleRepository',

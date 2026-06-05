@@ -25,6 +25,7 @@ from app.models.resultado_evaluacion import ResultadoEvaluacion
 from app.models.coloquio_alumno import ColoquioAlumno
 from app.models.aviso import Aviso, AlcanceAviso, SeveridadAviso
 from app.models.acknowledgment_aviso import AcknowledgmentAviso
+from app.models.tarea import Tarea, EstadoTarea, ComentarioTarea
 
 __all__ = [
     'BaseModelMixin', 'Tenant', 'User', 'RefreshToken', 'PasswordResetToken',
@@ -42,4 +43,5 @@ __all__ = [
     'ColoquioAlumno',
     'Aviso', 'AlcanceAviso', 'SeveridadAviso',
     'AcknowledgmentAviso',
+    'Tarea', 'EstadoTarea', 'ComentarioTarea',
 ]

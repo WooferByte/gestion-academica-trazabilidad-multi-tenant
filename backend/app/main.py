@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.routers.admin_usuarios import router as admin_usuarios_router
 from app.api.v1.routers.avisos import router as avisos_router
+from app.api.v1.routers.tareas import router as tareas_router
+from app.api.v1.routers.tareas import admin_router as tareas_admin_router
 from app.api.v1.routers.asignaciones import router as asignaciones_router
 from app.api.v1.routers.auth import router as auth_router
 from app.api.v1.routers.auth_impersonation import router as auth_impersonation_router
@@ -89,6 +91,8 @@ def create_app() -> FastAPI:
     app_instance.include_router(encuentros_router)
     app_instance.include_router(guardias_router)
     app_instance.include_router(coloquios_router)
+    app_instance.include_router(tareas_router)
+    app_instance.include_router(tareas_admin_router)
     from app.api.v1.routers.analisis_router import router as analisis_router
     app_instance.include_router(analisis_router)
     return app_instance
