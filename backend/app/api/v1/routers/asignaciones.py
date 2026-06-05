@@ -30,7 +30,7 @@ async def list_asignaciones(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('equipos:asignar'),
-):
+) -> AsignacionListResponse:
     service = AsignacionService(session, current_user.tenant_id)
     return await service.list_asignaciones(
         usuario_id=usuario_id,
@@ -51,7 +51,7 @@ async def create_asignacion(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('equipos:asignar'),
-):
+) -> AsignacionResponse:
     service = AsignacionService(session, current_user.tenant_id)
     return await service.create_asignacion(data)
 
@@ -62,7 +62,7 @@ async def get_asignacion(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('equipos:asignar'),
-):
+) -> AsignacionResponse:
     service = AsignacionService(session, current_user.tenant_id)
     return await service.get_asignacion(asignacion_id)
 
@@ -74,7 +74,7 @@ async def update_asignacion(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('equipos:asignar'),
-):
+) -> AsignacionResponse:
     service = AsignacionService(session, current_user.tenant_id)
     return await service.update_asignacion(asignacion_id, data)
 
@@ -85,7 +85,7 @@ async def delete_asignacion(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('equipos:asignar'),
-):
+) -> dict:
     service = AsignacionService(session, current_user.tenant_id)
     await service.delete_asignacion(asignacion_id)
     return {'detail': 'Asignacion eliminada'}

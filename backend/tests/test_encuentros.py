@@ -19,6 +19,7 @@ from app.models.slot_encuentro import DiaSemana, SlotEncuentro
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.user_role import UserRole
+import pytest
 
 
 @pytest_asyncio.fixture
@@ -83,6 +84,7 @@ class TestSlotEncuentro:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_crear_slot_recurrente_genera_instancias(self, app, db_session, setup_data):
         async with await self._client(app, db_session, setup_data['prof_token']) as client:
             resp = await client.post('/api/v1/encuentros/slots', json={
@@ -113,6 +115,7 @@ class TestSlotEncuentro:
             assert i.estado == EstadoInstancia.PROGRAMADO
             assert i.hora == '18:00'
 
+    @pytest.mark.asyncio
     async def test_crear_slot_sin_instancias(self, app, db_session, setup_data):
         async with await self._client(app, db_session, setup_data['prof_token']) as client:
             resp = await client.post('/api/v1/encuentros/slots', json={
@@ -133,6 +136,7 @@ class TestSlotEncuentro:
         instancias = result.scalars().all()
         assert len(instancias) == 0
 
+    @pytest.mark.asyncio
     async def test_crear_slot_dia_invalido_retorna_422(self, app, db_session, setup_data):
         async with await self._client(app, db_session, setup_data['prof_token']) as client:
             resp = await client.post('/api/v1/encuentros/slots', json={
@@ -146,6 +150,7 @@ class TestSlotEncuentro:
             })
         assert resp.status_code == 422
 
+    @pytest.mark.asyncio
     async def test_listar_slots(self, app, db_session, setup_data):
         async with await self._client(app, db_session, setup_data['prof_token']) as client:
             resp = await client.get(f'/api/v1/encuentros/slots?materia_id={setup_data["materia"].id}')
@@ -161,6 +166,7 @@ class TestInstanciaEncuentro:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_crear_encuentro_unico(self, app, db_session, setup_data):
         async with await self._client(app, db_session, setup_data['prof_token']) as client:
             resp = await client.post('/api/v1/encuentros/instancias', json={
@@ -175,6 +181,7 @@ class TestInstanciaEncuentro:
         assert data['slot_id'] is None
         assert data['estado'] == 'Programado'
 
+    @pytest.mark.asyncio
     async def test_editar_instancia_estado_realizado(self, app, db_session, setup_data):
         instancia = InstanciaEncuentro(
             tenant_id=setup_data['tid'],
@@ -195,6 +202,7 @@ class TestInstanciaEncuentro:
         data = resp.json()
         assert data['estado'] == 'Realizado'
 
+    @pytest.mark.asyncio
     async def test_editar_instancia_video_url(self, app, db_session, setup_data):
         instancia = InstanciaEncuentro(
             tenant_id=setup_data['tid'],
@@ -215,6 +223,7 @@ class TestInstanciaEncuentro:
         assert resp.status_code == 200
         assert resp.json()['video_url'] == 'https://vimeo.com/123'
 
+    @pytest.mark.asyncio
     async def test_editar_instancia_inexistente_retorna_404(self, app, db_session, setup_data):
         fake_id = str(uuid.uuid4())
         async with await self._client(app, db_session, setup_data['prof_token']) as client:
@@ -223,6 +232,7 @@ class TestInstanciaEncuentro:
             })
         assert resp.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_generar_html_con_encuentros(self, app, db_session, setup_data):
         for i in range(3):
             db_session.add(InstanciaEncuentro(
@@ -246,6 +256,7 @@ class TestInstanciaEncuentro:
         assert 'Clase 2' in html
         assert 'Clase 3' in html
 
+    @pytest.mark.asyncio
     async def test_generar_html_sin_encuentros(self, app, db_session, setup_data):
         async with await self._client(app, db_session, setup_data['prof_token']) as client:
             resp = await client.get(
@@ -254,6 +265,7 @@ class TestInstanciaEncuentro:
         assert resp.status_code == 200
         assert '<p>No hay encuentros programados.</p>' in resp.text
 
+    @pytest.mark.asyncio
     async def test_vista_global_coordinador_ve_todo(self, app, db_session, setup_data):
         db_session.add(InstanciaEncuentro(
             tenant_id=setup_data['tid'],
@@ -270,6 +282,7 @@ class TestInstanciaEncuentro:
         assert resp.status_code == 200
         assert resp.json()['total'] >= 1
 
+    @pytest.mark.asyncio
     async def test_vista_global_profesor_ve_solo_sus_materias(self, app, db_session, setup_data):
         otra_materia = Materia(
             tenant_id=setup_data['tid'],
@@ -305,6 +318,7 @@ class TestInstanciaEncuentro:
         assert data['total'] == 1
         assert data['items'][0]['titulo'] == 'Si deberia ver'
 
+    @pytest.mark.asyncio
     async def test_permiso_401_sin_token(self, app, db_session, setup_data):
         client = AsyncClient(transport=ASGITransport(app=app), base_url='http://test')
         resp = await client.get('/api/v1/encuentros/instancias')

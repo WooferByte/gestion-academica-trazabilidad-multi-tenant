@@ -7,6 +7,7 @@ import pytest_asyncio
 from app.core.security import hash_password, verify_password
 from app.models.tenant import Tenant
 from app.models.user import PasswordResetToken, User
+import pytest
 
 
 @pytest_asyncio.fixture
@@ -31,6 +32,7 @@ async def user(db_session, tenant):
 
 
 class TestForgotPassword:
+    @pytest.mark.asyncio
     async def test_forgot_returns_token_in_debug_mode(self, async_client, user):
         os.environ['DEBUG'] = 'true'
 
@@ -48,6 +50,7 @@ class TestForgotPassword:
             assert data['token'] is not None
             assert data['detail'] == 'Si el email existe, recibirás un enlace de recuperación'
 
+    @pytest.mark.asyncio
     async def test_forgot_nonexistent_email_still_returns_200(self, async_client):
         response = await async_client.post(
             '/api/v1/auth/forgot',
@@ -55,6 +58,7 @@ class TestForgotPassword:
         )
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_forgot_same_response_for_existing_and_nonexistent(self, async_client, user):
         r1 = await async_client.post(
             '/api/v1/auth/forgot',
@@ -67,6 +71,7 @@ class TestForgotPassword:
         assert r1.status_code == 200
         assert r2.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_forgot_debug_false_does_not_expose_token(self, async_client, user):
         os.environ['DEBUG'] = 'false'
 
@@ -80,6 +85,7 @@ class TestForgotPassword:
 
 
 class TestResetPassword:
+    @pytest.mark.asyncio
     async def test_reset_with_valid_token_updates_password(self, async_client, user, db_session, tenant):
         token_value = 'valid-reset-token'
         token_hash = hashlib.sha256(token_value.encode('utf-8')).hexdigest()
@@ -102,6 +108,7 @@ class TestResetPassword:
         await db_session.refresh(user)
         assert verify_password('new_pass_123', user.password_hash) is True
 
+    @pytest.mark.asyncio
     async def test_reset_marks_token_as_used(self, async_client, user, db_session, tenant):
         token_value = 'single-use-token'
         token_hash = hashlib.sha256(token_value.encode('utf-8')).hexdigest()
@@ -124,6 +131,7 @@ class TestResetPassword:
         await db_session.refresh(prt)
         assert prt.used_at is not None
 
+    @pytest.mark.asyncio
     async def test_reset_with_expired_token_returns_401(self, async_client, user, db_session, tenant):
         token_value = 'expired-reset-token'
         token_hash = hashlib.sha256(token_value.encode('utf-8')).hexdigest()
@@ -143,6 +151,7 @@ class TestResetPassword:
         )
         assert response.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_reset_with_used_token_returns_401(self, async_client, user, db_session, tenant):
         token_value = 'used-token'
         token_hash = hashlib.sha256(token_value.encode('utf-8')).hexdigest()
@@ -163,6 +172,7 @@ class TestResetPassword:
         )
         assert response.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_token_is_single_use(self, async_client, user, db_session, tenant):
         token_value = 'single-use-2'
         token_hash = hashlib.sha256(token_value.encode('utf-8')).hexdigest()

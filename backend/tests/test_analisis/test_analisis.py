@@ -6,9 +6,11 @@ from httpx import ASGITransport, AsyncClient
 from app.core.dependencies import get_db
 from app.models.calificacion import Calificacion
 from app.models.umbral_materia import UmbralMateria
+import pytest
 
 
 class TestAtrasados:
+    @pytest.mark.asyncio
     async def test_alumno_sin_calificacion_es_atrasado(
         self, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -23,6 +25,7 @@ class TestAtrasados:
         assert atrasado is not None
         assert 'Parcial' in atrasado.actividades_faltantes or True
 
+    @pytest.mark.asyncio
     async def test_nota_menor_umbral_es_atrasado(
         self, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -37,6 +40,7 @@ class TestAtrasados:
         assert atrasado is not None
         assert any('TP1' in a for a in atrasado.actividades_desaprobadas)
 
+    @pytest.mark.asyncio
     async def test_nota_textual_no_aprobatoria_es_atrasado(
         self, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -74,6 +78,7 @@ class TestAtrasados:
         assert atrasado is not None
         assert 'TP2' in atrasado.actividades_desaprobadas
 
+    @pytest.mark.asyncio
     async def test_todas_aprobadas_no_aparece(
         self, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -87,6 +92,7 @@ class TestAtrasados:
         atrasado = next((a for a in result if a.entrada_padron_id == carlos.id), None)
         assert atrasado is None
 
+    @pytest.mark.asyncio
     async def test_403_sin_permiso(self, app, db_session, admin_tenant, admin_setup, base_entities):
         from app.models.permission import Permission
         from app.models.role_permission import RolePermission
@@ -121,6 +127,7 @@ class TestAtrasados:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_aislamiento_multi_tenant(
         self, db_session, admin_tenant, tenant2, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -140,6 +147,7 @@ class TestAtrasados:
 
 
 class TestRanking:
+    @pytest.mark.asyncio
     async def test_solo_alumnos_con_aprobada(
         self, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -153,6 +161,7 @@ class TestRanking:
         entry = next((r for r in result if r.entrada_padron_id == maria.id), None)
         assert entry is None
 
+    @pytest.mark.asyncio
     async def test_orden_descendente_con_desempate(
         self, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -169,6 +178,7 @@ class TestRanking:
 
 
 class TestReporteRapido:
+    @pytest.mark.asyncio
     async def test_metricas_correctas(
         self, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -182,6 +192,7 @@ class TestReporteRapido:
         assert result.promedio_general is not None
         assert result.promedio_general > 0
 
+    @pytest.mark.asyncio
     async def test_sin_calificaciones(
         self, db_session, admin_tenant, admin_setup, base_entities,
     ):
@@ -197,6 +208,7 @@ class TestReporteRapido:
 
 
 class TestNotasFinales:
+    @pytest.mark.asyncio
     async def test_promedia_actividades_seleccionadas(
         self, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -212,6 +224,7 @@ class TestNotasFinales:
         assert entry.nota_final == 77.5  # (85 + 70) / 2
         assert entry.actividades_consideradas == 2
 
+    @pytest.mark.asyncio
     async def test_sin_nota_numerica_excluye(
         self, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -226,6 +239,7 @@ class TestNotasFinales:
         entry = next((r for r in result if r.entrada_padron_id == maria.id), None)
         assert entry is None or entry.nota_final is None
 
+    @pytest.mark.asyncio
     async def test_sin_actividades_seleccionadas_retorna_vacio(
         self, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -239,6 +253,7 @@ class TestNotasFinales:
 
 
 class TestTPSinCorregir:
+    @pytest.mark.asyncio
     async def test_csv_export(
         self, app, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -259,6 +274,7 @@ class TestTPSinCorregir:
         body = response.text
         assert 'alumno_nombre' in body
 
+    @pytest.mark.asyncio
     async def test_json_export(
         self, app, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -280,6 +296,7 @@ class TestTPSinCorregir:
 
 
 class TestMonitorGeneral:
+    @pytest.mark.asyncio
     async def test_filtra_por_materia(
         self, app, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -297,6 +314,7 @@ class TestMonitorGeneral:
         for item in data['items']:
             assert item['materia_id'] == str(base_entities['materia'].id)
 
+    @pytest.mark.asyncio
     async def test_csv_export(
         self, app, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -311,6 +329,7 @@ class TestMonitorGeneral:
         assert response.status_code == 200
         assert response.headers.get('content-type', '').startswith('text/csv')
 
+    @pytest.mark.asyncio
     async def test_busqueda_libre(
         self, app, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -330,6 +349,7 @@ class TestMonitorGeneral:
 
 
 class TestMonitorSeguimiento:
+    @pytest.mark.asyncio
     async def test_tutor_ve_solo_sus_materias(
         self, app, db_session, admin_tenant, tutor_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -344,6 +364,7 @@ class TestMonitorSeguimiento:
         data = response.json()
         assert data['total'] > 0
 
+    @pytest.mark.asyncio
     async def test_filtra_por_comision(
         self, app, db_session, admin_tenant, tutor_setup, base_entities, padron_setup, calificaciones_setup,
     ):
@@ -357,6 +378,7 @@ class TestMonitorSeguimiento:
         )
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_rango_fechas_vacio(
         self, app, db_session, admin_tenant, admin_setup, base_entities, padron_setup, calificaciones_setup,
     ):

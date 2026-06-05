@@ -2,6 +2,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.routers.admin_usuarios import router as admin_usuarios_router
 from app.api.v1.routers.avisos import router as avisos_router
@@ -28,6 +29,8 @@ from app.core.config import Settings
 from app.core.database import dispose_engine, init_engine
 from app.core.logging import setup_json_logging
 from app.core.observability import setup_observability
+from app.core.rate_limit_middleware import RateLimitMiddleware
+from app.core.security_headers_middleware import SecurityHeadersMiddleware
 
 
 @asynccontextmanager
@@ -42,6 +45,29 @@ async def lifespan(app_instance: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     app_instance = FastAPI(title='activia-trace', version='0.1.0', lifespan=lifespan)
+    settings = Settings()
+
+    origins = [
+        o.strip()
+        for o in settings.cors_origins.split(',')
+        if o.strip()
+    ]
+    app_instance.add_middleware(
+        SecurityHeadersMiddleware,
+        debug=settings.debug,
+    )
+    app_instance.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allow_headers=['Authorization', 'Content-Type', 'X-Requested-With', 'Accept'],
+    )
+    app_instance.add_middleware(
+        RateLimitMiddleware,
+        max_requests=settings.rate_limit_max_requests,
+        window_seconds=settings.rate_limit_window_seconds,
+    )
     app_instance.include_router(avisos_router)
     app_instance.include_router(comunicaciones_router)
     app_instance.include_router(health_router)

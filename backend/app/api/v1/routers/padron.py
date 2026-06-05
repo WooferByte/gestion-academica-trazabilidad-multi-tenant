@@ -27,7 +27,7 @@ async def preview_import(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('padron:cargar'),
-):
+) -> ImportPreviewResponse:
     service = PadronService(session, current_user.tenant_id)
     return await service.preview_import(materia_id, cohorte_id, archivo)
 
@@ -42,7 +42,7 @@ async def confirm_import(
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('padron:cargar'),
     audit: AuditService = Depends(get_audit_service),
-):
+) -> VersionPadronResponse:
     service = PadronService(session, current_user.tenant_id)
     preview = await service.preview_import(materia_id, cohorte_id, archivo)
     return await service.confirm_import(
@@ -59,7 +59,7 @@ async def vaciar_materia(
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('padron:cargar'),
     audit: AuditService = Depends(get_audit_service),
-):
+) -> PadronVaciarResponse:
     service = PadronService(session, current_user.tenant_id)
     return await service.vaciar_materia(materia_id, current_user, audit)
 
@@ -69,7 +69,7 @@ async def list_versiones(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('padron:cargar'),
-):
+) -> list[VersionPadronResponse]:
     service = PadronService(session, current_user.tenant_id)
     return await service.list_versiones()
 
@@ -83,7 +83,7 @@ async def sync_moodle(
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('padron:cargar'),
     audit: AuditService = Depends(get_audit_service),
-):
+) -> VersionPadronResponse:
     client = MoodleWSClient(
         url='https://moodle.example.com',
         token='mock-token',

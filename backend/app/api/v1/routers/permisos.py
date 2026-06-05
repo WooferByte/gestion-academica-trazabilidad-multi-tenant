@@ -16,7 +16,7 @@ async def list_permisos(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('rbac:gestionar'),
-):
+) -> dict:
     service = PermissionService(session, current_user.tenant_id)
     return await service.list_permisos()
 
@@ -27,7 +27,7 @@ async def create_permiso(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('rbac:gestionar'),
-):
+) -> PermissionResponse:
     service = PermissionService(session, current_user.tenant_id)
     return await service.create_permiso(data)
 
@@ -38,7 +38,7 @@ async def get_permiso(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('rbac:gestionar'),
-):
+) -> PermissionResponse:
     service = PermissionService(session, current_user.tenant_id)
     return await service.get_permiso(permiso_id)
 
@@ -50,7 +50,7 @@ async def update_permiso(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('rbac:gestionar'),
-):
+) -> PermissionResponse:
     service = PermissionService(session, current_user.tenant_id)
     return await service.update_permiso(permiso_id, data)
 
@@ -61,6 +61,6 @@ async def delete_permiso(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('rbac:gestionar'),
-):
+) -> None:
     service = PermissionService(session, current_user.tenant_id)
     await service.delete_permiso(permiso_id)

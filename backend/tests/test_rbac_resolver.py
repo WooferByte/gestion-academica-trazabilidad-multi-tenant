@@ -75,6 +75,7 @@ async def rbac_setup(db_session):
 
 
 class TestPermissionResolver:
+    @pytest.mark.asyncio
     async def test_single_role_permissions(self, db_session, rbac_setup):
         tid = rbac_setup['tid']
         user = rbac_setup['user']
@@ -89,6 +90,7 @@ class TestPermissionResolver:
         assert 'reservar_evaluacion' in perms
         assert 'calificaciones:importar' not in perms
 
+    @pytest.mark.asyncio
     async def test_union_of_multiple_roles(self, db_session, rbac_setup):
         tid = rbac_setup['tid']
         user = rbac_setup['user']
@@ -104,6 +106,7 @@ class TestPermissionResolver:
         assert 'reservar_evaluacion' in perms
         assert 'calificaciones:importar' in perms
 
+    @pytest.mark.asyncio
     async def test_excludes_soft_deleted_assignments(self, db_session, rbac_setup):
         tid = rbac_setup['tid']
         user = rbac_setup['user']
@@ -120,6 +123,7 @@ class TestPermissionResolver:
         perms = await resolver.get_effective_permissions(user.id)
         assert len(perms) == 0
 
+    @pytest.mark.asyncio
     async def test_tenant_scoped_resolution(self, db_session, rbac_setup):
         tid = rbac_setup['tid']
         user = rbac_setup['user']
@@ -133,6 +137,7 @@ class TestPermissionResolver:
         perms = await resolver_other.get_effective_permissions(user.id)
         assert len(perms) == 0
 
+    @pytest.mark.asyncio
     async def test_user_with_no_roles_returns_empty(self, db_session, rbac_setup):
         resolver = PermissionResolver(db_session, rbac_setup['tid'])
         perms = await resolver.get_effective_permissions(rbac_setup['user'].id)

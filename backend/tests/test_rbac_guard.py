@@ -56,6 +56,7 @@ async def auth_rbac_setup(db_session):
 
 
 class TestRequirePermission:
+    @pytest.mark.asyncio
     async def test_user_with_permission_passes(self, app, db_session, auth_rbac_setup):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -65,6 +66,7 @@ class TestRequirePermission:
             )
             assert response.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_user_without_permission_gets_403(self, app, db_session, auth_rbac_setup):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -75,6 +77,7 @@ class TestRequirePermission:
             assert response.status_code == 403
             assert 'Permiso insuficiente' in response.text
 
+    @pytest.mark.asyncio
     async def test_fail_closed_nonexistent_permission(self, app, db_session, auth_rbac_setup):
         from app.core.dependencies import require_permission
         from fastapi import FastAPI
@@ -83,6 +86,7 @@ class TestRequirePermission:
         test_app.dependency_overrides[get_db] = lambda: db_session
 
         @test_app.get('/test-ne')
+        @pytest.mark.asyncio
         async def test_endpoint(_=require_permission('modulo:inexistente')):
             return {'ok': True}
 

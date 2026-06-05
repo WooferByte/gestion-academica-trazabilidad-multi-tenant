@@ -68,6 +68,7 @@ async def alumno_token(db_session):
 
 
 class TestComunicacionModel:
+    @pytest.mark.asyncio
     async def test_create_comunicacion(self, db_session: AsyncSession):
         tid = uuid.uuid4()
         tenant = Tenant(id=tid, nombre='Test', codigo='MODEL', estado='Activo')
@@ -91,6 +92,7 @@ class TestComunicacionModel:
         assert c.estado == EstadoComunicacion.PENDIENTE
         assert decrypt(c.destinatario) == 'a@b.com'
 
+    @pytest.mark.asyncio
     async def test_maquina_estados(self, db_session: AsyncSession):
         tid = uuid.uuid4()
         tenant = Tenant(id=tid, nombre='T', codigo='EST', estado='Activo')
@@ -116,6 +118,7 @@ class TestComunicacionModel:
         await db_session.flush()
         assert c.estado == EstadoComunicacion.ENVIADO
 
+    @pytest.mark.asyncio
     async def test_append_only(self, db_session: AsyncSession):
         tid = uuid.uuid4()
         tenant = Tenant(id=tid, nombre='T', codigo='APP', estado='Activo')
@@ -138,6 +141,7 @@ class TestPreview:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_con_variables(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             resp = await client.post('/api/v1/comunicaciones/preview', json={
@@ -152,6 +156,7 @@ class TestPreview:
         assert d['cuerpo_renderizado'] == 'Materia Mate'
         assert d['variables_no_encontradas'] == []
 
+    @pytest.mark.asyncio
     async def test_variable_no_encontrada(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             resp = await client.post('/api/v1/comunicaciones/preview', json={
@@ -163,6 +168,7 @@ class TestPreview:
         assert resp.status_code == 200
         assert 'y' in resp.json()['variables_no_encontradas']
 
+    @pytest.mark.asyncio
     async def test_sin_crear_registro(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             resp = await client.post('/api/v1/comunicaciones/preview', json={
@@ -182,6 +188,7 @@ class TestEncolar:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_encolar_cifra_destinatario(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             resp = await client.post('/api/v1/comunicaciones', json={
@@ -198,6 +205,7 @@ class TestEncolar:
         c = result.scalar_one()
         assert decrypt(c.destinatario) == 'alumno@test.com'
 
+    @pytest.mark.asyncio
     async def test_encolar_lote(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             resp = await client.post('/api/v1/comunicaciones/lote', json={
@@ -210,6 +218,7 @@ class TestEncolar:
         assert len(data) == 2
         assert data[0]['lote_id'] == data[1]['lote_id']
 
+    @pytest.mark.asyncio
     async def test_encolar_sin_permiso_403(self, app, db_session, alumno_token):
         async with await self._client(app, db_session, alumno_token['token']) as client:
             resp = await client.post('/api/v1/comunicaciones', json={
@@ -227,6 +236,7 @@ class TestAprobacion:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_aprobar_lote(self, app, db_session, admin_token):
         tid = admin_token['tid']
         admin_token['tenant'].aprobacion_comunicaciones = True
@@ -249,6 +259,7 @@ class TestAprobacion:
             })
         assert resp.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_rechazar_lote(self, app, db_session, admin_token):
         admin_token['tenant'].aprobacion_comunicaciones = True
         await db_session.flush()
@@ -273,6 +284,7 @@ class TestAprobacion:
         for c in result.scalars().all():
             assert c.estado == EstadoComunicacion.CANCELADO
 
+    @pytest.mark.asyncio
     async def test_aprobar_sin_permiso_403(self, app, db_session, alumno_token):
         async with await self._client(app, db_session, alumno_token['token']) as client:
             resp = await client.post('/api/v1/comunicaciones/aprobar-lote', json={
@@ -281,6 +293,7 @@ class TestAprobacion:
             })
         assert resp.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_tenant_sin_aprobacion(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             resp = await client.post('/api/v1/comunicaciones', json={
@@ -299,6 +312,7 @@ class TestCancelar:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_cancelar_pendiente(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             resp = await client.post('/api/v1/comunicaciones', json={
@@ -310,6 +324,7 @@ class TestCancelar:
             resp = await client.post(f'/api/v1/comunicaciones/{c_id}/cancelar')
         assert resp.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_cancelar_enviando_error(self, app, db_session, admin_token):
         c = Comunicacion(
             tenant_id=admin_token['tid'],
@@ -333,6 +348,7 @@ class TestListar:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_listar_por_lote(self, app, db_session, admin_token):
         lote_id = uuid.uuid4()
         for email in ['a@b.com', 'c@d.com']:
@@ -350,6 +366,7 @@ class TestListar:
         assert resp.status_code == 200
         assert resp.json()['total'] == 2
 
+    @pytest.mark.asyncio
     async def test_listar_por_materia(self, app, db_session, admin_token):
         materia = Materia(
             tenant_id=admin_token['tid'],
@@ -377,6 +394,7 @@ class TestListar:
 
 
 class TestWorker:
+    @pytest.mark.asyncio
     async def test_worker_procesa_pendiente(self, db_session: AsyncSession):
         tid = uuid.uuid4()
         tenant = Tenant(id=tid, nombre='T', codigo='WK', estado='Activo')
@@ -401,6 +419,7 @@ class TestWorker:
         await db_session.refresh(c)
         assert c.estado == EstadoComunicacion.ENVIADO
 
+    @pytest.mark.asyncio
     async def test_worker_salta_sin_pendientes(self, db_session: AsyncSession):
         from app.workers.main import _process_batch
         processed = await _process_batch(db_session)

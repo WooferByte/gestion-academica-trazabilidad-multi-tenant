@@ -59,6 +59,7 @@ async def deleted_user(db_session, tenant):
 
 
 class TestLogin:
+    @pytest.mark.asyncio
     async def test_login_success_returns_tokens(self, async_client, active_user, tenant):
         response = await async_client.post(
             '/api/v1/auth/login',
@@ -71,6 +72,7 @@ class TestLogin:
         assert data['token_type'] == 'bearer'
         assert 'expires_in' in data
 
+    @pytest.mark.asyncio
     async def test_login_wrong_password_returns_401(self, async_client, active_user):
         response = await async_client.post(
             '/api/v1/auth/login',
@@ -79,6 +81,7 @@ class TestLogin:
         assert response.status_code == 401
         assert 'Credenciales inválidas' in response.json()['detail']
 
+    @pytest.mark.asyncio
     async def test_login_nonexistent_email_returns_401(self, async_client):
         response = await async_client.post(
             '/api/v1/auth/login',
@@ -86,6 +89,7 @@ class TestLogin:
         )
         assert response.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_login_deleted_user_returns_401(self, async_client, deleted_user):
         response = await async_client.post(
             '/api/v1/auth/login',
@@ -93,6 +97,7 @@ class TestLogin:
         )
         assert response.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_login_inactive_user_returns_401(self, async_client, inactive_user):
         response = await async_client.post(
             '/api/v1/auth/login',
@@ -100,6 +105,7 @@ class TestLogin:
         )
         assert response.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_login_jwt_has_correct_claims(self, async_client, active_user, tenant):
         response = await async_client.post(
             '/api/v1/auth/login',

@@ -21,6 +21,7 @@ async def user_repo(db_session, tenant):
 
 
 class TestUserModel:
+    @pytest.mark.asyncio
     async def test_create_user_with_all_fields(self, user_repo, tenant):
         user = await user_repo.create(
             email='juan@test.com',
@@ -45,6 +46,7 @@ class TestUserModel:
         assert user.updated_at is not None
         assert user.deleted_at is None
 
+    @pytest.mark.asyncio
     async def test_email_unique_per_tenant(self, user_repo):
         await user_repo.create(
             email='duplicate@test.com',
@@ -56,6 +58,7 @@ class TestUserModel:
                 password_hash=hash_password('pass456'),
             )
 
+    @pytest.mark.asyncio
     async def test_same_email_different_tenants(self, db_session, tenant, user_repo):
         tenant_b = Tenant(nombre='Tenant B', codigo='TB')
         db_session.add(tenant_b)
@@ -74,6 +77,7 @@ class TestUserModel:
         assert user_b is not None
         assert user_b.tenant_id == tenant_b.id
 
+    @pytest.mark.asyncio
     async def test_soft_delete_user(self, user_repo):
         user = await user_repo.create(
             email='delete@test.com',
@@ -87,6 +91,7 @@ class TestUserModel:
         found = await user_repo.get(user.id)
         assert found is None
 
+    @pytest.mark.asyncio
     async def test_pii_fields_encrypted_at_rest(self, user_repo):
         nombre_plain = 'Juan'
         apellido_plain = 'Pérez'
@@ -102,6 +107,7 @@ class TestUserModel:
         assert decrypt(user.nombre_cifrado) == nombre_plain
         assert decrypt(user.apellido_cifrado) == apellido_plain
 
+    @pytest.mark.asyncio
     async def test_default_roles_empty_list(self, user_repo):
         user = await user_repo.create(
             email='noroles@test.com',
@@ -109,6 +115,7 @@ class TestUserModel:
         )
         assert user.roles == []
 
+    @pytest.mark.asyncio
     async def test_default_is_active_true(self, user_repo):
         user = await user_repo.create(
             email='active@test.com',

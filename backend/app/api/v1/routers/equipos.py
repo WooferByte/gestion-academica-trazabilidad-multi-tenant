@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_db, require_permission
@@ -27,7 +28,7 @@ async def mis_equipos(
     solo_vigentes: bool = False,
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
-):
+) -> AsignacionListResponse:
     service = AsignacionService(session, current_user.tenant_id)
     return await service.mis_equipos(
         usuario_id=current_user.user_id,
@@ -48,7 +49,7 @@ async def asignacion_masiva(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('equipos:asignar'),
-):
+) -> list[AsignacionResponse]:
     service = AsignacionService(session, current_user.tenant_id)
     result = await service.asignacion_masiva(
         data,
@@ -70,7 +71,7 @@ async def clonar_equipo(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('equipos:asignar'),
-):
+) -> list[AsignacionResponse]:
     service = AsignacionService(session, current_user.tenant_id)
     result = await service.clonar_equipo(
         data,
@@ -88,7 +89,7 @@ async def modificar_vigencia(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('equipos:asignar'),
-):
+) -> VigenciaUpdateResponse:
     service = AsignacionService(session, current_user.tenant_id)
     return await service.modificar_vigencia(
         data,
@@ -106,9 +107,7 @@ async def exportar_equipo(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('equipos:asignar'),
-):
-    from fastapi.responses import StreamingResponse
-
+) -> StreamingResponse:
     service = AsignacionService(session, current_user.tenant_id)
     csv_content = await service.exportar_equipo(
         materia_id=materia_id,

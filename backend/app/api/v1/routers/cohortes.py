@@ -16,7 +16,7 @@ async def list_cohortes(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> dict:
     service = CohorteService(session, current_user.tenant_id)
     return await service.list_cohortes()
 
@@ -27,7 +27,7 @@ async def create_cohorte(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> CohorteResponse:
     service = CohorteService(session, current_user.tenant_id)
     return await service.create_cohorte(data)
 
@@ -38,7 +38,7 @@ async def get_cohorte(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> CohorteResponse:
     service = CohorteService(session, current_user.tenant_id)
     return await service.get_cohorte(cohorte_id)
 
@@ -50,7 +50,7 @@ async def update_cohorte(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> CohorteResponse:
     service = CohorteService(session, current_user.tenant_id)
     return await service.update_cohorte(cohorte_id, data)
 
@@ -61,6 +61,6 @@ async def delete_cohorte(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> None:
     service = CohorteService(session, current_user.tenant_id)
     await service.delete_cohorte(cohorte_id)

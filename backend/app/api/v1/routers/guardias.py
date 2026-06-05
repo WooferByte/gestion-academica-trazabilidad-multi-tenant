@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, Query, status
+from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_db, require_permission
@@ -26,7 +27,7 @@ async def registrar_guardia(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('encuentros:gestionar'),
-):
+) -> GuardiaResponse:
     service = _get_service(session, current_user)
     return await service.create(data)
 
@@ -42,7 +43,7 @@ async def listar_guardias(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('encuentros:gestionar'),
-):
+) -> GuardiaListResponse:
     service = _get_service(session, current_user)
     items, total = await service.list_with_filters(
         materia_id=materia_id,
@@ -63,7 +64,7 @@ async def actualizar_guardia(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('encuentros:gestionar'),
-):
+) -> GuardiaResponse:
     service = _get_service(session, current_user)
     return await service.update_state(guardia_id, data)
 
@@ -77,7 +78,7 @@ async def exportar_guardias(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('encuentros:gestionar'),
-):
+) -> PlainTextResponse:
     service = _get_service(session, current_user)
     csv_content = await service.export_csv(
         materia_id=materia_id,
@@ -85,7 +86,6 @@ async def exportar_guardias(
         cohorte_id=cohorte_id,
         estado=estado,
     )
-    from fastapi.responses import PlainTextResponse
     return PlainTextResponse(
         content=csv_content,
         media_type='text/csv',

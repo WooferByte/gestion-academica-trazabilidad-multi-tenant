@@ -124,6 +124,7 @@ async def admin_with_impersonation(
 
 
 class TestAuditLogModel:
+    @pytest.mark.asyncio
     async def test_create_audit_entry(self, db_session, tenant, admin_user):
         entry = AuditLog(
             tenant_id=tenant.id,
@@ -149,6 +150,7 @@ class TestAuditLogModel:
         assert entry.user_agent == 'pytest'
         assert entry.fecha_hora is not None
 
+    @pytest.mark.asyncio
     async def test_audit_entry_minimal_fields(self, db_session, tenant, admin_user):
         entry = AuditLog(
             tenant_id=tenant.id,
@@ -165,6 +167,7 @@ class TestAuditLogModel:
         assert entry.materia_id is None
         assert entry.filas_afectadas == 0
 
+    @pytest.mark.asyncio
     async def test_audit_entry_defaults(self, db_session, tenant, admin_user):
         entry = AuditLog(
             tenant_id=tenant.id,
@@ -181,6 +184,7 @@ class TestAuditLogModel:
 
 
 class TestAuditRepository:
+    @pytest.mark.asyncio
     async def test_create_only_no_update_no_delete_methods(self, db_session, tenant, admin_user):
         repo = AuditRepository(db_session, tenant.id)
         entry = AuditLog(
@@ -198,6 +202,7 @@ class TestAuditRepository:
 
 
 class TestAuditService:
+    @pytest.mark.asyncio
     async def test_log_creates_entry_with_all_fields(self, db_session, tenant, admin_user):
         user_context = UserContext(
             user_id=admin_user.id,
@@ -221,6 +226,7 @@ class TestAuditService:
         assert result.ip == '10.0.0.1'
         assert result.user_agent == 'test-agent'
 
+    @pytest.mark.asyncio
     async def test_log_under_impersonation_sets_impersonado_id(self, db_session, tenant, admin_user, regular_user):
         user_context = UserContext(
             user_id=regular_user.id,
@@ -265,6 +271,7 @@ class TestAuditCodes:
 
 
 class TestAppendOnlyConstraint:
+    @pytest.mark.asyncio
     async def test_update_via_sql_is_rejected(self, db_session, tenant, admin_user):
         entry = AuditLog(
             tenant_id=tenant.id,
@@ -289,6 +296,7 @@ class TestAppendOnlyConstraint:
         error_msg = str(excinfo.value).lower()
         assert 'append-only' in error_msg
 
+    @pytest.mark.asyncio
     async def test_delete_via_sql_is_rejected(self, db_session, tenant, admin_user):
         entry = AuditLog(
             tenant_id=tenant.id,
@@ -315,6 +323,7 @@ class TestAppendOnlyConstraint:
 
 
 class TestUserContextImpersonation:
+    @pytest.mark.asyncio
     async def test_token_without_impersonator_id(self, tenant, admin_user):
         token = create_access_token(
             user_id=str(admin_user.id),
@@ -326,6 +335,7 @@ class TestUserContextImpersonation:
         assert 'impersonator_id' not in payload
         assert payload['sub'] == str(admin_user.id)
 
+    @pytest.mark.asyncio
     async def test_token_with_impersonator_id(self, tenant, admin_user, regular_user):
         token = create_access_token(
             user_id=str(regular_user.id),
@@ -341,6 +351,7 @@ class TestUserContextImpersonation:
 
 
 class TestImpersonationPermission:
+    @pytest.mark.asyncio
     async def test_impersonacion_usar_exists_and_admin_has_it(
         self, db_session, tenant, admin_with_impersonation, impersonation_perm,
     ):
@@ -357,6 +368,7 @@ class TestImpersonationPermission:
 
 
 class TestImpersonationAPI:
+    @pytest.mark.asyncio
     async def test_impersonate_without_permission_returns_403(
         self, db_session, tenant, regular_user, admin_user,
     ):
@@ -378,6 +390,7 @@ class TestImpersonationAPI:
 
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_impersonate_self_returns_400(
         self, db_session, tenant, admin_with_impersonation,
     ):
@@ -399,6 +412,7 @@ class TestImpersonationAPI:
 
         assert response.status_code == 400
 
+    @pytest.mark.asyncio
     async def test_impersonate_nonexistent_user_returns_404(
         self, db_session, tenant, admin_with_impersonation,
     ):
@@ -420,6 +434,7 @@ class TestImpersonationAPI:
 
         assert response.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_impersonate_stop_without_impersonation_returns_400(
         self, db_session, tenant, admin_with_impersonation,
     ):
@@ -440,6 +455,7 @@ class TestImpersonationAPI:
 
         assert response.status_code == 400
 
+    @pytest.mark.asyncio
     async def test_impersonation_creates_audit_log(
         self, db_session, tenant, admin_with_impersonation, regular_user,
     ):
@@ -482,6 +498,7 @@ class TestImpersonationAPI:
         assert audit_entry.detalle is not None
         assert audit_entry.detalle.get('target_user_id') == str(regular_user.id)
 
+    @pytest.mark.asyncio
     async def test_impersonation_stop_creates_audit_log(
         self, db_session, tenant, admin_with_impersonation, regular_user,
     ):

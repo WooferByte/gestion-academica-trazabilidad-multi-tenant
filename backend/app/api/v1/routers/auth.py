@@ -76,7 +76,7 @@ async def login(
     body: LoginRequest,
     request: Request,
     db: AsyncSession = Depends(get_db),
-):
+) -> LoginResponse | dict:
     ip = request.client.host if request.client else 'unknown'
     if not rate_limiter.check(ip, body.email):
         raise HTTPException(
@@ -105,7 +105,7 @@ async def refresh(
     body: RefreshRequest,
     request: Request,
     db: AsyncSession = Depends(get_db),
-):
+) -> RefreshResponse:
     token_hash = _hash_token(body.refresh_token)
     result = await db.execute(
         select(RefreshToken).where(RefreshToken.token_hash == token_hash),
@@ -176,7 +176,7 @@ async def logout(
     body: LogoutRequest,
     db: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
-):
+) -> dict:
     svc = AuthService(db, current_user.tenant_id)
     await svc.logout(body.refresh_token)
     return {'detail': 'Sesión cerrada exitosamente'}
@@ -186,7 +186,7 @@ async def logout(
 async def enroll_2fa(
     db: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
-):
+) -> TOTPEnrollResponse:
     svc = AuthService(db, current_user.tenant_id)
     user = await svc.user_repo.get(current_user.user_id)
     if not user:
@@ -203,7 +203,7 @@ async def verify_2fa(
     body: TOTPVerifyRequest,
     db: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
-):
+) -> dict:
     svc = AuthService(db, current_user.tenant_id)
     user = await svc.user_repo.get(current_user.user_id)
     if not user:
@@ -219,7 +219,7 @@ async def verify_2fa(
 async def validate_2fa(
     body: TOTPValidateRequest,
     db: AsyncSession = Depends(get_db),
-):
+) -> LoginResponse:
     try:
         payload = decode_token(body.fa2_token)
         tenant_id = uuid.UUID(payload['tenant_id'])
@@ -236,7 +236,7 @@ async def validate_2fa(
 async def forgot(
     body: ForgotRequest,
     db: AsyncSession = Depends(get_db),
-):
+) -> ForgotResponse:
     settings = Settings()
     tenant_id = await _find_tenant_for_user(db, body.email)
 
@@ -255,7 +255,7 @@ async def forgot(
 async def reset(
     body: ResetRequest,
     db: AsyncSession = Depends(get_db),
-):
+) -> ResetResponse:
     token_hash = _hash_token(body.token)
     result = await db.execute(
         select(PasswordResetToken).where(

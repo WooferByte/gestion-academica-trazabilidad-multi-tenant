@@ -24,6 +24,7 @@ async def tenant(db_session):
 
 
 class TestRoleRepository:
+    @pytest.mark.asyncio
     async def test_create_and_get(self, db_session, tenant):
         repo = RoleRepository(db_session, tenant.id)
         role = await repo.create(name='Admin', codigo='ADMIN')
@@ -34,6 +35,7 @@ class TestRoleRepository:
         assert fetched is not None
         assert fetched.name == 'Admin'
 
+    @pytest.mark.asyncio
     async def test_get_by_codigo(self, db_session, tenant):
         repo = RoleRepository(db_session, tenant.id)
         await repo.create(name='Prof', codigo='PROFESOR')
@@ -41,6 +43,7 @@ class TestRoleRepository:
         assert fetched is not None
         assert fetched.name == 'Prof'
 
+    @pytest.mark.asyncio
     async def test_tenant_scope(self, db_session, tenant):
         t_b = Tenant(nombre='Other', codigo='OTH', estado='Activo')
         db_session.add(t_b)
@@ -51,6 +54,7 @@ class TestRoleRepository:
         roles_other = await repo2.get_multi()
         assert len(roles_other) == 0
 
+    @pytest.mark.asyncio
     async def test_soft_delete(self, db_session, tenant):
         repo = RoleRepository(db_session, tenant.id)
         role = await repo.create(name='Temp', codigo='TEMP')
@@ -59,6 +63,7 @@ class TestRoleRepository:
         fetched = await repo.get(role.id)
         assert fetched is None
 
+    @pytest.mark.asyncio
     async def test_unique_codigo_violation(self, db_session, tenant):
         repo = RoleRepository(db_session, tenant.id)
         await repo.create(name='A', codigo='DUPE')
@@ -67,6 +72,7 @@ class TestRoleRepository:
 
 
 class TestPermissionRepository:
+    @pytest.mark.asyncio
     async def test_create_and_get_by_codigo(self, db_session, tenant):
         repo = PermissionRepository(db_session, tenant.id)
         perm = await repo.create(
@@ -76,6 +82,7 @@ class TestPermissionRepository:
         assert fetched is not None
         assert fetched.modulo == 'mod'
 
+    @pytest.mark.asyncio
     async def test_get_multi_by_codigos(self, db_session, tenant):
         repo = PermissionRepository(db_session, tenant.id)
         p1 = await repo.create(codigo='a:x', modulo='a', accion='x')
@@ -86,6 +93,7 @@ class TestPermissionRepository:
 
 
 class TestRolePermissionRepository:
+    @pytest.mark.asyncio
     async def test_assign_and_list(self, db_session, tenant):
         role_repo = RoleRepository(db_session, tenant.id)
         perm_repo = PermissionRepository(db_session, tenant.id)
@@ -101,6 +109,7 @@ class TestRolePermissionRepository:
         assert len(lista) == 1
         assert lista[0].permiso_id == perm.id
 
+    @pytest.mark.asyncio
     async def test_delete_by_role_and_permiso(self, db_session, tenant):
         role_repo = RoleRepository(db_session, tenant.id)
         perm_repo = PermissionRepository(db_session, tenant.id)
@@ -118,6 +127,7 @@ class TestRolePermissionRepository:
 
 
 class TestUserRoleRepository:
+    @pytest.mark.asyncio
     async def test_assign_and_list(self, db_session, tenant):
         from app.repositories.user_repository import UserRepository
 
@@ -135,6 +145,7 @@ class TestUserRoleRepository:
         lista = await ur_repo.list_by_user(user.id)
         assert len(lista) == 1
 
+    @pytest.mark.asyncio
     async def test_delete_by_user_and_role(self, db_session, tenant):
         from app.repositories.user_repository import UserRepository
 

@@ -13,6 +13,7 @@ from app.models.role_permission import RolePermission
 from app.models.user import User
 from app.models.user_role import UserRole
 from app.models.tenant import Tenant
+import pytest
 
 
 @pytest_asyncio.fixture
@@ -48,6 +49,7 @@ class TestCarrerasAPI:
         app.dependency_overrides[get_db] = lambda: db_session
         return AsyncClient(transport=ASGITransport(app=app), base_url='http://test')
 
+    @pytest.mark.asyncio
     async def test_create_carrera(self, app, db_session, admin_token):
         async with await self._client(app, db_session) as client:
             response = await client.post(
@@ -61,6 +63,7 @@ class TestCarrerasAPI:
             assert data['nombre'] == 'Ingeniería'
             assert data['estado'] == 'Activa'
 
+    @pytest.mark.asyncio
     async def test_create_carrera_duplicate_codigo(self, app, db_session, admin_token):
         async with await self._client(app, db_session) as client:
             await client.post(
@@ -75,6 +78,7 @@ class TestCarrerasAPI:
             )
             assert response.status_code == 409
 
+    @pytest.mark.asyncio
     async def test_create_carrera_duplicate_other_tenant(self, app, db_session, admin_token):
         tid2 = uuid.uuid4()
         tenant2 = Tenant(id=tid2, nombre='Test2', codigo='TST2', estado='Activo')
@@ -109,6 +113,7 @@ class TestCarrerasAPI:
             )
             assert response.status_code == 201
 
+    @pytest.mark.asyncio
     async def test_list_carreras(self, app, db_session, admin_token):
         async with await self._client(app, db_session) as client:
             await client.post(
@@ -129,6 +134,7 @@ class TestCarrerasAPI:
             data = response.json()
             assert data['total'] == 2
 
+    @pytest.mark.asyncio
     async def test_get_carrera(self, app, db_session, admin_token):
         async with await self._client(app, db_session) as client:
             created = await client.post(
@@ -144,6 +150,7 @@ class TestCarrerasAPI:
             assert response.status_code == 200
             assert response.json()['codigo'] == 'ING'
 
+    @pytest.mark.asyncio
     async def test_get_carrera_not_found(self, app, db_session, admin_token):
         async with await self._client(app, db_session) as client:
             response = await client.get(
@@ -152,6 +159,7 @@ class TestCarrerasAPI:
             )
             assert response.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_update_carrera(self, app, db_session, admin_token):
         async with await self._client(app, db_session) as client:
             created = await client.post(
@@ -168,6 +176,7 @@ class TestCarrerasAPI:
             assert response.status_code == 200
             assert response.json()['nombre'] == 'Ingeniería Actualizada'
 
+    @pytest.mark.asyncio
     async def test_update_carrera_duplicate_codigo(self, app, db_session, admin_token):
         async with await self._client(app, db_session) as client:
             await client.post(
@@ -188,6 +197,7 @@ class TestCarrerasAPI:
             )
             assert response.status_code == 409
 
+    @pytest.mark.asyncio
     async def test_soft_delete_carrera(self, app, db_session, admin_token):
         async with await self._client(app, db_session) as client:
             created = await client.post(
@@ -207,6 +217,7 @@ class TestCarrerasAPI:
             )
             assert get_resp.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_multi_tenant_isolation(self, app, db_session, admin_token):
         tid2 = uuid.uuid4()
         tenant2 = Tenant(id=tid2, nombre='Test2', codigo='TST2', estado='Activo')
@@ -242,6 +253,7 @@ class TestCarrerasAPI:
             data = response.json()
             assert data['total'] == 0
 
+    @pytest.mark.asyncio
     async def test_inactivar_carrera_con_cohortes_abiertas(self, app, db_session, admin_token):
         async with await self._client(app, db_session) as client:
             created = await client.post(
@@ -269,6 +281,7 @@ class TestCarrerasAPI:
             )
             assert response.status_code == 422
 
+    @pytest.mark.asyncio
     async def test_access_without_permission(self, app, db_session, admin_token):
         tid = admin_token['tid']
         no_perm_user = User(tenant_id=tid, email='noperm@t.com', password_hash='hash', roles=[])

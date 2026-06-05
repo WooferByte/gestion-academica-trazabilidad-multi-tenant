@@ -30,7 +30,7 @@ async def impersonate(
     current_user: UserContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     audit: AuditService = Depends(get_audit_service),
-):
+) -> LoginResponse:
     if body.target_user_id == current_user.user_id:
         raise HTTPException(status_code=400, detail='No puedes impersonarte a ti mismo')
 
@@ -71,7 +71,7 @@ async def impersonate_stop(
     current_user: UserContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     audit: AuditService = Depends(get_audit_service),
-):
+) -> LoginResponse:
     if current_user.impersonator_id is None:
         raise HTTPException(status_code=400, detail='No hay una impersonación activa')
 

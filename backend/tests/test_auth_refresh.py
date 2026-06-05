@@ -6,6 +6,7 @@ import pytest_asyncio
 from app.core.security import hash_password
 from app.models.tenant import Tenant
 from app.models.user import RefreshToken, User
+import pytest
 
 
 @pytest_asyncio.fixture
@@ -30,6 +31,7 @@ async def user(db_session, tenant):
 
 
 class TestRefresh:
+    @pytest.mark.asyncio
     async def test_refresh_success_returns_new_tokens(self, async_client, user, tenant):
         login_resp = await async_client.post(
             '/api/v1/auth/login',
@@ -47,6 +49,7 @@ class TestRefresh:
         assert 'refresh_token' in data
         assert data['token_type'] == 'bearer'
 
+    @pytest.mark.asyncio
     async def test_old_token_revoked_after_refresh(self, async_client, user, tenant):
         login_resp = await async_client.post(
             '/api/v1/auth/login',
@@ -67,6 +70,7 @@ class TestRefresh:
         )
         assert resp2.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_reuse_of_revoked_token_invalidates_family(self, async_client, user, tenant):
         login_resp = await async_client.post(
             '/api/v1/auth/login',
@@ -93,6 +97,7 @@ class TestRefresh:
         )
         assert resp3.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_refresh_with_expired_token_returns_401(self, async_client, user, tenant, db_session):
         token_hash = hashlib.sha256('expired-token'.encode('utf-8')).hexdigest()
         rt = RefreshToken(

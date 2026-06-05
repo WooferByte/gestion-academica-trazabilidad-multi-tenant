@@ -92,6 +92,7 @@ class TestVersionado:
         client.headers['Authorization'] = f'Bearer {token_value}'
         return client
 
+    @pytest.mark.asyncio
     async def test_crear_version_activa(self, db_session, admin_tenant, admin_setup, base_entiites):
         from app.repositories.padron_repository import VersionPadronRepository
         repo = VersionPadronRepository(db_session, admin_tenant.id)
@@ -110,6 +111,7 @@ class TestVersionado:
         assert activa is not None
         assert activa.id == v1.id
 
+    @pytest.mark.asyncio
     async def test_crear_segunda_version_desactiva_primera(self, db_session, admin_tenant, admin_setup, base_entiites):
         from app.repositories.padron_repository import VersionPadronRepository
         repo = VersionPadronRepository(db_session, admin_tenant.id)
@@ -136,6 +138,7 @@ class TestVersionado:
         activa = await repo.get_activa(base_entiites['materia'].id, base_entiites['cohorte'].id)
         assert activa.id == v2.id
 
+    @pytest.mark.asyncio
     async def test_aislamiento_entre_pares_materia_cohorte(self, db_session, admin_tenant, admin_setup, base_entiites):
         from app.repositories.padron_repository import VersionPadronRepository
         repo = VersionPadronRepository(db_session, admin_tenant.id)
@@ -177,6 +180,7 @@ class TestImportService:
             writer.writerow(r)
         return output.getvalue().encode('utf-8'), 'alumnos.csv'
 
+    @pytest.mark.asyncio
     async def test_preview_retorna_items_sin_persistir(self, db_session, admin_tenant, base_entiites):
         from app.services.padron_service import PadronService
         from fastapi import UploadFile
@@ -201,6 +205,7 @@ class TestImportService:
         activa = await vrepo.get_activa(base_entiites['materia'].id, base_entiites['cohorte'].id)
         assert activa is None
 
+    @pytest.mark.asyncio
     async def test_confirm_import_persiste_version_y_entradas(self, db_session, admin_tenant, admin_setup, base_entiites):
         from app.schemas.auth import UserContext
         from app.schemas.padron import ImportPreviewItem
@@ -228,6 +233,7 @@ class TestImportService:
         assert len(entradas) == 1
         assert entradas[0].nombre == 'Juan'
 
+    @pytest.mark.asyncio
     async def test_entrada_sin_usuario_id(self, db_session, admin_tenant, admin_setup, base_entiites):
         from app.schemas.auth import UserContext
         from app.schemas.padron import ImportPreviewItem
@@ -255,6 +261,7 @@ class TestImportService:
         assert entradas[0].nombre == 'Sin'
         assert entradas[0].email == email
 
+    @pytest.mark.asyncio
     async def test_archivo_formato_invalido(self, db_session, admin_tenant, base_entiites):
         from app.services.padron_service import PadronService
         from fastapi import HTTPException, UploadFile
@@ -269,6 +276,7 @@ class TestImportService:
 
 
 class TestVaciar:
+    @pytest.mark.asyncio
     async def test_vaciar_materia_soft_delete(self, db_session, admin_tenant, admin_setup, base_entiites):
         from app.repositories.padron_repository import EntradaPadronRepository, VersionPadronRepository
         from app.schemas.auth import UserContext
@@ -298,6 +306,7 @@ class TestVaciar:
         await db_session.refresh(v)
         assert v.activa is False
 
+    @pytest.mark.asyncio
     async def test_vaciar_no_afecta_otras_materias(self, db_session, admin_tenant, admin_setup, base_entiites):
         from app.schemas.auth import UserContext
         from app.schemas.padron import ImportPreviewItem
@@ -327,6 +336,7 @@ class TestVaciar:
         v2_refreshed = await vrepo.get(v2.id)
         assert v2_refreshed is not None
 
+    @pytest.mark.asyncio
     async def test_vaciar_audit(self, db_session, admin_tenant, admin_setup, base_entiites):
         from app.schemas.auth import UserContext
         from app.schemas.padron import ImportPreviewItem
@@ -353,6 +363,7 @@ class TestVaciar:
 
 
 class TestMoodleWS:
+    @pytest.mark.asyncio
     async def test_skeleton_retorna_mock(self):
         from app.integrations.moodle_ws import MoodleWSClient
         client = MoodleWSClient(url='https://test.com', token='token')
@@ -361,6 +372,7 @@ class TestMoodleWS:
         assert usuarios[0]['nombre'] == 'Juan'
         assert usuarios[0]['apellidos'] == 'Pérez'
 
+    @pytest.mark.asyncio
     async def test_moodle_ws_error_502(self):
         from app.integrations.moodle_ws import MoodleWSClient, MoodleWSException
         client = MoodleWSClient(url='https://test.com', token='token')
@@ -379,6 +391,7 @@ class TestMoodleWS:
 
 
 class TestAislamientoTenant:
+    @pytest.mark.asyncio
     async def test_aislamiento_tenant_import(self, db_session, admin_tenant, admin_setup, base_entiites):
         from app.repositories.padron_repository import VersionPadronRepository
 

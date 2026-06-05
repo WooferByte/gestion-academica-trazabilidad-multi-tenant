@@ -36,6 +36,7 @@ async def repo(db_session, tenant):
 
 
 class TestRefreshTokenRepository:
+    @pytest.mark.asyncio
     async def test_create_token_persists_correctly(self, repo, user):
         token_value = str(uuid.uuid4())
         token_hash = hashlib.sha256(token_value.encode('utf-8')).hexdigest()
@@ -54,6 +55,7 @@ class TestRefreshTokenRepository:
         assert rt.expires_at is not None
         assert rt.revoked_at is None
 
+    @pytest.mark.asyncio
     async def test_get_by_token_hash_finds_token(self, repo, user):
         token_value = str(uuid.uuid4())
         token_hash = hashlib.sha256(token_value.encode('utf-8')).hexdigest()
@@ -71,6 +73,7 @@ class TestRefreshTokenRepository:
         assert found is not None
         assert found.token_hash == token_hash
 
+    @pytest.mark.asyncio
     async def test_revoke_sets_revoked_at(self, repo, user):
         token_value = str(uuid.uuid4())
         token_hash = hashlib.sha256(token_value.encode('utf-8')).hexdigest()
@@ -88,6 +91,7 @@ class TestRefreshTokenRepository:
         await repo.revoke(rt)
         assert rt.revoked_at is not None
 
+    @pytest.mark.asyncio
     async def test_revoke_family_revokes_all_tokens(self, repo, user):
         family_id = uuid.uuid4()
         expires_at = datetime.now(timezone.utc) + timedelta(days=30)
@@ -112,6 +116,7 @@ class TestRefreshTokenRepository:
         assert f1.revoked_at is not None
         assert f2.revoked_at is not None
 
+    @pytest.mark.asyncio
     async def test_token_hash_is_sha256_of_uuid(self, repo, user):
         token_value = str(uuid.uuid4())
         expected_hash = hashlib.sha256(token_value.encode('utf-8')).hexdigest()
@@ -127,6 +132,7 @@ class TestRefreshTokenRepository:
         assert rt.token_hash == expected_hash
         assert rt.token_hash != token_value
 
+    @pytest.mark.asyncio
     async def test_revoke_all_for_user(self, repo, user):
         family_id_a = uuid.uuid4()
         family_id_b = uuid.uuid4()

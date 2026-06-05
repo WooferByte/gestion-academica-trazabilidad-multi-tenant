@@ -49,6 +49,7 @@ class TestGetCurrentUser:
 
         return app
 
+    @pytest.mark.asyncio
     async def test_valid_token_returns_user_context(self, db_session, tenant, user):
         app = self._make_app()
         app.dependency_overrides[get_db] = lambda: db_session
@@ -71,6 +72,7 @@ class TestGetCurrentUser:
         assert data['tenant_id'] == str(tenant.id)
         assert data['roles'] == ['admin']
 
+    @pytest.mark.asyncio
     async def test_expired_token_returns_401(self, db_session, tenant, user):
         app = self._make_app()
         app.dependency_overrides[get_db] = lambda: db_session
@@ -93,6 +95,7 @@ class TestGetCurrentUser:
             )
         assert response.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_invalid_signature_returns_401(self, db_session, tenant, user):
         app = self._make_app()
         app.dependency_overrides[get_db] = lambda: db_session
@@ -118,6 +121,7 @@ class TestGetCurrentUser:
             )
         assert response.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_token_without_tenant_id_returns_401(self, db_session, tenant, user):
         app = self._make_app()
         app.dependency_overrides[get_db] = lambda: db_session
@@ -139,6 +143,7 @@ class TestGetCurrentUser:
             )
         assert response.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_valid_token_without_user_returns_401(self, db_session, tenant, user):
         """Token for a user that doesn't exist (deleted) should return 401."""
         app = self._make_app()
@@ -159,6 +164,7 @@ class TestGetCurrentUser:
             )
         assert response.status_code == 401
 
+    @pytest.mark.asyncio
     async def test_2fa_token_rejected_by_get_current_user(self, db_session, tenant, user):
         """A 2fa_token should not work with get_current_user."""
         app = self._make_app()

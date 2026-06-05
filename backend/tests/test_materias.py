@@ -11,6 +11,7 @@ from app.models.role_permission import RolePermission
 from app.models.user import User
 from app.models.user_role import UserRole
 from app.models.tenant import Tenant
+import pytest
 
 
 @pytest_asyncio.fixture
@@ -48,6 +49,7 @@ class TestMateriasAPI:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_create_materia(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             response = await client.post(
@@ -60,6 +62,7 @@ class TestMateriasAPI:
             assert data['nombre'] == 'Matemáticas'
             assert data['estado'] == 'Activa'
 
+    @pytest.mark.asyncio
     async def test_create_materia_duplicate_codigo(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             await client.post(
@@ -72,6 +75,7 @@ class TestMateriasAPI:
             )
             assert response.status_code == 409
 
+    @pytest.mark.asyncio
     async def test_create_materia_duplicate_other_tenant(self, app, db_session, admin_token):
         tid2 = uuid.uuid4()
         tenant2 = Tenant(id=tid2, nombre='Test2', codigo='TST2', estado='Activo')
@@ -105,6 +109,7 @@ class TestMateriasAPI:
             )
             assert response.status_code == 201
 
+    @pytest.mark.asyncio
     async def test_list_materias(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             await client.post(
@@ -120,6 +125,7 @@ class TestMateriasAPI:
             data = response.json()
             assert data['total'] == 2
 
+    @pytest.mark.asyncio
     async def test_get_materia(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             created = await client.post(
@@ -131,6 +137,7 @@ class TestMateriasAPI:
             assert response.status_code == 200
             assert response.json()['codigo'] == 'MATE'
 
+    @pytest.mark.asyncio
     async def test_update_materia(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             created = await client.post(
@@ -145,6 +152,7 @@ class TestMateriasAPI:
             assert response.status_code == 200
             assert response.json()['nombre'] == 'Matemáticas Avanzadas'
 
+    @pytest.mark.asyncio
     async def test_soft_delete_materia(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             created = await client.post(
@@ -157,6 +165,7 @@ class TestMateriasAPI:
             get_resp = await client.get(f'/api/v1/admin/materias/{materia_id}')
             assert get_resp.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_multi_tenant_isolation(self, app, db_session, admin_token):
         tid2 = uuid.uuid4()
         tenant2 = Tenant(id=tid2, nombre='Test2', codigo='TST2', estado='Activo')

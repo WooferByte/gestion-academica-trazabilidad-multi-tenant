@@ -27,7 +27,7 @@ async def crear_aviso(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('avisos:publicar'),
-):
+) -> AvisoResponse:
     service = _get_service(session, current_user)
     return await service.crear(data, current_user)
 
@@ -36,7 +36,7 @@ async def crear_aviso(
 async def listar_avisos(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
-):
+) -> AvisoListResponse:
     service = _get_service(session, current_user)
     return await service.listar_avisos_para_usuario(current_user)
 
@@ -46,7 +46,7 @@ async def obtener_aviso(
     aviso_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
-):
+) -> AvisoResponse:
     service = _get_service(session, current_user)
     return await service.obtener_aviso(aviso_id, current_user)
 
@@ -58,7 +58,7 @@ async def actualizar_aviso(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('avisos:publicar'),
-):
+) -> AvisoResponse:
     service = _get_service(session, current_user)
     return await service.actualizar(aviso_id, data)
 
@@ -69,7 +69,7 @@ async def eliminar_aviso(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('avisos:publicar'),
-):
+) -> dict:
     service = _get_service(session, current_user)
     return await service.desactivar(aviso_id)
 
@@ -79,6 +79,6 @@ async def confirmar_lectura(
     aviso_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
-):
+) -> AckResponse:
     service = _get_service(session, current_user)
     return await service.confirmar_lectura(aviso_id, current_user)

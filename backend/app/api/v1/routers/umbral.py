@@ -20,7 +20,7 @@ async def get_umbral(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('calificaciones:importar'),
-):
+) -> UmbralMateriaResponse:
     service = UmbralService(session, current_user.tenant_id)
     return await service.obtener_umbral(materia_id, cohorte_id)
 
@@ -35,6 +35,6 @@ async def update_umbral(
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('calificaciones:importar'),
     audit: AuditService = Depends(get_audit_service),
-):
+) -> UmbralMateriaResponse:
     service = UmbralService(session, current_user.tenant_id)
     return await service.configurar_umbral(materia_id, cohorte_id, data, current_user, audit)

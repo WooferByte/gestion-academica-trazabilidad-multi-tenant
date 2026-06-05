@@ -32,6 +32,7 @@ async def repo_b(db_session, tenant_b):
 
 
 class TestUserRepository:
+    @pytest.mark.asyncio
     async def test_get_by_email_finds_user(self, repo_a):
         await repo_a.create(
             email='findme@test.com',
@@ -41,10 +42,12 @@ class TestUserRepository:
         assert user is not None
         assert user.email == 'findme@test.com'
 
+    @pytest.mark.asyncio
     async def test_get_by_email_returns_none_if_not_found(self, repo_a):
         user = await repo_a.get_by_email('noexiste@test.com')
         assert user is None
 
+    @pytest.mark.asyncio
     async def test_create_assigns_tenant_id(self, repo_a, tenant_a):
         user = await repo_a.create(
             email='new@test.com',
@@ -52,6 +55,7 @@ class TestUserRepository:
         )
         assert user.tenant_id == tenant_a.id
 
+    @pytest.mark.asyncio
     async def test_get_by_email_respects_tenant_scope(self, repo_a, repo_b):
         await repo_a.create(
             email='shared@test.com',
@@ -63,6 +67,7 @@ class TestUserRepository:
         found_b = await repo_b.get_by_email('shared@test.com')
         assert found_b is None
 
+    @pytest.mark.asyncio
     async def test_get_by_email_excludes_soft_deleted(self, repo_a):
         user = await repo_a.create(
             email='todelete@test.com',

@@ -145,6 +145,7 @@ class TestMisEquipos:
             db_session.add(a)
         await db_session.flush()
 
+    @pytest.mark.asyncio
     async def test_mis_equipos_sin_filtros(self, app, db_session, admin_setup, profesor_setup):
         token = create_access_token(
             str(profesor_setup[0].id), str(admin_setup['tid']), ['PROFESOR'],
@@ -156,6 +157,7 @@ class TestMisEquipos:
             assert data['total'] == 1
             assert data['items'][0]['usuario_id'] == str(profesor_setup[0].id)
 
+    @pytest.mark.asyncio
     async def test_mis_equipos_filtro_materia(self, app, db_session, admin_setup, profesor_setup, base_entities):
         token = create_access_token(
             str(profesor_setup[0].id), str(admin_setup['tid']), ['PROFESOR'],
@@ -167,6 +169,7 @@ class TestMisEquipos:
             assert response.status_code == 200
             assert response.json()['total'] == 1
 
+    @pytest.mark.asyncio
     async def test_mis_equipos_solo_vigentes(self, app, db_session, admin_setup, profesor_setup, base_entities):
         tid = admin_setup['tid']
         vencida = Asignacion(
@@ -192,6 +195,7 @@ class TestMisEquipos:
             assert data['total'] == 1
             assert data['items'][0]['rol'] == 'PROFESOR'
 
+    @pytest.mark.asyncio
     async def test_mis_equipos_401(self, app, db_session):
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
             response = await client.get('/api/v1/equipos/mis-equipos')
@@ -205,6 +209,7 @@ class TestAsignacionMasiva:
         client.headers['Authorization'] = f'Bearer {token_value}'
         return client
 
+    @pytest.mark.asyncio
     async def test_asignacion_masiva_exitosa(self, app, db_session, admin_setup, base_entities, profesor_setup):
         async with await self._client(app, db_session, admin_setup['token']) as client:
             response = await client.post(
@@ -227,6 +232,7 @@ class TestAsignacionMasiva:
                 assert item['rol'] == 'PROFESOR'
                 assert item['materia_id'] == str(base_entities['materia'].id)
 
+    @pytest.mark.asyncio
     async def test_asignacion_masiva_usuario_inexistente(self, app, db_session, admin_setup, base_entities):
         async with await self._client(app, db_session, admin_setup['token']) as client:
             fake_id = uuid.uuid4()
@@ -242,6 +248,7 @@ class TestAsignacionMasiva:
             )
             assert response.status_code == 422
 
+    @pytest.mark.asyncio
     async def test_asignacion_masiva_403(self, app, db_session, admin_tenant, base_entities):
         tid = admin_tenant.id
         email = 'alumno@test.com'
@@ -276,6 +283,7 @@ class TestClonarEquipo:
         client.headers['Authorization'] = f'Bearer {token_value}'
         return client
 
+    @pytest.mark.asyncio
     async def test_clonar_exitoso(self, app, db_session, admin_setup, base_entities, profesor_setup):
         tid = admin_setup['tid']
         for p in profesor_setup:
@@ -317,6 +325,7 @@ class TestClonarEquipo:
             for item in data:
                 assert item['cohorte_id'] == str(base_entities['cohorte2'].id)
 
+    @pytest.mark.asyncio
     async def test_clonar_sin_vigentes(self, app, db_session, admin_setup, base_entities):
         async with await self._client(app, db_session, admin_setup['token']) as client:
             response = await client.post(
@@ -364,6 +373,7 @@ class TestVigenciaEquipo:
             db_session.add(a)
         await db_session.flush()
 
+    @pytest.mark.asyncio
     async def test_modificar_vigencia_exitoso(self, app, db_session, admin_setup, base_entities):
         async with await self._client(app, db_session, admin_setup['token']) as client:
             nuevo_desde = (datetime.now(timezone.utc)).isoformat()
@@ -382,6 +392,7 @@ class TestVigenciaEquipo:
             data = response.json()
             assert data['filas_afectadas'] == 3
 
+    @pytest.mark.asyncio
     async def test_equipo_inexistente(self, app, db_session, admin_setup, base_entities):
         async with await self._client(app, db_session, admin_setup['token']) as client:
             response = await client.patch(
@@ -418,6 +429,7 @@ class TestExportar:
             db_session.add(a)
         await db_session.flush()
 
+    @pytest.mark.asyncio
     async def test_exportar_csv_con_datos(self, app, db_session, admin_setup, base_entities):
         async with await self._client(app, db_session, admin_setup['token']) as client:
             response = await client.get(
@@ -436,6 +448,7 @@ class TestExportar:
             lines = body.strip().split('\n')
             assert len(lines) == 4  # header + 3 profes
 
+    @pytest.mark.asyncio
     async def test_exportar_csv_vacio(self, app, db_session, admin_setup, base_entities):
         async with await self._client(app, db_session, admin_setup['token']) as client:
             response = await client.get(

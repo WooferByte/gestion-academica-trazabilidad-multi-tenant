@@ -2,6 +2,7 @@ import uuid
 from datetime import date
 
 from fastapi import APIRouter, Depends, Query, status
+from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_db, require_permission
@@ -37,7 +38,7 @@ async def crear_slot(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('encuentros:gestionar'),
-):
+) -> SlotEncuentroResponse:
     service = _get_slot_service(session, current_user)
     return await service.create_slot(data)
 
@@ -48,7 +49,7 @@ async def listar_slots(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('encuentros:gestionar'),
-):
+) -> SlotEncuentroListResponse:
     service = _get_slot_service(session, current_user)
     items = await service.list_slots(materia_id)
     return SlotEncuentroListResponse(items=items, total=len(items))
@@ -60,7 +61,7 @@ async def obtener_slot(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('encuentros:gestionar'),
-):
+) -> SlotEncuentroResponse:
     service = _get_slot_service(session, current_user)
     return await service.get_slot(slot_id)
 
@@ -71,7 +72,7 @@ async def crear_instancia(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('encuentros:gestionar'),
-):
+) -> InstanciaEncuentroResponse:
     service = _get_instancia_service(session, current_user)
     return await service.create_unique(data)
 
@@ -89,11 +90,10 @@ async def listar_instancias(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('encuentros:gestionar'),
-):
+) -> HTMLResponse | InstanciaEncuentroListResponse:
     service = _get_instancia_service(session, current_user)
     if html and materia_id is not None:
         html_content = await service.generate_html(materia_id)
-        from fastapi.responses import HTMLResponse
         return HTMLResponse(content=html_content, media_type='text/html')
 
     items, total = await service.list_with_filters(
@@ -116,6 +116,6 @@ async def editar_instancia(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('encuentros:gestionar'),
-):
+) -> InstanciaEncuentroResponse:
     service = _get_instancia_service(session, current_user)
     return await service.update(instancia_id, data)

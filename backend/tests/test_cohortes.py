@@ -11,6 +11,7 @@ from app.models.role_permission import RolePermission
 from app.models.user import User
 from app.models.user_role import UserRole
 from app.models.tenant import Tenant
+import pytest
 
 
 @pytest_asyncio.fixture
@@ -48,6 +49,7 @@ class TestCohortesAPI:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_create_cohorte(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             carrera = await client.post(
@@ -70,6 +72,7 @@ class TestCohortesAPI:
             assert data['nombre'] == '2025'
             assert data['anio'] == 2025
 
+    @pytest.mark.asyncio
     async def test_create_cohorte_duplicate_name_same_carrera(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             carrera = await client.post(
@@ -98,6 +101,7 @@ class TestCohortesAPI:
             )
             assert response.status_code == 409
 
+    @pytest.mark.asyncio
     async def test_create_cohorte_duplicate_name_different_carrera(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             c1 = await client.post(
@@ -129,6 +133,7 @@ class TestCohortesAPI:
             )
             assert response.status_code == 201
 
+    @pytest.mark.asyncio
     async def test_create_cohorte_carrera_inactiva(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             carrera = await client.post(
@@ -151,6 +156,7 @@ class TestCohortesAPI:
             )
             assert response.status_code == 422
 
+    @pytest.mark.asyncio
     async def test_create_cohorte_carrera_inexistente(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             response = await client.post(
@@ -164,6 +170,7 @@ class TestCohortesAPI:
             )
             assert response.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_list_cohortes(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             carrera = await client.post(
@@ -196,6 +203,7 @@ class TestCohortesAPI:
             data = response.json()
             assert data['total'] == 2
 
+    @pytest.mark.asyncio
     async def test_get_cohorte(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             carrera = await client.post(
@@ -216,6 +224,7 @@ class TestCohortesAPI:
             assert response.status_code == 200
             assert response.json()['nombre'] == '2025'
 
+    @pytest.mark.asyncio
     async def test_update_cohorte(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             carrera = await client.post(
@@ -239,6 +248,7 @@ class TestCohortesAPI:
             assert response.status_code == 200
             assert response.json()['vig_hasta'] == '2025-12-31'
 
+    @pytest.mark.asyncio
     async def test_soft_delete_cohorte(self, app, db_session, admin_token):
         async with await self._client(app, db_session, admin_token['token']) as client:
             carrera = await client.post(
@@ -260,6 +270,7 @@ class TestCohortesAPI:
             get_resp = await client.get(f'/api/v1/admin/cohortes/{cohorte_id}')
             assert get_resp.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_multi_tenant_isolation(self, app, db_session, admin_token):
         tid2 = uuid.uuid4()
         tenant2 = Tenant(id=tid2, nombre='Test2', codigo='TST2', estado='Activo')

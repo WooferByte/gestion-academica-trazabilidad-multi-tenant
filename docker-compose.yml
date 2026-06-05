@@ -27,6 +27,7 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change-me-32-char-encryption-key}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
       DEBUG: ${DEBUG:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
     ports:
       - "8000:8000"
     healthcheck:

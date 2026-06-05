@@ -43,6 +43,7 @@ async def admin_token(db_session):
 
 
 class TestRolesAPI:
+    @pytest.mark.asyncio
     async def test_list_roles(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -54,6 +55,7 @@ class TestRolesAPI:
             data = response.json()
             assert 'items' in data
 
+    @pytest.mark.asyncio
     async def test_create_role(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -67,6 +69,7 @@ class TestRolesAPI:
             assert data['name'] == 'Supervisor'
             assert data['codigo'] == 'SUPERVISOR'
 
+    @pytest.mark.asyncio
     async def test_create_role_duplicate(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -82,6 +85,7 @@ class TestRolesAPI:
             )
             assert response.status_code == 409
 
+    @pytest.mark.asyncio
     async def test_update_role(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -99,6 +103,7 @@ class TestRolesAPI:
             assert response.status_code == 200
             assert response.json()['name'] == 'New'
 
+    @pytest.mark.asyncio
     async def test_delete_role(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -122,6 +127,7 @@ class TestRolesAPI:
 
 
 class TestPermisosAPI:
+    @pytest.mark.asyncio
     async def test_create_permission(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -140,6 +146,7 @@ class TestPermisosAPI:
             assert data['codigo'] == 'nuevo_modulo:accion'
             assert data['modulo'] == 'nuevo_modulo'
 
+    @pytest.mark.asyncio
     async def test_duplicate_permission_code(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -161,6 +168,7 @@ class TestPermisosAPI:
             )
             assert response.status_code == 409
 
+    @pytest.mark.asyncio
     async def test_list_permisos(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -170,6 +178,7 @@ class TestPermisosAPI:
             )
             assert response.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_update_permiso(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -189,6 +198,7 @@ class TestPermisosAPI:
             )
             assert response.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_delete_permiso(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -209,6 +219,7 @@ class TestPermisosAPI:
 
 
 class TestRolePermisosAPI:
+    @pytest.mark.asyncio
     async def test_assign_and_list(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -243,6 +254,7 @@ class TestRolePermisosAPI:
             assert lista.status_code == 200
             assert len(lista.json()) >= 1
 
+    @pytest.mark.asyncio
     async def test_unassign(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -272,6 +284,7 @@ class TestRolePermisosAPI:
 
 
 class TestUserRolesAPI:
+    @pytest.mark.asyncio
     async def test_assign_and_list(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -296,6 +309,7 @@ class TestUserRolesAPI:
             )
             assert lista.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_unassign(self, app, db_session, admin_token):
         app.dependency_overrides[get_db] = lambda: db_session
         async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -318,6 +332,7 @@ class TestUserRolesAPI:
             )
             assert delete_resp.status_code == 204
 
+    @pytest.mark.asyncio
     async def test_non_admin_gets_403(self, app, db_session, admin_token):
         tid = admin_token['tid']
         no_perm_user = User(tenant_id=tid, email='noperm@t.com', password_hash='hash', roles=[])

@@ -109,6 +109,7 @@ class TestCrearConvocatoria:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_crear_convocatoria_exitosa_con_turnos(self, app, db_session, setup_data):
         """1.1 Crear convocatoria exitosa con turnos"""
         async with await self._client(app, db_session, setup_data['coord_token']) as client:
@@ -131,6 +132,7 @@ class TestCrearConvocatoria:
         assert data['dias_disponibles'] == 3
         assert len(data['turnos']) == 3
 
+    @pytest.mark.asyncio
     async def test_crear_convocatoria_sin_turnos_falla(self, app, db_session, setup_data):
         """1.2 Crear convocatoria sin turnos falla"""
         async with await self._client(app, db_session, setup_data['coord_token']) as client:
@@ -143,6 +145,7 @@ class TestCrearConvocatoria:
             })
         assert resp.status_code == 422
 
+    @pytest.mark.asyncio
     async def test_crear_convocatoria_sin_token_401(self, app, db_session, setup_data):
         client = AsyncClient(transport=ASGITransport(app=app), base_url='http://test')
         resp = await client.post('/api/v1/coloquios/', json={
@@ -176,6 +179,7 @@ class TestImportarAlumnos:
         await db_session.flush()
         return ev
 
+    @pytest.mark.asyncio
     async def test_importar_alumnos_exitoso(self, app, db_session, setup_data):
         """2.1 Importar alumnos a convocatoria"""
         ev = await self._crear_evaluacion(db_session, setup_data)
@@ -194,6 +198,7 @@ class TestImportarAlumnos:
         alumnos = result.scalars().all()
         assert len(alumnos) == 2
 
+    @pytest.mark.asyncio
     async def test_importar_alumnos_id_inexistente_falla(self, app, db_session, setup_data):
         """2.2 Importar con ID inexistente falla"""
         ev = await self._crear_evaluacion(db_session, setup_data)
@@ -204,6 +209,7 @@ class TestImportarAlumnos:
             })
         assert resp.status_code == 422
 
+    @pytest.mark.asyncio
     async def test_importar_usuario_no_alumno_falla(self, app, db_session, setup_data):
         ev = await self._crear_evaluacion(db_session, setup_data)
         async with await self._client(app, db_session, setup_data['coord_token']) as client:
@@ -220,6 +226,7 @@ class TestListarConvocatorias:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_coordinador_lista_todas(self, app, db_session, setup_data):
         """3.1 COORDINADOR lista con metricas"""
         ev = Evaluacion(
@@ -241,6 +248,7 @@ class TestListarConvocatorias:
         assert data['total'] >= 1
         assert len(data['items']) >= 1
 
+    @pytest.mark.asyncio
     async def test_alumno_lista_solo_habilitadas(self, app, db_session, setup_data):
         """3.2 ALUMNO lista solo sus convocatorias"""
         ev = Evaluacion(
@@ -290,6 +298,7 @@ class TestMetricas:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_metricas_globales(self, app, db_session, setup_data):
         ev = Evaluacion(
             tenant_id=setup_data['tid'],
@@ -361,6 +370,7 @@ class TestReserva:
 
         return ev, turno
 
+    @pytest.mark.asyncio
     async def test_reserva_exitosa_resta_cupo(self, app, db_session, setup_data):
         """5.1 Reserva exitosa resta cupo atomicamente"""
         ev, turno = await self._setup_convocatoria(db_session, setup_data, cupo=5)
@@ -375,6 +385,7 @@ class TestReserva:
         await db_session.refresh(turno)
         assert turno.ocupados == 1
 
+    @pytest.mark.asyncio
     async def test_reserva_sin_cupo_rechaza_409(self, app, db_session, setup_data):
         """5.2 Sin cupo rechaza 409"""
         ev, turno = await self._setup_convocatoria(db_session, setup_data, cupo=1)
@@ -387,6 +398,7 @@ class TestReserva:
             })
         assert resp.status_code == 409
 
+    @pytest.mark.asyncio
     async def test_alumno_no_habilitado_rechaza_403(self, app, db_session, setup_data):
         """5.3 Alumno no habilitado rechaza 403"""
         ev, turno = await self._setup_convocatoria(db_session, setup_data)
@@ -396,6 +408,7 @@ class TestReserva:
             })
         assert resp.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_doble_reserva_activa_rechaza_409(self, app, db_session, setup_data):
         """5.4 Doble reserva en misma convocatoria rechaza 409"""
         ev, turno = await self._setup_convocatoria(db_session, setup_data, cupo=5)
@@ -430,6 +443,7 @@ class TestCancelacion:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_cancelacion_libera_cupo(self, app, db_session, setup_data):
         """6.1 Cancelacion libera cupo"""
         ev = Evaluacion(
@@ -475,6 +489,7 @@ class TestCancelacion:
         await db_session.refresh(turno)
         assert turno.ocupados == 0
 
+    @pytest.mark.asyncio
     async def test_cancelar_reserva_ajena_falla(self, app, db_session, setup_data):
         """6.2 Cancelar reserva ajena falla 404"""
         ev = Evaluacion(
@@ -523,6 +538,7 @@ class TestCerrarConvocatoria:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_cerrar_convocatoria(self, app, db_session, setup_data):
         """7.1 Cerrar convocatoria"""
         ev = Evaluacion(
@@ -551,6 +567,7 @@ class TestResultados:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_registrar_nota_final(self, app, db_session, setup_data):
         """8.1 Registrar nota final"""
         ev = Evaluacion(
@@ -574,6 +591,7 @@ class TestResultados:
         assert data['nota_final'] == 'Aprobado'
         assert data['alumno_id'] == str(setup_data['alumno_user'].id)
 
+    @pytest.mark.asyncio
     async def test_listar_resultados_consolidados(self, app, db_session, setup_data):
         """8.2 Listar resultados consolidados"""
         ev = Evaluacion(
@@ -610,6 +628,7 @@ class TestResultados:
         data = resp.json()
         assert data['total'] == 2
 
+    @pytest.mark.asyncio
     async def test_actualizar_nota_existente(self, app, db_session, setup_data):
         ev = Evaluacion(
             tenant_id=setup_data['tid'],
@@ -647,6 +666,7 @@ class TestMultiTenant:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_aislamiento_multi_tenant(self, app, db_session, setup_data):
         """Tenant A no ve datos de tenant B"""
         tid_b = uuid.uuid4()
@@ -694,6 +714,7 @@ class TestMultiTenant:
 
 
 class TestRaceCondition:
+    @pytest.mark.asyncio
     async def test_race_condition_ultimo_cupo(self, app, db_session, setup_data):
         tid = setup_data['tid']
         ev = Evaluacion(
@@ -732,6 +753,7 @@ class TestRaceCondition:
 
 
 class TestSoftDelete:
+    @pytest.mark.asyncio
     async def test_soft_delete_evaluacion(self, app, db_session, setup_data):
         ev = Evaluacion(
             tenant_id=setup_data['tid'],

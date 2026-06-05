@@ -28,6 +28,7 @@ async def setup_tenants(db_session):
 
 
 class TestTenantIsolation:
+    @pytest.mark.asyncio
     async def test_get_isolation(self, setup_tenants, db_session):
         repo_a, repo_b, tenant_a, tenant_b = setup_tenants
         a_records = await repo_a.get_multi()
@@ -42,6 +43,7 @@ class TestTenantIsolation:
         b_ids = {r.id for r in b_records}
         assert a_ids.isdisjoint(b_ids)
 
+    @pytest.mark.asyncio
     async def test_get_multi_isolation(self, setup_tenants):
         repo_a, repo_b, tenant_a, tenant_b = setup_tenants
         a_all = await repo_a.get_multi()
@@ -51,6 +53,7 @@ class TestTenantIsolation:
         for item in b_all:
             assert item.tenant_id == tenant_b.id
 
+    @pytest.mark.asyncio
     async def test_exists_isolation(self, setup_tenants):
         repo_a, repo_b, tenant_a, tenant_b = setup_tenants
         a_records = await repo_a.get_multi()
@@ -58,6 +61,7 @@ class TestTenantIsolation:
             assert await repo_a.exists(codigo=record.codigo) is True
             assert await repo_b.exists(codigo=record.codigo) is False
 
+    @pytest.mark.asyncio
     async def test_update_isolation(self, setup_tenants):
         repo_a, repo_b, tenant_a, tenant_b = setup_tenants
         a_records = await repo_a.get_multi()
@@ -67,6 +71,7 @@ class TestTenantIsolation:
         target_b = await repo_b.get(target.id)
         assert target_b is None
 
+    @pytest.mark.asyncio
     async def test_soft_delete_isolation(self, setup_tenants):
         repo_a, repo_b, tenant_a, tenant_b = setup_tenants
         a_records = await repo_a.get_multi()
@@ -75,6 +80,7 @@ class TestTenantIsolation:
         assert await repo_a.get(target.id) is None
         assert await repo_b.get(target.id) is None
 
+    @pytest.mark.asyncio
     async def test_get_with_deleted_isolation(self, setup_tenants):
         repo_a, repo_b, tenant_a, tenant_b = setup_tenants
         a_records = await repo_a.get_multi()

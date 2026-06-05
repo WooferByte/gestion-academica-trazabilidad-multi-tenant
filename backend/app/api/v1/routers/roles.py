@@ -16,7 +16,7 @@ async def list_roles(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('rbac:gestionar'),
-):
+) -> dict:
     service = RoleService(session, current_user.tenant_id)
     return await service.list_roles()
 
@@ -27,7 +27,7 @@ async def create_role(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('rbac:gestionar'),
-):
+) -> RoleResponse:
     service = RoleService(session, current_user.tenant_id)
     return await service.create_role(data)
 
@@ -38,7 +38,7 @@ async def get_role(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('rbac:gestionar'),
-):
+) -> RoleResponse:
     service = RoleService(session, current_user.tenant_id)
     return await service.get_role(role_id)
 
@@ -50,7 +50,7 @@ async def update_role(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('rbac:gestionar'),
-):
+) -> RoleResponse:
     service = RoleService(session, current_user.tenant_id)
     return await service.update_role(role_id, data)
 
@@ -61,6 +61,6 @@ async def delete_role(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('rbac:gestionar'),
-):
+) -> None:
     service = RoleService(session, current_user.tenant_id)
     await service.delete_role(role_id)

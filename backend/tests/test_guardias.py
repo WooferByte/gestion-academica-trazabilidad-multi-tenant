@@ -20,6 +20,7 @@ from app.models.slot_encuentro import DiaSemana
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.user_role import UserRole
+import pytest
 
 
 @pytest_asyncio.fixture
@@ -94,6 +95,7 @@ class TestGuardia:
         client.headers['Authorization'] = f'Bearer {token}'
         return client
 
+    @pytest.mark.asyncio
     async def test_registrar_guardia_exitoso(self, app, db_session, setup_data):
         async with await self._client(app, db_session, setup_data['tutor_token']) as client:
             resp = await client.post('/api/v1/guardias', json={
@@ -110,6 +112,7 @@ class TestGuardia:
         assert data['horario'] == '14:00-14:45'
         assert data['dia'] == 'Lunes'
 
+    @pytest.mark.asyncio
     async def test_registrar_guardia_datos_faltantes_retorna_422(self, app, db_session, setup_data):
         async with await self._client(app, db_session, setup_data['tutor_token']) as client:
             resp = await client.post('/api/v1/guardias', json={
@@ -118,6 +121,7 @@ class TestGuardia:
             })
         assert resp.status_code == 422
 
+    @pytest.mark.asyncio
     async def test_consultar_guardias_coordinador_ve_todas(self, app, db_session, setup_data):
         db_session.add(Guardia(
             tenant_id=setup_data['tid'],
@@ -136,6 +140,7 @@ class TestGuardia:
         assert resp.status_code == 200
         assert resp.json()['total'] >= 1
 
+    @pytest.mark.asyncio
     async def test_consultar_guardias_tutor_ve_solo_suyas(self, app, db_session, setup_data):
         otro_tutor = User(tenant_id=setup_data['tid'], email='otro-tutor@t.com', password_hash='hash')
         db_session.add(otro_tutor)
@@ -171,6 +176,7 @@ class TestGuardia:
         data = resp.json()
         assert data['total'] == 1
 
+    @pytest.mark.asyncio
     async def test_exportar_guardias_csv(self, app, db_session, setup_data):
         db_session.add(Guardia(
             tenant_id=setup_data['tid'],
@@ -191,6 +197,7 @@ class TestGuardia:
         assert 'id' in resp.text
         assert 'Viernes' in resp.text
 
+    @pytest.mark.asyncio
     async def test_exportar_guardias_sin_resultados_csv_cabecera(self, app, db_session, setup_data):
         async with await self._client(app, db_session, setup_data['coord_token']) as client:
             resp = await client.get(
@@ -201,6 +208,7 @@ class TestGuardia:
         assert len(lines) == 1
         assert lines[0] == 'id,tenant_id,asignacion_id,materia_id,carrera_id,cohorte_id,dia,horario,estado,comentarios,creada_at'
 
+    @pytest.mark.asyncio
     async def test_actualizar_estado_guardia(self, app, db_session, setup_data):
         guardia = Guardia(
             tenant_id=setup_data['tid'],
@@ -220,6 +228,7 @@ class TestGuardia:
         assert resp.status_code == 200
         assert resp.json()['estado'] == 'Realizada'
 
+    @pytest.mark.asyncio
     async def test_permiso_401_sin_token(self, app, db_session, setup_data):
         client = AsyncClient(transport=ASGITransport(app=app), base_url='http://test')
         resp = await client.get('/api/v1/guardias')

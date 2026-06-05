@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.get('/health')
-async def health(db: AsyncSession = Depends(get_db)):
+async def health(db: AsyncSession = Depends(get_db)) -> dict:
     db_status = 'up'
     try:
         await db.execute(text('SELECT 1'))

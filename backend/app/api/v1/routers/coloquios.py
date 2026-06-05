@@ -37,7 +37,7 @@ async def crear_convocatoria(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('coloquios:gestionar'),
-):
+) -> EvaluacionResponse:
     service = EvaluacionService(session, current_user.tenant_id)
     result = await service.create_convocatoria(data)
     audit_svc = _audit(session, current_user)
@@ -56,7 +56,7 @@ async def listar_convocatorias(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('coloquios:reservar'),
-):
+) -> EvaluacionListResponse:
     service = EvaluacionService(session, current_user.tenant_id)
     items, total = await service.listar_convocatorias(
         materia_id=materia_id,
@@ -75,7 +75,7 @@ async def obtener_metricas(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('coloquios:gestionar'),
-):
+) -> MetricasColoquiosResponse:
     service = EvaluacionService(session, current_user.tenant_id)
     return await service.obtener_metricas()
 
@@ -86,7 +86,7 @@ async def obtener_convocatoria(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('coloquios:reservar'),
-):
+) -> EvaluacionResponse:
     service = EvaluacionService(session, current_user.tenant_id)
     return await service.obtener_convocatoria(evaluacion_id)
 
@@ -98,7 +98,7 @@ async def importar_alumnos(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('coloquios:gestionar'),
-):
+) -> None:
     service = EvaluacionService(session, current_user.tenant_id)
     await service.importar_alumnos(evaluacion_id, data)
     audit_svc = _audit(session, current_user)
@@ -112,7 +112,7 @@ async def reservar_turno(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('coloquios:reservar'),
-):
+) -> ReservaResponse:
     service = ReservaService(session, current_user.tenant_id)
     result = await service.reservar(evaluacion_id, data, current_user.user_id)
     audit_svc = _audit(session, current_user)
@@ -126,7 +126,7 @@ async def cancelar_reserva(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('coloquios:reservar'),
-):
+) -> dict:
     service = ReservaService(session, current_user.tenant_id)
     result = await service.cancelar(reserva_id, current_user)
     audit_svc = _audit(session, current_user)
@@ -142,7 +142,7 @@ async def registrar_resultado(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('coloquios:gestionar'),
-):
+) -> ResultadoResponse:
     service = ResultadoService(session, current_user.tenant_id)
     result = await service.registrar(evaluacion_id, alumno_id, data)
     audit_svc = _audit(session, current_user)
@@ -156,7 +156,7 @@ async def listar_resultados(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('coloquios:gestionar'),
-):
+) -> ResultadosListResponse:
     service = ResultadoService(session, current_user.tenant_id)
     return await service.listar(evaluacion_id)
 
@@ -167,7 +167,7 @@ async def cerrar_convocatoria(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('coloquios:gestionar'),
-):
+) -> EvaluacionResponse:
     service = EvaluacionService(session, current_user.tenant_id)
     result = await service.cerrar_convocatoria(evaluacion_id)
     audit_svc = _audit(session, current_user)

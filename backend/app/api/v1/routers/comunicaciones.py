@@ -36,7 +36,7 @@ async def preview(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('comunicacion:enviar'),
-):
+) -> ComunicacionPreviewResponse:
     service = _get_service(session, current_user)
     return await service.preview(data)
 
@@ -48,7 +48,7 @@ async def encolar(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('comunicacion:enviar'),
-):
+) -> ComunicacionResponse:
     service = _get_service(session, current_user)
     ip, ua = _extract_meta(request)
     return await service.encolar(data, current_user, ip, ua)
@@ -61,7 +61,7 @@ async def encolar_lote(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('comunicacion:enviar'),
-):
+) -> list[ComunicacionResponse]:
     service = _get_service(session, current_user)
     ip, ua = _extract_meta(request)
     return await service.encolar_lote(data, current_user, ip, ua)
@@ -74,7 +74,7 @@ async def aprobar_lote(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('comunicacion:aprobar'),
-):
+) -> dict:
     service = _get_service(session, current_user)
     ip, ua = _extract_meta(request)
     if data.accion == 'aprobar':
@@ -89,7 +89,7 @@ async def cancelar(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('comunicacion:enviar'),
-):
+) -> dict:
     service = _get_service(session, current_user)
     ip, ua = _extract_meta(request)
     return await service.cancelar(comunicacion_id, current_user, ip, ua)
@@ -102,7 +102,7 @@ async def listar(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('comunicacion:enviar'),
-):
+) -> ComunicacionListResponse:
     service = _get_service(session, current_user)
     if lote_id is not None:
         return await service.listar_por_lote(lote_id, current_user)

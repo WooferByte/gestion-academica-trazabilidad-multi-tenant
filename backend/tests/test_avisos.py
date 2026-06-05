@@ -88,6 +88,7 @@ class TestCreacionAvisos:
         c.headers['Authorization'] = f'Bearer {token}'
         return c
 
+    @pytest.mark.asyncio
     async def test_crear_aviso_global_201(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         async with await self._client(app, db_session, setup_data['coord_token']) as c:
@@ -108,6 +109,7 @@ class TestCreacionAvisos:
         assert data['tenant_id'] == str(setup_data['tid'])
         assert data['alcance'] == 'Global'
 
+    @pytest.mark.asyncio
     async def test_crear_aviso_por_materia(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         async with await self._client(app, db_session, setup_data['coord_token']) as c:
@@ -124,6 +126,7 @@ class TestCreacionAvisos:
         assert resp.status_code == 201
         assert resp.json()['materia_id'] == str(setup_data['materia'].id)
 
+    @pytest.mark.asyncio
     async def test_crear_aviso_por_cohorte(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         async with await self._client(app, db_session, setup_data['coord_token']) as c:
@@ -140,6 +143,7 @@ class TestCreacionAvisos:
         assert resp.status_code == 201
         assert resp.json()['cohorte_id'] == str(setup_data['cohorte_a'].id)
 
+    @pytest.mark.asyncio
     async def test_crear_aviso_por_rol(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         async with await self._client(app, db_session, setup_data['coord_token']) as c:
@@ -156,6 +160,7 @@ class TestCreacionAvisos:
         assert resp.status_code == 201
         assert resp.json()['rol_destino'] == 'PROFESOR'
 
+    @pytest.mark.asyncio
     async def test_403_sin_permiso(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         async with await self._client(app, db_session, setup_data['alumno_token']) as c:
@@ -170,6 +175,7 @@ class TestCreacionAvisos:
             })
         assert resp.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_422_campo_extra(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         async with await self._client(app, db_session, setup_data['coord_token']) as c:
@@ -193,6 +199,7 @@ class TestVisualizacion:
         c.headers['Authorization'] = f'Bearer {token}'
         return c
 
+    @pytest.mark.asyncio
     async def test_ve_avisos_global(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         aviso_global = Aviso(
@@ -211,6 +218,7 @@ class TestVisualizacion:
         titulos = [item['titulo'] for item in resp.json()['items']]
         assert 'Global para todos' in titulos
 
+    @pytest.mark.asyncio
     async def test_no_ve_avisos_de_otro_rol(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         aviso_rol = Aviso(
@@ -229,6 +237,7 @@ class TestVisualizacion:
         titulos = [item['titulo'] for item in resp.json()['items']]
         assert 'Solo profesores' not in titulos
 
+    @pytest.mark.asyncio
     async def test_ve_avisos_por_cohorte(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         aviso_cohorte = Aviso(
@@ -256,6 +265,7 @@ class TestVisualizacion:
         assert 'Solo cohorte A' in titulos
         assert 'Solo cohorte B' not in titulos
 
+    @pytest.mark.asyncio
     async def test_ve_avisos_por_materia(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         aviso_materia = Aviso(
@@ -274,6 +284,7 @@ class TestVisualizacion:
         titulos = [item['titulo'] for item in resp.json()['items']]
         assert 'Aviso de matematica' in titulos
 
+    @pytest.mark.asyncio
     async def test_aviso_fuera_vigencia_no_se_muestra(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         vencido = Aviso(
@@ -292,6 +303,7 @@ class TestVisualizacion:
         titulos = [item['titulo'] for item in resp.json()['items']]
         assert 'Vencido' not in titulos
 
+    @pytest.mark.asyncio
     async def test_aviso_fuera_vigencia_404_en_detalle(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         vencido = Aviso(
@@ -308,6 +320,7 @@ class TestVisualizacion:
             resp = await c.get(f'/api/v1/avisos/{vencido.id}')
         assert resp.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_orden_por_prioridad(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         primero = Aviso(
@@ -336,6 +349,7 @@ class TestVisualizacion:
         if len(avisos_filtrados) >= 2:
             assert avisos_filtrados[0]['orden'] <= avisos_filtrados[1]['orden']
 
+    @pytest.mark.asyncio
     async def test_soft_delete_oculta_aviso(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         aviso = Aviso(
@@ -364,6 +378,7 @@ class TestAcknowledgment:
         c.headers['Authorization'] = f'Bearer {token}'
         return c
 
+    @pytest.mark.asyncio
     async def test_ack_exitoso_201(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         aviso = Aviso(
@@ -390,6 +405,7 @@ class TestAcknowledgment:
         assert ack is not None
         assert ack.usuario_id == setup_data['alumno'].id
 
+    @pytest.mark.asyncio
     async def test_ack_duplicado_409(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         aviso = Aviso(
@@ -409,6 +425,7 @@ class TestAcknowledgment:
             resp2 = await c.post(f'/api/v1/avisos/{aviso.id}/ack')
         assert resp2.status_code == 409
 
+    @pytest.mark.asyncio
     async def test_total_acks_refleja_confirmaciones(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         tid = setup_data['tid']
@@ -445,6 +462,7 @@ class TestAcknowledgment:
         assert data['total_acks'] == 3
         assert data['user_acked'] is True
 
+    @pytest.mark.asyncio
     async def test_user_acked_true_si_confirmo(self, app, db_session, setup_data):
         now = datetime.now(timezone.utc)
         aviso = Aviso(
@@ -465,6 +483,7 @@ class TestAcknowledgment:
 
 
 class TestMultiTenant:
+    @pytest.mark.asyncio
     async def test_aislamiento_entre_tenants(self, app, db_session):
         tid_a = uuid.uuid4()
         tid_b = uuid.uuid4()

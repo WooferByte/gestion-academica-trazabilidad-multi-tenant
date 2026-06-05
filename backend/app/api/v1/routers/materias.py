@@ -16,7 +16,7 @@ async def list_materias(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> dict:
     service = MateriaService(session, current_user.tenant_id)
     return await service.list_materias()
 
@@ -27,7 +27,7 @@ async def create_materia(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> MateriaResponse:
     service = MateriaService(session, current_user.tenant_id)
     return await service.create_materia(data)
 
@@ -38,7 +38,7 @@ async def get_materia(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> MateriaResponse:
     service = MateriaService(session, current_user.tenant_id)
     return await service.get_materia(materia_id)
 
@@ -50,7 +50,7 @@ async def update_materia(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> MateriaResponse:
     service = MateriaService(session, current_user.tenant_id)
     return await service.update_materia(materia_id, data)
 
@@ -61,6 +61,6 @@ async def delete_materia(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> None:
     service = MateriaService(session, current_user.tenant_id)
     await service.delete_materia(materia_id)

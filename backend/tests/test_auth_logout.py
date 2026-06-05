@@ -3,6 +3,7 @@ import pytest_asyncio
 from app.core.security import hash_password
 from app.models.tenant import Tenant
 from app.models.user import User
+import pytest
 
 
 @pytest_asyncio.fixture
@@ -27,6 +28,7 @@ async def user(db_session, tenant):
 
 
 class TestLogout:
+    @pytest.mark.asyncio
     async def test_logout_revokes_refresh_token(self, async_client, user, tenant):
         login_resp = await async_client.post(
             '/api/v1/auth/login',
@@ -43,6 +45,7 @@ class TestLogout:
         )
         assert logout_resp.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_logout_without_auth_returns_401(self, async_client):
         response = await async_client.post(
             '/api/v1/auth/logout',

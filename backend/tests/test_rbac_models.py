@@ -22,6 +22,7 @@ async def tenant(db_session):
 
 
 class TestRoleModel:
+    @pytest.mark.asyncio
     async def test_create_role(self, db_session, tenant):
         role = Role(tenant_id=tenant.id, name='Supervisor', codigo='SUPERVISOR')
         db_session.add(role)
@@ -32,6 +33,7 @@ class TestRoleModel:
         assert role.codigo == 'SUPERVISOR'
         assert role.deleted_at is None
 
+    @pytest.mark.asyncio
     async def test_soft_delete_role(self, db_session, tenant):
         role = Role(tenant_id=tenant.id, name='Test', codigo='TEST')
         db_session.add(role)
@@ -46,6 +48,7 @@ class TestRoleModel:
         )
         assert result.scalar_one_or_none() is None
 
+    @pytest.mark.asyncio
     async def test_tenant_isolation_role(self, db_session, tenant):
         tid_b = uuid.uuid4()
         t_b = Tenant(id=tid_b, nombre='Other', codigo='OTH', estado='Activo')
@@ -65,6 +68,7 @@ class TestRoleModel:
         assert len(roles_a) == 1
         assert roles_a[0].codigo == 'PROFESOR'
 
+    @pytest.mark.asyncio
     async def test_unique_codigo_per_tenant(self, db_session, tenant):
         db_session.add(Role(tenant_id=tenant.id, name='Admin', codigo='ADMIN'))
         await db_session.flush()
@@ -75,6 +79,7 @@ class TestRoleModel:
 
 
 class TestPermissionModel:
+    @pytest.mark.asyncio
     async def test_create_permission(self, db_session, tenant):
         perm = Permission(
             tenant_id=tenant.id,
@@ -91,6 +96,7 @@ class TestPermissionModel:
         assert perm.modulo == 'calificaciones'
         assert perm.accion == 'importar'
 
+    @pytest.mark.asyncio
     async def test_unique_codigo_per_tenant(self, db_session, tenant):
         db_session.add(Permission(
             tenant_id=tenant.id, codigo='mod:acc', modulo='mod', accion='acc',
@@ -105,6 +111,7 @@ class TestPermissionModel:
 
 
 class TestRolePermissionModel:
+    @pytest.mark.asyncio
     async def test_create_role_permission(self, db_session, tenant):
         role = Role(tenant_id=tenant.id, name='Prof', codigo='PROFESOR')
         perm = Permission(tenant_id=tenant.id, codigo='mod:acc', modulo='mod', accion='acc')
@@ -121,6 +128,7 @@ class TestRolePermissionModel:
 
 
 class TestUserRoleModel:
+    @pytest.mark.asyncio
     async def test_create_user_role(self, db_session, tenant):
         user = User(tenant_id=tenant.id, email='test@test.com', password_hash='hash', roles=[])
         role = Role(tenant_id=tenant.id, name='Prof', codigo='PROFESOR')

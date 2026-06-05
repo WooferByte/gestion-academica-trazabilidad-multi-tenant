@@ -5,6 +5,7 @@ from app.core.config import Settings
 from app.core.security import hash_password
 from app.models.tenant import Tenant
 from app.models.user import User
+import pytest
 
 
 @pytest_asyncio.fixture
@@ -50,6 +51,7 @@ async def user_b(db_session, tenant_b):
 
 
 class TestMultiTenantAuth:
+    @pytest.mark.asyncio
     async def test_users_have_different_tenants(self, async_client, user_a, user_b):
         resp_a = await async_client.post(
             '/api/v1/auth/login',
@@ -75,6 +77,7 @@ class TestMultiTenantAuth:
 
         assert payload_a['tenant_id'] != payload_b['tenant_id']
 
+    @pytest.mark.asyncio
     async def test_user_a_cannot_login_in_tenant_b(self, async_client, user_a, user_b):
         resp_a = await async_client.post(
             '/api/v1/auth/login',

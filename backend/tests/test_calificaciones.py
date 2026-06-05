@@ -116,6 +116,7 @@ async def padron_setup(db_session, admin_tenant, admin_setup, base_entities):
 
 
 class TestAprobadoDerivado:
+    @pytest.mark.asyncio
     async def test_numerica_aprobada_supera_umbral(self):
         from app.services.calificaciones_service import _calcular_aprobado
         result = _calcular_aprobado(
@@ -124,6 +125,7 @@ class TestAprobadoDerivado:
         )
         assert result is True
 
+    @pytest.mark.asyncio
     async def test_numerica_no_aprobada_menor_umbral(self):
         from app.services.calificaciones_service import _calcular_aprobado
         result = _calcular_aprobado(
@@ -132,6 +134,7 @@ class TestAprobadoDerivado:
         )
         assert result is False
 
+    @pytest.mark.asyncio
     async def test_textual_aprobatoria_default(self):
         from app.services.calificaciones_service import _calcular_aprobado
         result = _calcular_aprobado(
@@ -140,6 +143,7 @@ class TestAprobadoDerivado:
         )
         assert result is True
 
+    @pytest.mark.asyncio
     async def test_textual_no_aprobatoria(self):
         from app.services.calificaciones_service import _calcular_aprobado
         result = _calcular_aprobado(
@@ -148,6 +152,7 @@ class TestAprobadoDerivado:
         )
         assert result is False
 
+    @pytest.mark.asyncio
     async def test_textual_con_valores_personalizados(self):
         from app.services.calificaciones_service import _calcular_aprobado
         valores = {'Aprobado', 'Muy bueno'}
@@ -162,6 +167,7 @@ class TestAprobadoDerivado:
         )
         assert result2 is False
 
+    @pytest.mark.asyncio
     async def test_sin_nota_retorna_none(self):
         from app.services.calificaciones_service import _calcular_aprobado
         result = _calcular_aprobado(
@@ -170,6 +176,7 @@ class TestAprobadoDerivado:
         )
         assert result is None
 
+    @pytest.mark.asyncio
     async def test_umbral_afecta_derivacion(self):
         from app.services.calificaciones_service import _calcular_aprobado
         with_60 = _calcular_aprobado(
@@ -185,6 +192,7 @@ class TestAprobadoDerivado:
 
 
 class TestDetectarActividades:
+    @pytest.mark.asyncio
     async def test_columna_sufijo_real_es_numerica(self):
         from app.services.calificaciones_service import _detectar_actividades
         acts = _detectar_actividades(['Parcial 1 (Real)', 'Alumno'])
@@ -192,6 +200,7 @@ class TestDetectarActividades:
         assert acts[0].nombre == 'Parcial 1'
         assert acts[0].tipo == 'numerica'
 
+    @pytest.mark.asyncio
     async def test_columna_sin_sufijo_es_textual(self):
         from app.services.calificaciones_service import _detectar_actividades
         acts = _detectar_actividades(['Estado TP', 'Alumno'])
@@ -199,6 +208,7 @@ class TestDetectarActividades:
         assert acts[0].nombre == 'Estado TP'
         assert acts[0].tipo == 'textual'
 
+    @pytest.mark.asyncio
     async def test_columnas_identificacion_se_ignoran(self):
         from app.services.calificaciones_service import _detectar_actividades
         acts = _detectar_actividades(['Alumno', 'Nombre', 'Apellido', 'Parcial (Real)'])
@@ -206,6 +216,7 @@ class TestDetectarActividades:
         assert acts[0].nombre == 'Parcial'
         assert acts[0].tipo == 'numerica'
 
+    @pytest.mark.asyncio
     async def test_preview_devuelve_actividades_y_filas(self, db_session, admin_tenant, base_entities):
         from app.services.calificaciones_service import CalificacionesService
         from fastapi import UploadFile
@@ -243,6 +254,7 @@ class TestConfirmImport:
             writer.writerow(r)
         return output.getvalue().encode('utf-8')
 
+    @pytest.mark.asyncio
     async def test_confirm_persiste_calificaciones(self, db_session, admin_tenant, admin_setup, base_entities, padron_setup):
         from app.services.calificaciones_service import CalificacionesService
         from app.schemas.calificaciones import CalificacionConfirmRequest, ActividadAImportar
@@ -279,6 +291,7 @@ class TestConfirmImport:
         califs = await service.list_calificaciones(base_entities['materia'].id, base_entities['cohorte'].id)
         assert len(califs) == 4
 
+    @pytest.mark.asyncio
     async def test_confirm_audita_con_calificaciones_importar(self, db_session, admin_tenant, admin_setup, base_entities, padron_setup):
         from app.services.calificaciones_service import CalificacionesService
         from app.schemas.calificaciones import CalificacionConfirmRequest, ActividadAImportar
@@ -313,6 +326,7 @@ class TestConfirmImport:
         assert len(logs) >= 1
         assert logs[0].materia_id == base_entities['materia'].id
 
+    @pytest.mark.asyncio
     async def test_seleccion_parcial_actividades(self, db_session, admin_tenant, admin_setup, base_entities, padron_setup):
         from app.services.calificaciones_service import CalificacionesService
         from app.schemas.calificaciones import CalificacionConfirmRequest, ActividadAImportar
@@ -340,6 +354,7 @@ class TestConfirmImport:
         assert result.calificaciones_creadas == 1  # solo Parcial
         assert result.actividades_procesadas == ['Parcial']
 
+    @pytest.mark.asyncio
     async def test_sin_padron_activo_error(self, db_session, admin_tenant, admin_setup, base_entities):
         from app.services.calificaciones_service import CalificacionesService
         from app.schemas.calificaciones import CalificacionConfirmRequest, ActividadAImportar
@@ -378,6 +393,7 @@ class TestReporteFinalizacion:
             writer.writerow(r)
         return output.getvalue().encode('utf-8')
 
+    @pytest.mark.asyncio
     async def test_detecta_entregas_sin_calificar(self, db_session, admin_tenant, admin_setup, base_entities, padron_setup):
         from app.services.calificaciones_service import CalificacionesService
         from fastapi import UploadFile
@@ -398,6 +414,7 @@ class TestReporteFinalizacion:
         assert result.total == 3  # Juan TP1, Juan TP2, Maria TP1
         assert len(result.entregas_sin_corregir) == 3
 
+    @pytest.mark.asyncio
     async def test_solo_textuales_en_reporte(self, db_session, admin_tenant, admin_setup, base_entities, padron_setup):
         from app.services.calificaciones_service import CalificacionesService
         from fastapi import UploadFile
@@ -419,6 +436,7 @@ class TestReporteFinalizacion:
         assert 'TP1' in actividades
         assert 'Parcial' not in actividades
 
+    @pytest.mark.asyncio
     async def test_cruce_contra_calificaciones_existentes(self, db_session, admin_tenant, admin_setup, base_entities, padron_setup):
         from app.services.calificaciones_service import CalificacionesService
         from app.schemas.calificaciones import CalificacionConfirmRequest, ActividadAImportar
@@ -472,6 +490,7 @@ class TestUmbral:
         await db_session.flush()
         return asignacion
 
+    @pytest.mark.asyncio
     async def test_crear_umbral(self, db_session, admin_tenant, asignacion_setup, base_entities):
         from app.repositories.umbral_repository import UmbralMateriaRepository
 
@@ -488,6 +507,7 @@ class TestUmbral:
         assert found is not None
         assert found.umbral_pct == 70
 
+    @pytest.mark.asyncio
     async def test_actualizar_umbral(self, db_session, admin_tenant, asignacion_setup, base_entities):
         from app.repositories.umbral_repository import UmbralMateriaRepository
 
@@ -506,10 +526,12 @@ class TestUmbral:
         )
         assert updated.umbral_pct == 75
 
+    @pytest.mark.asyncio
     async def test_default_60_porciento(self):
         from app.repositories.umbral_repository import UmbralMateriaRepository
         assert UmbralMateriaRepository._model is not None  # just verify import
 
+    @pytest.mark.asyncio
     async def test_umbral_afecta_derivacion_aprobado(self, db_session, admin_tenant, admin_setup, base_entities, padron_setup):
         from app.services.calificaciones_service import CalificacionesService, _calcular_aprobado
 
@@ -528,6 +550,7 @@ class TestAPI:
         client.headers['Authorization'] = f'Bearer {token_value}'
         return client
 
+    @pytest.mark.asyncio
     async def test_preview_endpoint(self, app, db_session, admin_tenant, admin_setup, base_entities):
         client = await self._client(app, db_session, admin_setup['token'])
         csv_content = 'Alumno,Nombre,Apellidos,Email,Parcial (Real),TP1\n1,Juan,Perez,juan@test.com,85,Entregado\n'

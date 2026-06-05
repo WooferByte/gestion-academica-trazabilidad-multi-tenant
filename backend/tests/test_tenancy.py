@@ -9,17 +9,20 @@ from tests.helpers import TestModel
 
 
 class TestTenancyLayer:
+    @pytest.mark.asyncio
     async def test_tenant_context_holds_tenant_id(self):
         tenant_id = uuid.uuid4()
         context = TenantContext(tenant_id=tenant_id)
         assert context.tenant_id == tenant_id
 
+    @pytest.mark.asyncio
     async def test_get_tenant_returns_context_with_correct_id(self):
         tenant_id = uuid.uuid4()
         context = await get_tenant(tenant_id=tenant_id)
         assert isinstance(context, TenantContext)
         assert context.tenant_id == tenant_id
 
+    @pytest.mark.asyncio
     async def test_multiple_tenants_have_different_contexts(self):
         id_a = uuid.uuid4()
         id_b = uuid.uuid4()
@@ -29,11 +32,13 @@ class TestTenancyLayer:
         assert ctx_b.tenant_id == id_b
         assert ctx_a.tenant_id != ctx_b.tenant_id
 
+    @pytest.mark.asyncio
     async def test_tenant_context_is_immutable_like_object(self):
         tenant_id = uuid.uuid4()
         context = TenantContext(tenant_id=tenant_id)
         assert context.tenant_id == tenant_id
 
+    @pytest.mark.asyncio
     async def test_tenant_context_can_be_used_in_repository(
         self, db_session
     ):

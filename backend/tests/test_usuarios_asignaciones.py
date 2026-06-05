@@ -106,6 +106,7 @@ class TestUsuariosAPI:
         return client
 
     # 6.1 PII cifrada no se expone en respuestas API
+    @pytest.mark.asyncio
     async def test_pii_not_exposed_in_response(self, app, db_session, admin_setup):
         async with await self._client(app, db_session, admin_setup['token']) as client:
             response = await client.post(
@@ -135,6 +136,7 @@ class TestUsuariosAPI:
             assert 'cbu_cifrado' not in data
 
     # 6.2 Unicidad (tenant_id, email) — mismo email en distinto tenant sí se permite
+    @pytest.mark.asyncio
     async def test_email_uniqueness_same_tenant(self, app, db_session, admin_setup):
         async with await self._client(app, db_session, admin_setup['token']) as client:
             await client.post(
@@ -147,6 +149,7 @@ class TestUsuariosAPI:
             )
             assert response.status_code == 409
 
+    @pytest.mark.asyncio
     async def test_email_uniqueness_different_tenant(
         self, app, db_session, admin_setup,
     ):
@@ -189,6 +192,7 @@ class TestUsuariosAPI:
             assert response.status_code == 201
 
     # 6.8 403 sin permiso usuarios:gestionar o equipos:asignar
+    @pytest.mark.asyncio
     async def test_403_without_usuarios_gestionar(self, app, db_session, admin_tenant):
         tid = admin_tenant.id
         email = 'basico@test.com'
@@ -209,6 +213,7 @@ class TestUsuariosAPI:
             response = await client.get('/api/v1/admin/usuarios')
             assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_403_without_equipos_asignar(self, app, db_session, admin_tenant):
         tid = admin_tenant.id
         email = 'basico2@test.com'
@@ -230,6 +235,7 @@ class TestUsuariosAPI:
             assert response.status_code == 403
 
     # 6.9 Contexto nullable — asignación global sin materia/carrera/cohorte
+    @pytest.mark.asyncio
     async def test_global_asignacion_nullable_context(
         self, app, db_session, admin_setup,
     ):
@@ -257,6 +263,7 @@ class TestUsuariosAPI:
             assert data['cohorte_id'] is None
 
     # 6.6 Aislamiento multi-tenant
+    @pytest.mark.asyncio
     async def test_multi_tenant_isolation(
         self, app, db_session, admin_setup, base_entities,
     ):
@@ -324,6 +331,7 @@ class TestAsignacionesAPI:
         return resp.json()['id']
 
     # 6.3 Creación y consulta de asignación vigente vs vencida
+    @pytest.mark.asyncio
     async def test_asignacion_vigente_vs_vencida(
         self, app, db_session, admin_setup, base_entities,
     ):
@@ -369,6 +377,7 @@ class TestAsignacionesAPI:
             assert vigentes['items'][0]['id'] == vigente_id
 
     # 6.4 Multi-rol (mismo usuario con dos asignaciones distintas)
+    @pytest.mark.asyncio
     async def test_multi_rol_mismo_usuario(
         self, app, db_session, admin_setup, base_entities,
     ):
@@ -404,6 +413,7 @@ class TestAsignacionesAPI:
             assert roles == {'PROFESOR', 'COORDINADOR'}
 
     # 6.5 Jerarquía responsable_id
+    @pytest.mark.asyncio
     async def test_jerarquia_responsable(
         self, app, db_session, admin_setup, base_entities,
     ):
@@ -425,6 +435,7 @@ class TestAsignacionesAPI:
             assert data['responsable_id'] == responsable_id
 
     # 6.7 Soft delete en usuario y asignación
+    @pytest.mark.asyncio
     async def test_soft_delete_usuario(self, app, db_session, admin_setup):
         async with await self._client(app, db_session, admin_setup['token']) as client:
             resp = await client.post(
@@ -439,6 +450,7 @@ class TestAsignacionesAPI:
             get_resp = await client.get(f'/api/v1/admin/usuarios/{uid}')
             assert get_resp.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_soft_delete_asignacion(
         self, app, db_session, admin_setup, base_entities,
     ):

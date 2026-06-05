@@ -16,7 +16,7 @@ async def list_carreras(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> dict:
     service = CarreraService(session, current_user.tenant_id)
     return await service.list_carreras()
 
@@ -27,7 +27,7 @@ async def create_carrera(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> CarreraResponse:
     service = CarreraService(session, current_user.tenant_id)
     return await service.create_carrera(data)
 
@@ -38,7 +38,7 @@ async def get_carrera(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> CarreraResponse:
     service = CarreraService(session, current_user.tenant_id)
     return await service.get_carrera(carrera_id)
 
@@ -50,7 +50,7 @@ async def update_carrera(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> CarreraResponse:
     service = CarreraService(session, current_user.tenant_id)
     return await service.update_carrera(carrera_id, data)
 
@@ -61,6 +61,6 @@ async def delete_carrera(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('estructura:gestionar'),
-):
+) -> None:
     service = CarreraService(session, current_user.tenant_id)
     await service.delete_carrera(carrera_id)

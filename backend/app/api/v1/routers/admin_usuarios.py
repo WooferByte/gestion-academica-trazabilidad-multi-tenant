@@ -19,7 +19,7 @@ async def list_usuarios(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('usuarios:gestionar'),
-):
+) -> UsuarioListResponse:
     service = UsuarioService(session, current_user.tenant_id)
     return await service.list_usuarios(estado=estado, skip=skip, limit=limit)
 
@@ -30,7 +30,7 @@ async def create_usuario(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('usuarios:gestionar'),
-):
+) -> UsuarioResponse:
     service = UsuarioService(session, current_user.tenant_id)
     return await service.create_usuario(data)
 
@@ -41,7 +41,7 @@ async def get_usuario(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('usuarios:gestionar'),
-):
+) -> UsuarioResponse:
     service = UsuarioService(session, current_user.tenant_id)
     return await service.get_usuario(usuario_id)
 
@@ -53,7 +53,7 @@ async def update_usuario(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('usuarios:gestionar'),
-):
+) -> UsuarioResponse:
     service = UsuarioService(session, current_user.tenant_id)
     return await service.update_usuario(usuario_id, data)
 
@@ -64,7 +64,7 @@ async def delete_usuario(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('usuarios:gestionar'),
-):
+) -> dict:
     service = UsuarioService(session, current_user.tenant_id)
     await service.delete_usuario(usuario_id)
     return {'detail': 'Usuario desactivado'}

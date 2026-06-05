@@ -29,7 +29,7 @@ async def preview_import(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('calificaciones:importar'),
-):
+) -> CalificacionPreviewResponse:
     service = CalificacionesService(session, current_user.tenant_id)
     return await service.preview_import(materia_id, cohorte_id, archivo)
 
@@ -45,7 +45,7 @@ async def confirm_import(
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('calificaciones:importar'),
     audit: AuditService = Depends(get_audit_service),
-):
+) -> CalificacionConfirmResponse:
     import json
     from app.schemas.calificaciones import ActividadAImportar
 
@@ -73,7 +73,7 @@ async def import_reporte_finalizacion(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('calificaciones:importar'),
-):
+) -> ReporteFinalizacionPreviewResponse:
     service = CalificacionesService(session, current_user.tenant_id)
     return await service.import_reporte_finalizacion(materia_id, cohorte_id, archivo)
 
@@ -86,7 +86,7 @@ async def list_calificaciones(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('calificaciones:importar'),
-):
+) -> CalificacionListResponse:
     service = CalificacionesService(session, current_user.tenant_id)
     umbral_pct, valores_aprobatorios = await service.get_umbral(materia_id, cohorte_id)
     items = await service.list_calificaciones(

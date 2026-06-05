@@ -2,9 +2,11 @@ import uuid
 from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_db, require_permission
+from app.schemas.analisis import ReporteRapido
 from app.schemas.auth import UserContext
 
 router = APIRouter(prefix='/api/v1/analisis', tags=['analisis'])
@@ -17,7 +19,7 @@ async def atrasados(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('atrasados:ver'),
-):
+) -> dict:
     from app.services.analisis_service import AnalisisService
     service = AnalisisService(session, current_user.tenant_id)
     result = await service.calcular_atrasados(materia_id, cohorte_id)
@@ -31,25 +33,24 @@ async def ranking(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('atrasados:ver'),
-):
+) -> dict:
     from app.services.analisis_service import AnalisisService
     service = AnalisisService(session, current_user.tenant_id)
     result = await service.calcular_ranking(materia_id, cohorte_id)
     return {'items': result, 'total': len(result)}
 
 
-@router.get('/reportes-rapidos')
+@router.get('/reportes-rapidos', response_model=ReporteRapido)
 async def reportes_rapidos(
     materia_id: uuid.UUID = Query(...),
     cohorte_id: uuid.UUID = Query(...),
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('atrasados:ver'),
-):
+) -> ReporteRapido:
     from app.services.analisis_service import AnalisisService
     service = AnalisisService(session, current_user.tenant_id)
-    result = await service.calcular_reporte_rapido(materia_id, cohorte_id)
-    return result
+    return await service.calcular_reporte_rapido(materia_id, cohorte_id)
 
 
 @router.get('/notas-finales')
@@ -60,7 +61,7 @@ async def notas_finales(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('atrasados:ver'),
-):
+) -> dict:
     from app.services.analisis_service import AnalisisService
     service = AnalisisService(session, current_user.tenant_id)
     act_list = [a.strip() for a in actividades.split(',') if a.strip()]
@@ -70,7 +71,7 @@ async def notas_finales(
     return {'items': result, 'total': len(result)}
 
 
-@router.get('/tps-sin-corregir')
+@router.get('/tps-sin-corregir', response_model=None)
 async def tps_sin_corregir(
     materia_id: uuid.UUID = Query(...),
     cohorte_id: uuid.UUID = Query(...),
@@ -78,13 +79,12 @@ async def tps_sin_corregir(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('atrasados:ver'),
-):
+) -> PlainTextResponse | dict:
     from app.services.analisis_service import AnalisisService
     service = AnalisisService(session, current_user.tenant_id)
     result = await service.exportar_tps_sin_corregir(materia_id, cohorte_id)
 
     if format == 'csv':
-        from fastapi.responses import PlainTextResponse
         headers = ['alumno_nombre', 'alumno_apellidos', 'actividad', 'comision']
         rows = [[e.alumno_nombre, e.alumno_apellidos, e.actividad, e.comision] for e in result]
         csv_content = service.to_csv(headers, rows)
@@ -97,7 +97,7 @@ async def tps_sin_corregir(
     return {'items': result, 'total': len(result)}
 
 
-@router.get('/monitor-general')
+@router.get('/monitor-general', response_model=None)
 async def monitor_general(
     materia_id: uuid.UUID | None = Query(default=None),
     comision: str | None = Query(default=None),
@@ -107,7 +107,7 @@ async def monitor_general(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('atrasados:ver'),
-):
+) -> PlainTextResponse | dict:
     from app.services.analisis_service import AnalisisService
     service = AnalisisService(session, current_user.tenant_id)
     result = await service.monitor_general(
@@ -118,7 +118,6 @@ async def monitor_general(
     )
 
     if format == 'csv':
-        from fastapi.responses import PlainTextResponse
         headers = ['nombre', 'apellidos', 'comision', 'regional', 'materia_id', 'actividad', 'nota_numerica', 'nota_textual']
         rows = [[e.nombre, e.apellidos, e.comision, e.regional, str(e.materia_id), e.actividad, e.nota_numerica or '', e.nota_textual or ''] for e in result]
         csv_content = service.to_csv(headers, rows)
@@ -142,7 +141,7 @@ async def monitor_seguimiento(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
     _=require_permission('atrasados:ver'),
-):
+) -> dict:
     from app.services.analisis_service import AnalisisService
     service = AnalisisService(session, current_user.tenant_id)
 
