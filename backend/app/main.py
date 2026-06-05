@@ -27,6 +27,8 @@ from app.api.v1.routers.user_roles import router as user_roles_router
 from app.api.v1.routers.encuentros import router as encuentros_router
 from app.api.v1.routers.guardias import router as guardias_router
 from app.api.v1.routers.coloquios import router as coloquios_router
+from app.api.v1.routers.programas import router as programas_router
+from app.api.v1.routers.fechas_academicas import router as fechas_academicas_router
 from app.core.config import Settings
 from app.core.database import dispose_engine, init_engine
 from app.core.logging import setup_json_logging
@@ -91,6 +93,8 @@ def create_app() -> FastAPI:
     app_instance.include_router(encuentros_router)
     app_instance.include_router(guardias_router)
     app_instance.include_router(coloquios_router)
+    app_instance.include_router(programas_router)
+    app_instance.include_router(fechas_academicas_router)
     app_instance.include_router(tareas_router)
     app_instance.include_router(tareas_admin_router)
     from app.api.v1.routers.analisis_router import router as analisis_router

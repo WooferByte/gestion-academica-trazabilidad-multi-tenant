@@ -17,6 +17,8 @@ from app.models.calificacion import Calificacion
 from app.models.carrera import Carrera
 from app.models.cohorte import Cohorte
 from app.models.coloquio_alumno import ColoquioAlumno
+from app.models.fecha_academica import FechaAcademica, TipoFechaAcademica
+from app.models.programa_materia import ProgramaMateria
 from app.models.comunicacion import Comunicacion, EstadoComunicacion
 from app.models.entrada_padron import EntradaPadron
 from app.models.evaluacion import Evaluacion, TipoEvaluacion, EstadoEvaluacion
@@ -117,6 +119,17 @@ COMENTARIO_TAREA_2_ID = uuid.uuid5(NS, 'seed-comentario-tarea-2')
 TURNO_EVAL1_ID = uuid.uuid5(NS, 'seed-turno-eval1-1')
 TURNO_EVAL1B_ID = uuid.uuid5(NS, 'seed-turno-eval1-2')
 TURNO_EVAL2_ID = uuid.uuid5(NS, 'seed-turno-eval2-1')
+
+PROGRAMA_ALGEBRA_ID = uuid.uuid5(NS, 'seed-programa-algebra')
+PROGRAMA_CONTABILIDAD_ID = uuid.uuid5(NS, 'seed-programa-contabilidad')
+
+FECHA_ALGEBRA_PARCIAL1 = uuid.uuid5(NS, 'seed-fecha-algebra-parcial1')
+FECHA_ALGEBRA_PARCIAL2 = uuid.uuid5(NS, 'seed-fecha-algebra-parcial2')
+FECHA_ALGEBRA_TP1 = uuid.uuid5(NS, 'seed-fecha-algebra-tp1')
+FECHA_ALGEBRA_TP2 = uuid.uuid5(NS, 'seed-fecha-algebra-tp2')
+FECHA_CONTABILIDAD_PARCIAL1 = uuid.uuid5(NS, 'seed-fecha-contab-parcial1')
+FECHA_CONTABILIDAD_PARCIAL2 = uuid.uuid5(NS, 'seed-fecha-contab-parcial2')
+FECHA_CONTABILIDAD_TP1 = uuid.uuid5(NS, 'seed-fecha-contab-tp1')
 
 # ── Data ─────────────────────────────────────────────────────────────────
 
@@ -527,6 +540,40 @@ async def run_seed(session: AsyncSession) -> None:
             id=cid, tenant_id=TENANT_ID,
             tarea_id=tid, autor_id=autor, texto=texto,
             creado_at=now,
+        ))
+
+    # ── 16. Programas Materia (2) ─────────────────────────────────────────
+    session.add(ProgramaMateria(
+        id=PROGRAMA_ALGEBRA_ID, tenant_id=TENANT_ID,
+        materia_id=MATERIA_ALGEBRA_ID, carrera_id=CARRERA_ING_ID,
+        cohorte_id=COHORTE_ING_2024_ID,
+        titulo='Álgebra - Programa 2024',
+        cargado_at=now,
+    ))
+    session.add(ProgramaMateria(
+        id=PROGRAMA_CONTABILIDAD_ID, tenant_id=TENANT_ID,
+        materia_id=MATERIA_CONTABILIDAD_ID, carrera_id=CARRERA_ADM_ID,
+        cohorte_id=COHORTE_ADM_2024_ID,
+        titulo='Contabilidad - Programa 2024',
+    ))
+
+    # ── 17. Fechas Académicas (7) ─────────────────────────────────────────
+    fechas = [
+        (FECHA_ALGEBRA_PARCIAL1, MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, TipoFechaAcademica.PARCIAL, 1, '2024-1C', date(2024, 5, 15), 'Primer Parcial'),
+        (FECHA_ALGEBRA_PARCIAL2, MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, TipoFechaAcademica.PARCIAL, 2, '2024-1C', date(2024, 7, 10), 'Segundo Parcial'),
+        (FECHA_ALGEBRA_TP1, MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, TipoFechaAcademica.TP, 1, '2024-1C', date(2024, 4, 20), 'TP1 - Álgebra'),
+        (FECHA_ALGEBRA_TP2, MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, TipoFechaAcademica.TP, 2, '2024-1C', date(2024, 6, 5), 'TP2 - Álgebra'),
+        (uuid.uuid5(NS, 'seed-fecha-algebra-rec1'), MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, TipoFechaAcademica.RECUPERATORIO, 1, '2024-1C', date(2024, 7, 20), 'Recuperatorio Álgebra'),
+        (FECHA_CONTABILIDAD_PARCIAL1, MATERIA_CONTABILIDAD_ID, COHORTE_ADM_2024_ID, TipoFechaAcademica.PARCIAL, 1, '2024-1C', date(2024, 5, 18), 'Primer Parcial Contabilidad'),
+        (FECHA_CONTABILIDAD_PARCIAL2, MATERIA_CONTABILIDAD_ID, COHORTE_ADM_2024_ID, TipoFechaAcademica.PARCIAL, 2, '2024-1C', date(2024, 7, 12), 'Segundo Parcial Contabilidad'),
+        (FECHA_CONTABILIDAD_TP1, MATERIA_CONTABILIDAD_ID, COHORTE_ADM_2024_ID, TipoFechaAcademica.TP, 1, '2024-1C', date(2024, 4, 22), 'TP1 - Contabilidad'),
+    ]
+    for fid, mat_id, coh_id, tipo, numero, periodo, fecha, titulo in fechas:
+        session.add(FechaAcademica(
+            id=fid, tenant_id=TENANT_ID,
+            materia_id=mat_id, cohorte_id=coh_id,
+            tipo=tipo.value, numero=numero, periodo=periodo,
+            fecha=fecha, titulo=titulo,
         ))
 
     await session.flush()

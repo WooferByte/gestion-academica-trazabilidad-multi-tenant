@@ -19,6 +19,11 @@ from app.core.security import create_access_token
 from app.models.turno_coloquio import TurnoColoquio
 from seed import (
     ACTIVIDADES,
+    PROGRAMA_ALGEBRA_ID,
+    PROGRAMA_CONTABILIDAD_ID,
+    FECHA_ALGEBRA_PARCIAL1,
+    FECHA_ALGEBRA_TP1,
+    FECHA_CONTABILIDAD_PARCIAL1,
     ASIG_ADMIN_ALGEBRA_ID,
     ASIG_ANA_ALGEBRA_ID,
     ASIG_CARLOS_PROG1_ID,
@@ -1108,7 +1113,101 @@ async def test_all_endpoints_seeded(db_session: AsyncSession, async_client: Asyn
             verify=json_has_keys('id', 'estado'),
         )
 
-    # ── 21. ANALISIS ───────────────────────────────────────────────────
+    # ── 21. PROGRAMAS MATERIA ──────────────────────────────────────────
+    # GET list → 2 from seed
+    await _call(
+        async_client, 'get', '/api/v1/admin/programas', token=admin_token,
+        verify=items_match('programas list', count=2,
+                           contains_values=[('titulo', 'Álgebra - Programa 2024')]),
+    )
+
+    # POST create
+    status, body = await _call(
+        async_client, 'post', '/api/v1/admin/programas',
+        json_body={
+            'materia_id': str(MATERIA_PROG1_ID),
+            'carrera_id': str(CARRERA_ING_ID),
+            'cohorte_id': str(COHORTE_ING_2025_ID),
+            'titulo': 'Programación I - 2025',
+        },
+        token=admin_token, expect_status=201,
+        verify=json_has_keys('id', 'titulo', 'materia_id'),
+    )
+    new_programa_id = _to_dict(body).get('id')
+    if new_programa_id:
+        await _call(async_client, 'get', f'/api/v1/admin/programas/{new_programa_id}', token=admin_token,
+                    verify=json_has_keys('id', 'titulo'))
+        await _call(
+            async_client, 'put', f'/api/v1/admin/programas/{new_programa_id}',
+            json_body={'titulo': 'Programa Actualizado'},
+            token=admin_token,
+            verify=json_contains('titulo', 'Programa Actualizado'),
+        )
+        await _call(async_client, 'delete', f'/api/v1/admin/programas/{new_programa_id}', token=admin_token,
+                    expect_status=204)
+        await _call(async_client, 'get', f'/api/v1/admin/programas/{new_programa_id}', token=admin_token,
+                    expect_status=404)
+
+    # GET by seed ID
+    await _call(async_client, 'get', f'/api/v1/admin/programas/{PROGRAMA_ALGEBRA_ID}', token=admin_token,
+                verify=lambda b, s: isinstance(b, dict) and b.get('titulo') == 'Álgebra - Programa 2024')
+
+    await _call(async_client, 'get', f'/api/v1/admin/programas/{uuid.uuid4()}', token=admin_token,
+                expect_status=404)
+
+    # ── 22. FECHAS ACADEMICAS ──────────────────────────────────────────
+    # GET list → 8 from seed
+    await _call(
+        async_client, 'get', '/api/v1/admin/fechas-academicas', token=admin_token,
+        verify=items_match('fechas list', count=8),
+    )
+
+    # GET list filtered by tipo
+    await _call(
+        async_client, 'get', '/api/v1/admin/fechas-academicas',
+        params={'tipo': 'Parcial'},
+        token=admin_token,
+        verify=items_match('fechas filtered by tipo', contains_values=[('tipo', 'Parcial')]),
+    )
+
+    # POST create
+    status, body = await _call(
+        async_client, 'post', '/api/v1/admin/fechas-academicas',
+        json_body={
+            'materia_id': str(MATERIA_PROG1_ID),
+            'cohorte_id': str(COHORTE_ING_2025_ID),
+            'tipo': 'TP',
+            'numero': 1,
+            'periodo': '2025-1C',
+            'fecha': '2025-04-15',
+            'titulo': 'TP1 - Programación',
+        },
+        token=admin_token, expect_status=201,
+        verify=json_has_keys('id', 'titulo', 'tipo'),
+    )
+    new_fecha_id = _to_dict(body).get('id')
+    if new_fecha_id:
+        await _call(async_client, 'get', f'/api/v1/admin/fechas-academicas/{new_fecha_id}', token=admin_token,
+                    verify=json_has_keys('id', 'titulo'))
+        await _call(
+            async_client, 'put', f'/api/v1/admin/fechas-academicas/{new_fecha_id}',
+            json_body={'titulo': 'TP1 Modificado'},
+            token=admin_token,
+            verify=json_contains('titulo', 'TP1 Modificado'),
+        )
+        await _call(async_client, 'delete', f'/api/v1/admin/fechas-academicas/{new_fecha_id}', token=admin_token,
+                    expect_status=204)
+        await _call(async_client, 'get', f'/api/v1/admin/fechas-academicas/{new_fecha_id}', token=admin_token,
+                    expect_status=404)
+
+    # GET by seed ID
+    await _call(async_client, 'get', f'/api/v1/admin/fechas-academicas/{FECHA_ALGEBRA_PARCIAL1}', token=admin_token,
+                verify=lambda b, s: isinstance(b, dict) and b.get('titulo') == 'Primer Parcial')
+
+    await _call(async_client, 'get', f'/api/v1/admin/fechas-academicas/{uuid.uuid4()}', token=admin_token,
+                expect_status=404)
+
+    # ── 23. ANALISIS ───────────────────────────────────────────────────
     # GET atrasados → 5 atrasados for Algebra/ING-2024
     await _call(
         async_client, 'get', '/api/v1/analisis/atrasados',
@@ -1170,7 +1269,7 @@ async def test_all_endpoints_seeded(db_session: AsyncSession, async_client: Asyn
         token=admin_token,
     )
 
-    # ── 22. TAREAS ─────────────────────────────────────────────────────
+    # ── 24. TAREAS ─────────────────────────────────────────────────────
     # GET mis-tareas (admin has 0 assigned in seed)
     await _call(
         async_client, 'get', '/api/v1/tareas/mis-tareas',
@@ -1255,7 +1354,7 @@ async def test_all_endpoints_seeded(db_session: AsyncSession, async_client: Asyn
         token=admin_token,
     )
 
-    # ── 23. ERROR VERIFICATION ─────────────────────────────────────────
+    # ── 25. ERROR VERIFICATION ─────────────────────────────────────────
     # 404 on non-existent route
     await _call(
         async_client, 'get', '/api/v1/non-existent-route', token=admin_token,

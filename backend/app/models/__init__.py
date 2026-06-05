@@ -25,6 +25,8 @@ from app.models.resultado_evaluacion import ResultadoEvaluacion
 from app.models.coloquio_alumno import ColoquioAlumno
 from app.models.aviso import Aviso, AlcanceAviso, SeveridadAviso
 from app.models.acknowledgment_aviso import AcknowledgmentAviso
+from app.models.programa_materia import ProgramaMateria
+from app.models.fecha_academica import FechaAcademica, TipoFechaAcademica
 from app.models.tarea import Tarea, EstadoTarea, ComentarioTarea
 
 __all__ = [
@@ -43,5 +45,7 @@ __all__ = [
     'ColoquioAlumno',
     'Aviso', 'AlcanceAviso', 'SeveridadAviso',
     'AcknowledgmentAviso',
+    'ProgramaMateria',
+    'FechaAcademica', 'TipoFechaAcademica',
     'Tarea', 'EstadoTarea', 'ComentarioTarea',
 ]
