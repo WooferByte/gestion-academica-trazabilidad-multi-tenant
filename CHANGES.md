@@ -417,7 +417,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/07_flujos_principales.md` FL-05 (workflow de tareas)
 
 ### [C-18] `liquidaciones-y-honorarios`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado ✓
 - **Scope**:
   - Modelos `SalarioBase` (por rol, vigencia), `SalarioPlus` (grupo × rol, vigencia), `Liquidacion` (base + plus = total, es_nexo, excluido_por_factura, estado Abierta/Cerrada), `Factura`.
   - Cálculo de liquidación del período (FL-08, RN-21): base por rol vigente + plus por grupos. Vista (F10.1), cerrar (F10.2, inmutable RN-22), historial (F10.3).
@@ -427,11 +427,15 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - Tests: selección de base vigente por período, suma de plus, total, cierre inmutable, exclusión por factura, segmentación NEXO/factura/general.
 - **Dependencias**: `C-07`
 - **Governance**: CRITICO
+- **Bloqueantes resueltos**:
+  - ✅ **PA-22** (categorías de Plus): catálogo fijo de 6 claves (PROG, BD, ING_SOFT, SIST_OP, MAT, HW) + N/A. Seed global.
+  - ✅ **PA-23** (acumulación de Plus): se acumula N veces por comisión activa de la misma categoría (sin tope). RN-33/34.
 - **Leer antes**:
   - `knowledge-base/04_modelo_de_datos.md` §E17–E20 (Salario, Liquidación, Factura)
+  - `knowledge-base/05_reglas_de_negocio.md` RN-21, RN-31 a RN-38 (cálculo y reglas)
   - `knowledge-base/06_funcionalidades.md` Épica 10 (F10.1–F10.6)
   - `knowledge-base/07_flujos_principales.md` FL-08 (liquidación)
-  - `knowledge-base/10_preguntas_abiertas.md` PA-22, PA-23 (mapeo y acumulación de Plus — confirmar antes)
+  - `docs/ARQUITECTURA.md` §10 (ADR-007 resuelto)
 
 ### [C-19] `panel-auditoria-metricas`
 - **Estado**: `[ ]` pendiente

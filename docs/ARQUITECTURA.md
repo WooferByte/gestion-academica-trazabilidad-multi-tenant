@@ -305,7 +305,7 @@ Estas tres decisiones tocan transversalmente el sistema (cada tabla, cada reques
 | ADR-003 | Worker propio (asyncio/Celery/ARQ) vs N8N para la cola de comunicaciones | Al construir el módulo de comunicaciones |
 | ADR-004 | Impersonation: token de sesión separado vs claim adicional en el JWT | Al implementar la feature de impersonation |
 | ADR-005 | Estrategia de versionado de padrón (snapshot completo vs deltas) | Al construir el módulo de ingesta |
-| ADR-007 | Fórmula de cálculo de Plus en liquidación (N comisiones, claves de Plus) | Antes de cerrar el módulo FINANZAS — **requiere definición del área de finanzas** |
+| ADR-007 | ✅ **Cerrada**: Plus se acumula N veces por comisión activa de la misma categoría (RN-33/RN-34). Catálogo fijo de 6 categorías (PROG, BD, ING_SOFT, SIST_OP, MAT, HW) + N/A. Mapeo materia→categoría en seed global para MVP. Ver [PA-22 resuelta](../knowledge-base/10_preguntas_abiertas.md). | ✅ **Cerrada** — Resuelta en C-18 con decisiones documentadas |
 | ADR-008 | Semántica y permisos del rol NEXO | Al poblar la matriz RBAC de NEXO (es data, no código) — **requiere definición de negocio** |
 
 ---

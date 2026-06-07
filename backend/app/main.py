@@ -12,10 +12,12 @@ from app.api.v1.routers.asignaciones import router as asignaciones_router
 from app.api.v1.routers.auth import router as auth_router
 from app.api.v1.routers.auth_impersonation import router as auth_impersonation_router
 from app.api.v1.routers.carreras import router as carreras_router
+from app.api.v1.routers.categorias_plus import router as categorias_plus_router
 from app.api.v1.routers.cohortes import router as cohortes_router
 from app.api.v1.routers.equipos import router as equipos_router
 from app.api.v1.routers.comunicaciones import router as comunicaciones_router
 from app.api.v1.routers.health import router as health_router
+from app.api.v1.routers.materia_categoria import router as materia_categoria_router
 from app.api.v1.routers.materias import router as materias_router
 from app.api.v1.routers.padron import router as padron_router
 from app.api.v1.routers.calificaciones import router as calificaciones_router
@@ -29,6 +31,9 @@ from app.api.v1.routers.guardias import router as guardias_router
 from app.api.v1.routers.coloquios import router as coloquios_router
 from app.api.v1.routers.programas import router as programas_router
 from app.api.v1.routers.fechas_academicas import router as fechas_academicas_router
+from app.api.v1.routers.grilla_salarial import router as grilla_salarial_router
+from app.api.v1.routers.liquidaciones import router as liquidaciones_router
+from app.api.v1.routers.facturas import router as facturas_router
 from app.core.config import Settings
 from app.core.database import dispose_engine, init_engine
 from app.core.logging import setup_json_logging
@@ -80,8 +85,10 @@ def create_app() -> FastAPI:
     app_instance.include_router(admin_usuarios_router)
     app_instance.include_router(asignaciones_router)
     app_instance.include_router(carreras_router)
+    app_instance.include_router(categorias_plus_router)
     app_instance.include_router(cohortes_router)
     app_instance.include_router(equipos_router)
+    app_instance.include_router(materia_categoria_router)
     app_instance.include_router(materias_router)
     app_instance.include_router(roles_router)
     app_instance.include_router(padron_router)
@@ -97,6 +104,9 @@ def create_app() -> FastAPI:
     app_instance.include_router(fechas_academicas_router)
     app_instance.include_router(tareas_router)
     app_instance.include_router(tareas_admin_router)
+    app_instance.include_router(grilla_salarial_router)
+    app_instance.include_router(liquidaciones_router)
+    app_instance.include_router(facturas_router)
     from app.api.v1.routers.analisis_router import router as analisis_router
     app_instance.include_router(analisis_router)
     return app_instance

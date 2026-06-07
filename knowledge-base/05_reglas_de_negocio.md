@@ -121,6 +121,22 @@ Existe una **base salarial fija por rol** independiente de la materia dictada. L
 ### RN-33 — Plus salarial por (categoría de materia × rol)
 Los plus son adicionales identificados por una **clave de categoría** (por ejemplo: una categoría que agrupa materias de programación) cruzada con el rol del docente. El valor del plus es configurable en la grilla. Si un docente tiene asignaciones en N comisiones de la misma categoría, acumula N veces el plus correspondiente.
 
+**Categorías definidas para el MVP** (seed global):
+
+| Clave | Nombre | Ejemplos de materias |
+|-------|--------|---------------------|
+| `PROG` | Programación | Programación I, Programación II, Algoritmos |
+| `BD` | Bases de Datos | Base de Datos I, Base de Datos II, SQL |
+| `ING_SOFT` | Ingeniería de Software | Ingeniería de Software, Metodologías Ágiles |
+| `SIST_OP` | Sistemas Operativos | Sistemas Operativos, Redes |
+| `MAT` | Matemática | Matemática I, Matemática II, Estadística |
+| `HW` | Hardware | Arquitectura de Computadoras, Electrónica |
+
+**Reglas del mapeo**:
+- Si una materia NO tiene categoría → solo cobra base, sin plus.
+- El mapeo materia → categoría es seed data global (no configurable por tenant en MVP).
+- Post-MVP: migrar a tabla configurable por tenant (ver [deuda técnica](../docs/technical-debt.md)).
+
 ### RN-34 — Cálculo de liquidación mensual
 La liquidación mensual de un docente se calcula como:
 ```

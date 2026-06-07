@@ -38,31 +38,6 @@ Las cohortes (ej.: "MAR-2026") pueden pertenecer a una carrera específica o ser
 
 ---
 
-### PA-22 — ¿Cuántas claves de Plus existen y cómo se mapean a materias?
-
-El modelo de liquidación define un **Plus** por combinación `(clave, rol)`, donde la clave agrupa familias de materias (ej.: `PROG` para materias de Programación). Ver [RN-31](05_reglas_de_negocio.md#rn-31) a [RN-38](05_reglas_de_negocio.md#rn-38).
-
-**Preguntas abiertas**:
-
-- ¿Cuáles son todas las claves de Plus que existen en el dominio (ej.: `PROG`, `BD`, `ING`, `MAT`, etc.)?
-- ¿Qué materia cae en qué clave? ¿Hay materias sin clave asignada?
-- ¿Ese mapeo es configurable por tenant o está fijo para toda la plataforma?
-- ¿Lo define el ADMIN del tenant o viene preconfigurado desde la institución?
-
----
-
-### PA-23 — ¿Cómo se calcula el Plus cuando un docente tiene N comisiones de la misma clave?
-
-Si un PROFESOR tiene tres comisiones de materias que caen bajo la clave `PROG`:
-
-**Preguntas abiertas**:
-
-- ¿Se acumula `3 × Plus(PROG, PROFESOR)` o se aplica una sola vez sin importar la cantidad de comisiones?
-- ¿Existe un tope de acumulación?
-- ¿La lógica cambia según el rol (TUTOR vs. PROFESOR vs. COORDINADOR)?
-
-**Impacto**: es la regla de negocio central del módulo de liquidaciones. Sin ella no se puede implementar el cálculo.
-
 ---
 
 ### PA-25 — ¿Cuál es la semántica precisa del rol NEXO?
@@ -243,6 +218,8 @@ Las siguientes preguntas que existían en versiones anteriores de este documento
 | PA-04 | Login por email + contraseña; 2FA opcional (TOTP); recuperación por token de un solo uso; alta solo administrativa en MVP | [07_flujos_principales.md](07_flujos_principales.md), [`docs/ARQUITECTURA.md` §5.1](../docs/ARQUITECTURA.md) |
 | PA-06 | Fórmula de liquidación: Base (por rol) + Plus (por clave × rol); ver RN-31 a RN-38 | [05_reglas_de_negocio.md](05_reglas_de_negocio.md) |
 | PA-21 | Impersonación via parámetro de petición: eliminada. La impersonación legítima requiere permiso explícito, sesión diferenciada y auditoría completa | [03_actores_y_roles.md §4](03_actores_y_roles.md), [`docs/ARQUITECTURA.md`](../docs/ARQUITECTURA.md) |
+| PA-22 | Catálogo fijo de 6 categorías de Plus (PROG, BD, ING_SOFT, SIST_OP, MAT, HW) + 1 categoría N/A (sin plus). Mapeo materia→categoría en seed global para MVP. Post-MVP: migrar a tabla configurable por tenant (deuda técnica documentada) | [`docs/ARQUITECTURA.md` §10](../docs/ARQUITECTURA.md) |
+| PA-23 | El plus se acumula N veces por comisión activa de la misma categoría (sin tope, sin cambio por rol). RN-33 y RN-34 ya lo especificaban correctamente | [05_reglas_de_negocio.md](05_reglas_de_negocio.md) (RN-33, RN-34) |
 
 ---
 

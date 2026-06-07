@@ -4,40 +4,43 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
-class MateriaCreate(BaseModel):
+class CategoriaPlusCreate(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     codigo: str
     nombre: str
-    estado: str = 'Activa'
-    categoria_plus_id: uuid.UUID | None = None
+    activo: bool = True
 
 
-class MateriaUpdate(BaseModel):
+class CategoriaPlusUpdate(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     codigo: str | None = None
     nombre: str | None = None
-    estado: str | None = None
-    categoria_plus_id: uuid.UUID | None = None
+    activo: bool | None = None
 
 
-class MateriaResponse(BaseModel):
+class CategoriaPlusResponse(BaseModel):
     model_config = ConfigDict(extra='forbid', from_attributes=True)
 
     id: uuid.UUID
     tenant_id: uuid.UUID
     codigo: str
     nombre: str
-    estado: str
-    categoria_plus_id: uuid.UUID | None = None
+    activo: bool
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None = None
 
 
-class MateriaList(BaseModel):
+class AsignacionMasivaRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    items: list[MateriaResponse]
-    total: int
+    categoria_plus_id: uuid.UUID
+    materia_ids: list[uuid.UUID]
+
+
+class AsignarCategoriaRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    categoria_plus_id: uuid.UUID

@@ -15,6 +15,7 @@ from app.models.aviso import Aviso
 from app.models.tarea import Tarea, ComentarioTarea, EstadoTarea
 from app.models.calificacion import Calificacion
 from app.models.carrera import Carrera
+from app.models.categoria_plus import CategoriaPlus
 from app.models.cohorte import Cohorte
 from app.models.coloquio_alumno import ColoquioAlumno
 from app.models.fecha_academica import FechaAcademica, TipoFechaAcademica
@@ -46,6 +47,7 @@ TENANT_ID = uuid.uuid5(NS, 'seed-tenant-tec')
 ROLE_ADMIN_ID = uuid.uuid5(NS, 'seed-role-admin')
 ROLE_PROFESOR_ID = uuid.uuid5(NS, 'seed-role-profesor')
 ROLE_TUTOR_ID = uuid.uuid5(NS, 'seed-role-tutor')
+ROLE_FINANZAS_ID = uuid.uuid5(NS, 'seed-role-finanzas')
 
 USER_ADMIN_ID = uuid.uuid5(NS, 'seed-user-admin')
 USER_ANA_ID = uuid.uuid5(NS, 'seed-user-ana')
@@ -139,6 +141,9 @@ ALL_PERMISOS = [
     'atrasados:ver', 'comunicacion:enviar', 'comunicacion:aprobar',
     'avisos:publicar', 'encuentros:gestionar', 'coloquios:gestionar',
     'coloquios:reservar', 'tareas:gestionar',
+    'liquidaciones:ver', 'liquidaciones:calcular', 'liquidaciones:cerrar',
+    'liquidaciones:exportar', 'liquidaciones:configurar-salarios',
+    'facturas:gestionar',
 ]
 
 ALUMNOS = [
@@ -212,7 +217,8 @@ async def run_seed(session: AsyncSession) -> None:
     role_admin = Role(id=ROLE_ADMIN_ID, tenant_id=TENANT_ID, name='ADMIN', codigo='ADMIN')
     role_prof = Role(id=ROLE_PROFESOR_ID, tenant_id=TENANT_ID, name='PROFESOR', codigo='PROFESOR')
     role_tutor = Role(id=ROLE_TUTOR_ID, tenant_id=TENANT_ID, name='TUTOR', codigo='TUTOR')
-    session.add_all([role_admin, role_prof, role_tutor])
+    role_finanzas = Role(id=ROLE_FINANZAS_ID, tenant_id=TENANT_ID, name='FINANZAS', codigo='FINANZAS')
+    session.add_all([role_admin, role_prof, role_tutor, role_finanzas])
     await session.flush()
 
     # ── Permissions & RolePermissions ────────────────────────────────────
@@ -226,7 +232,7 @@ async def run_seed(session: AsyncSession) -> None:
     await session.flush()
     for codigo in ALL_PERMISOS:
         perm_id = uuid.uuid5(NS, f'seed-perm-{codigo.replace(":", "-")}')
-        for role_id in [ROLE_ADMIN_ID, ROLE_PROFESOR_ID, ROLE_TUTOR_ID]:
+        for role_id in [ROLE_ADMIN_ID, ROLE_PROFESOR_ID, ROLE_TUTOR_ID, ROLE_FINANZAS_ID]:
             rp_id = uuid.uuid5(NS, f'seed-rp-{role_id}-{codigo.replace(":", "-")}')
             session.add(RolePermission(
                 id=rp_id, tenant_id=TENANT_ID,
@@ -292,7 +298,20 @@ async def run_seed(session: AsyncSession) -> None:
     ])
     await session.flush()
 
-    # ── 7. Asignaciones ──────────────────────────────────────────────────
+    # ── 7. Categorias Plus ────────────────────────────────────────────────
+    categorias_plus = [
+        CategoriaPlus(id=uuid.uuid5(NS, 'seed-cat-prog'), tenant_id=TENANT_ID, codigo='PROG', nombre='Programación'),
+        CategoriaPlus(id=uuid.uuid5(NS, 'seed-cat-bd'), tenant_id=TENANT_ID, codigo='BD', nombre='Bases de Datos'),
+        CategoriaPlus(id=uuid.uuid5(NS, 'seed-cat-ing-soft'), tenant_id=TENANT_ID, codigo='ING_SOFT', nombre='Ingeniería de Software'),
+        CategoriaPlus(id=uuid.uuid5(NS, 'seed-cat-sist-op'), tenant_id=TENANT_ID, codigo='SIST_OP', nombre='Sistemas Operativos'),
+        CategoriaPlus(id=uuid.uuid5(NS, 'seed-cat-mat'), tenant_id=TENANT_ID, codigo='MAT', nombre='Matemática'),
+        CategoriaPlus(id=uuid.uuid5(NS, 'seed-cat-hw'), tenant_id=TENANT_ID, codigo='HW', nombre='Hardware'),
+        CategoriaPlus(id=uuid.uuid5(NS, 'seed-cat-na'), tenant_id=TENANT_ID, codigo='N_A', nombre='Sin categoría'),
+    ]
+    session.add_all(categorias_plus)
+    await session.flush()
+
+    # ── 8. Asignaciones ──────────────────────────────────────────────────
     session.add_all([
         Asignacion(id=ASIG_ADMIN_ALGEBRA_ID, tenant_id=TENANT_ID, usuario_id=USER_ADMIN_ID,
                    rol='PROFESOR', materia_id=MATERIA_ALGEBRA_ID, cohorte_id=COHORTE_ING_2024_ID),

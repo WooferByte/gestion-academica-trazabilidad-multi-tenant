@@ -28,6 +28,11 @@ from app.models.acknowledgment_aviso import AcknowledgmentAviso
 from app.models.programa_materia import ProgramaMateria
 from app.models.fecha_academica import FechaAcademica, TipoFechaAcademica
 from app.models.tarea import Tarea, EstadoTarea, ComentarioTarea
+from app.models.categoria_plus import CategoriaPlus
+from app.models.salario_base import SalarioBase
+from app.models.salario_plus import SalarioPlus
+from app.models.liquidacion import Liquidacion
+from app.models.factura import Factura
 
 __all__ = [
     'BaseModelMixin', 'Tenant', 'User', 'RefreshToken', 'PasswordResetToken',
@@ -48,4 +53,9 @@ __all__ = [
     'ProgramaMateria',
     'FechaAcademica', 'TipoFechaAcademica',
     'Tarea', 'EstadoTarea', 'ComentarioTarea',
+    'CategoriaPlus',
+    'SalarioBase',
+    'SalarioPlus',
+    'Liquidacion',
+    'Factura',
 ]
