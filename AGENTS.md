@@ -80,12 +80,12 @@ Cargá la skill correspondiente al contexto **ANTES** de escribir código. Aplic
 |--------|-----|------------------|
 | **Backend Core** | FastAPI / SQLAlchemy / migraciones / modelos | `fastapi-templates`, `postgresql-table-design`, `python-testing-patterns`, `test-driven-development` |
 | **Backend Aux** | Servicios, integraciones, seguridad, performance | `api-security-best-practices`, `postgresql-optimization`, `systematic-debugging` |
-| **Frontend** | React / TanStack / Tailwind / E2E / Dashboard | `typescript-advanced-types`, `tailwind-design-system`, `playwright-best-practices`, `dashboard-crud-page`, `help-system-content`, `vercel-react-best-practices`, `web-design-guidelines`, `ui-ux-pro-max` |
+| **Frontend** | React / TanStack / Tailwind / E2E / Dashboard | `typescript-advanced-types`, `tailwind-design-system`, `playwright-best-practices`, `dashboard-crud-page`, `help-system-content`, `vercel-react-best-practices`, `web-design-guidelines`, `ui-ux-pro-max`, `aceternity-ui`, `micro-interactions` |
 | **DevOps** | Contenedores / build | `multi-stage-dockerfile` |
 | **Transversal** | Calidad / revisión | `code-review-excellence`, `systematic-debugging` |
 | **Orquestación** | SDD / OPSX / docs | `kb-creator`, `roadmap-generator`, `agent-instruction`, `find-skill` |
 
-> **Skills frontend actualizadas**: se agregaron `dashboard-crud-page` (CRUD estandarizado), `help-system-content` (sistema de ayuda), `vercel-react-best-practices` (70 reglas de performance React), `web-design-guidelines` (guías de diseño web), `ui-ux-pro-max` (UI/UX), y se actualizó `react-dev`.
+> **Skills frontend actualizadas**: se agregaron `dashboard-crud-page` (CRUD estandarizado), `help-system-content` (sistema de ayuda), `vercel-react-best-practices` (70 reglas de performance React), `web-design-guidelines` (guías de diseño web), `ui-ux-pro-max` (UI/UX), `aceternity-ui` (efectos visuales animados), `micro-interactions` (micro interacciones), y se actualizó `react-dev`.
 
 ---
 
