@@ -34,6 +34,8 @@ from app.api.v1.routers.fechas_academicas import router as fechas_academicas_rou
 from app.api.v1.routers.grilla_salarial import router as grilla_salarial_router
 from app.api.v1.routers.liquidaciones import router as liquidaciones_router
 from app.api.v1.routers.facturas import router as facturas_router
+from app.api.v1.routers.perfil import router as perfil_router
+from app.api.v1.routers.inbox import router as inbox_router
 from app.core.config import Settings
 from app.core.database import dispose_engine, init_engine
 from app.core.logging import setup_json_logging
@@ -107,8 +109,12 @@ def create_app() -> FastAPI:
     app_instance.include_router(grilla_salarial_router)
     app_instance.include_router(liquidaciones_router)
     app_instance.include_router(facturas_router)
+    app_instance.include_router(perfil_router)
+    app_instance.include_router(inbox_router)
     from app.api.v1.routers.analisis_router import router as analisis_router
     app_instance.include_router(analisis_router)
+    from app.api.v1.routers.auditoria import router as auditoria_router
+    app_instance.include_router(auditoria_router)
     return app_instance
 
 

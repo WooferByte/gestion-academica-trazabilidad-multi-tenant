@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 
@@ -38,6 +40,9 @@ class User(Base, BaseModelMixin):
     )
     password_reset_tokens: Mapped[list['PasswordResetToken']] = relationship(
         back_populates='user', cascade='all, delete-orphan',
+    )
+    mensajes_enviados: Mapped[list['Mensaje']] = relationship(
+        back_populates='sender', cascade='all, delete-orphan',
     )
 
     __table_args__ = (
