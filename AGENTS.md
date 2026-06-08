@@ -87,6 +87,8 @@ Cargá la skill correspondiente al contexto **ANTES** de escribir código. Aplic
 
 > **Skills frontend actualizadas**: se agregaron `dashboard-crud-page` (CRUD estandarizado), `help-system-content` (sistema de ayuda), `vercel-react-best-practices` (70 reglas de performance React), `web-design-guidelines` (guías de diseño web), `ui-ux-pro-max` (UI/UX), `aceternity-ui` (efectos visuales animados), `micro-interactions` (micro interacciones), y se actualizó `react-dev`.
 
+> **Diseño UI**: el diseño del frontend fue realizado en Google Stitch y está disponible en `knowledge-base/stitch_activia_trace_academic_orchestrator/`. Incluye design tokens (colores, tipografía Geist, espaciado), layout (sidebar colapsable 260px/64px), y pantallas de los 5 módulos (dashboard, académico, coordinación, finanzas). Consultar ANTES de implementar cualquier componente frontend. Las skills `tailwind-design-system`, `ui-ux-pro-max`, `aceternity-ui` y `micro-interactions` se alinean directamente con este diseño.
+
 ---
 
 ## Roadmap de Changes

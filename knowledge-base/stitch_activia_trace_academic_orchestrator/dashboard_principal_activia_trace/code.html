@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Geist+Mono:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#2d3133",
+                        "on-tertiary-fixed": "#001d31",
+                        "primary-fixed": "#dae2fd",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-secondary-container": "#54647a",
+                        "on-tertiary-container": "#188ace",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#bec6e0",
+                        "on-secondary-fixed": "#0b1c30",
+                        "tertiary": "#000000",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "outline-variant": "#c6c6cd",
+                        "on-primary-container": "#7c839b",
+                        "on-surface-variant": "#45464d",
+                        "background": "#f7f9fb",
+                        "surface-bright": "#f7f9fb",
+                        "surface-tint": "#565e74",
+                        "tertiary-fixed-dim": "#93ccff",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e0e3e5",
+                        "surface-container-low": "#f2f4f6",
+                        "on-background": "#191c1e",
+                        "secondary-container": "#d0e1fb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#004b73",
+                        "on-surface": "#191c1e",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "primary-container": "#131b2e",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-container": "#eceef0",
+                        "error-container": "#ffdad6",
+                        "surface": "#f7f9fb",
+                        "tertiary-container": "#001d31",
+                        "outline": "#76777d",
+                        "surface-dim": "#d8dadc",
+                        "primary": "#000000",
+                        "on-primary-fixed": "#131b2e",
+                        "secondary": "#505f76",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface-variant": "#e0e3e5",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#cce5ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "sidebar-collapsed": "64px",
+                        "sidebar-width": "260px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "base": "4px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Geist"],
+                        "mono-data": ["Geist Mono"],
+                        "headline-lg": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "body-md": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "headline-sm": ["Geist"],
+                        "body-sm": ["Geist"],
+                        "label-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "mono-data": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-sm": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Geist', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- SideNavBar Anchor -->
+<aside class="flex flex-col h-full w-[260px] bg-surface-container-lowest dark:bg-inverse-surface border-r border-outline-variant sticky top-0 left-0 z-50">
+<div class="p-lg flex items-center gap-sm">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-headline-sm">school</span>
+</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed">Activia Trace</h1>
+<p class="font-body-md text-label-md opacity-70">Gestión Académica</p>
+</div>
+</div>
+<nav class="flex-1 px-md py-sm space-y-xs overflow-y-auto custom-scrollbar">
+<!-- Autenticación -->
+<a class="flex items-center gap-sm px-md py-sm rounded transition-colors text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low group" href="#">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+<span class="font-body-md text-body-md">Autenticación</span>
+</a>
+<!-- Académico (ACTIVE) -->
+<a class="flex items-center gap-sm px-md py-sm rounded bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed font-semibold" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span class="font-body-md text-body-md">Académico</span>
+</a>
+<!-- Coordinación -->
+<a class="flex items-center gap-sm px-md py-sm rounded transition-colors text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low" href="#">
+<span class="material-symbols-outlined" data-icon="assignment_ind">assignment_ind</span>
+<span class="font-body-md text-body-md">Coordinación</span>
+</a>
+<!-- Finanzas -->
+<a class="flex items-center gap-sm px-md py-sm rounded transition-colors text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-body-md text-body-md">Finanzas</span>
+</a>
+<!-- Administración -->
+<a class="flex items-center gap-sm px-md py-sm rounded transition-colors text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low" href="#">
+<span class="material-symbols-outlined" data-icon="settings_applications">settings_applications</span>
+<span class="font-body-md text-body-md">Administración</span>
+</a>
+<div class="pt-lg pb-sm">
+<button class="w-full flex items-center justify-center gap-sm py-sm px-md bg-primary text-on-primary rounded font-label-md text-label-md scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        Nuevo Registro
+                    </button>
+</div>
+</nav>
+<div class="p-md border-t border-outline-variant mt-auto">
+<a class="flex items-center gap-sm px-md py-sm rounded transition-colors text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-body-md text-body-md">Ayuda</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm rounded transition-colors text-error hover:bg-error-container/20" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-body-md text-body-md">Cerrar Sesión</span>
+</a>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- Impersonation Banner -->
+<div class="bg-primary-container text-on-primary-container px-lg py-xs flex items-center justify-between border-b border-white/10 z-20">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+<span class="font-label-sm text-label-sm">MODO ADMINISTRADOR: Puedes impersonar usuarios para auditoría o soporte técnico.</span>
+</div>
+<button class="text-label-sm font-bold underline hover:opacity-80 transition-opacity">Ver Tutorial</button>
+</div>
+<!-- TopNavBar Anchor -->
+<header class="flex justify-between items-center h-16 px-lg w-full bg-surface-container-lowest dark:bg-inverse-surface border-b border-outline-variant sticky top-0 z-10">
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-sm bg-surface-container rounded-lg px-md py-xs border border-outline-variant/30">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-label-md font-label-md w-64" placeholder="Buscar estudiante, factura o acta..." type="text"/>
+</div>
+<nav class="hidden md:flex items-center gap-md">
+<a class="text-primary font-label-md text-label-md border-b-2 border-primary py-xs" href="#">Dashboard</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors py-xs" href="#">Reportes</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors py-xs" href="#">Auditoría</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs">
+<button class="flex items-center gap-xs px-sm py-xs border border-outline-variant rounded hover:bg-surface-container transition-colors text-label-md font-label-md">
+<span class="material-symbols-outlined text-[18px]">hub</span>
+                            Seleccionar Tenant
+                        </button>
+<button class="flex items-center gap-xs px-sm py-xs text-primary hover:bg-primary/5 rounded transition-colors text-label-md font-label-md">
+<span class="material-symbols-outlined text-[18px]">account_circle</span>
+                            Impersonar
+                        </button>
+</div>
+<div class="h-6 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-sm">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">history</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden">
+<img alt="Usuario Administrador" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a senior system administrator in a high-tech corporate office environment. The lighting is soft and natural from large windows, creating a clean light-mode aesthetic with slate and cool blue tones. The individual looks focused yet approachable, embodying a modern enterprise SaaS brand personality that is precise and authoritative." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI3js5LYDUp7mpXC4QfP81s_ixkpzqWlXQIMkW0niy3mzhTIEzfrW7BkmPQXIv4jMfj7bn9DhWByUd9BRLiqT2p7YYn-6IVJOMv6RaeRwIw8GmcjxDW_c8O1PEN8O6ftFBGkbkGlG582xrq7iscyvyIGFPVInfr_fUn8q1GLgTvbfHDLN-8KWlRgmP_jMjDJXDwNsZG8IlgfLFBWj2ltr4Kc-pwS5o_ZCUD96qnsOP_OY7OWK4Tpjo0Z-OMoEdiEutN64_req6oZZq"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-lg custom-scrollbar space-y-lg">
+<!-- Welcome Section -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tight">Panel de Control General</h2>
+<p class="font-body-md text-body-md text-secondary">Resumen consolidado para la gestión académica del ciclo lectivo 2024.</p>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-xs px-md py-sm bg-white border border-outline-variant rounded text-label-md font-label-md hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                            Exportar CSV
+                        </button>
+<button class="flex items-center gap-xs px-md py-sm bg-primary text-on-primary rounded text-label-md font-label-md hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                            Filtros Avanzados
+                        </button>
+</div>
+</div>
+<!-- Metrics Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<!-- Metric Card 1 -->
+<div class="bg-white border border-outline-variant p-lg rounded transition-all hover:shadow-sm">
+<div class="flex justify-between items-start mb-md">
+<div class="w-10 h-10 rounded bg-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<span class="text-error font-label-sm text-label-sm bg-error-container/30 px-sm py-xs rounded">+12% vs ayer</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-xs">Alumnos Atrasados</p>
+<h3 class="font-headline-md text-headline-md font-black">42</h3>
+<div class="mt-md h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="bg-error h-full w-[42%]"></div>
+</div>
+</div>
+<!-- Metric Card 2 -->
+<div class="bg-white border border-outline-variant p-lg rounded transition-all hover:shadow-sm">
+<div class="flex justify-between items-start mb-md">
+<div class="w-10 h-10 rounded bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container">pending_actions</span>
+</div>
+<span class="text-on-secondary-container font-label-sm text-label-sm bg-secondary-container/30 px-sm py-xs rounded">Prioridad Media</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-xs">TPs Pendientes</p>
+<h3 class="font-headline-md text-headline-md font-black">128</h3>
+<div class="mt-md h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="bg-on-secondary-container h-full w-[65%]"></div>
+</div>
+</div>
+<!-- Metric Card 3 -->
+<div class="bg-white border border-outline-variant p-lg rounded transition-all hover:shadow-sm">
+<div class="flex justify-between items-start mb-md">
+<div class="w-10 h-10 rounded bg-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-fixed">mail</span>
+</div>
+<span class="text-on-tertiary-fixed font-label-sm text-label-sm bg-tertiary-fixed/30 px-sm py-xs rounded">5 Urgentes</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-xs">Mensajes por Aprobar</p>
+<h3 class="font-headline-md text-headline-md font-black">14</h3>
+<div class="mt-md h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="bg-on-tertiary-fixed-variant h-full w-[30%]"></div>
+</div>
+</div>
+</div>
+<!-- Table Section: Monitor de Alumnos -->
+<div class="bg-white border border-outline-variant rounded flex flex-col">
+<div class="p-lg border-b border-outline-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">groups</span>
+<h3 class="font-headline-sm text-headline-sm">Monitor de Alumnos</h3>
+</div>
+<div class="flex flex-wrap gap-xs">
+<span class="px-md py-xs bg-surface-container-high rounded-full font-label-md text-label-md flex items-center gap-xs">
+                                Todos <button class="material-symbols-outlined text-[14px]">close</button>
+</span>
+<span class="px-md py-xs bg-secondary-container text-on-secondary-container rounded-full font-label-md text-label-md flex items-center gap-xs border border-outline-variant/20">
+                                Inactivos <button class="material-symbols-outlined text-[14px]">close</button>
+</span>
+<button class="px-md py-xs text-primary font-label-md text-label-md hover:underline">+ Agregar Filtro</button>
+</div>
+</div>
+<!-- Dense Table UI -->
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="p-md font-label-sm text-label-sm text-secondary uppercase tracking-wider">Estudiante</th>
+<th class="p-md font-label-sm text-label-sm text-secondary uppercase tracking-wider">ID Legajo</th>
+<th class="p-md font-label-sm text-label-sm text-secondary uppercase tracking-wider">Carrera / Ciclo</th>
+<th class="p-md font-label-sm text-label-sm text-secondary uppercase tracking-wider">Estado</th>
+<th class="p-md font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center font-bold text-on-primary-fixed text-label-md">AM</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Alejandro Martínez</p>
+<p class="font-label-sm text-label-sm text-secondary">a.martinez@activia.edu</p>
+</div>
+</div>
+</td>
+<td class="p-md font-mono-data text-mono-data text-secondary">#ACT-29402</td>
+<td class="p-md font-body-md text-body-md">Ing. en Sistemas - 4to Año</td>
+<td class="p-md">
+<span class="px-sm py-xs bg-green-100 text-green-800 rounded-full font-label-sm text-label-sm font-bold">ACTIVO</span>
+</td>
+<td class="p-md text-right">
+<button class="material-symbols-outlined text-secondary hover:text-primary transition-all p-xs">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center font-bold text-on-secondary-fixed text-label-md">LS</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Lucía Soler</p>
+<p class="font-label-sm text-label-sm text-secondary">l.soler@activia.edu</p>
+</div>
+</div>
+</td>
+<td class="p-md font-mono-data text-mono-data text-secondary">#ACT-29415</td>
+<td class="p-md font-body-md text-body-md">Lic. en Administración - 2do Año</td>
+<td class="p-md">
+<span class="px-sm py-xs bg-red-100 text-red-800 rounded-full font-label-sm text-label-sm font-bold">ATRASADO</span>
+</td>
+<td class="p-md text-right">
+<button class="material-symbols-outlined text-secondary hover:text-primary transition-all p-xs">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center font-bold text-on-tertiary-fixed text-label-md">CR</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Carlos Rodríguez</p>
+<p class="font-label-sm text-label-sm text-secondary">c.rod@activia.edu</p>
+</div>
+</div>
+</td>
+<td class="p-md font-mono-data text-mono-data text-secondary">#ACT-29422</td>
+<td class="p-md font-body-md text-body-md">Arquitectura - 5to Año</td>
+<td class="p-md">
+<span class="px-sm py-xs bg-yellow-100 text-yellow-800 rounded-full font-label-sm text-label-sm font-bold">PENDIENTE</span>
+</td>
+<td class="p-md text-right">
+<button class="material-symbols-outlined text-secondary hover:text-primary transition-all p-xs">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-outline-variant flex items-center justify-center font-bold text-white text-label-md">MB</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Mariana Benítez</p>
+<p class="font-label-sm text-label-sm text-secondary">m.benitez@activia.edu</p>
+</div>
+</div>
+</td>
+<td class="p-md font-mono-data text-mono-data text-secondary">#ACT-29501</td>
+<td class="p-md font-body-md text-body-md">Ing. Industrial - 1er Año</td>
+<td class="p-md">
+<span class="px-sm py-xs bg-slate-100 text-slate-800 rounded-full font-label-sm text-label-sm font-bold">INACTIVO</span>
+</td>
+<td class="p-md text-right">
+<button class="material-symbols-outlined text-secondary hover:text-primary transition-all p-xs">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination/Footer -->
+<div class="p-md border-t border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<p class="font-label-sm text-label-sm text-secondary">Mostrando 4 de 2,450 alumnos</p>
+<div class="flex gap-xs">
+<button class="p-xs border border-outline-variant rounded hover:bg-surface-container-low disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="px-sm py-xs bg-primary text-on-primary rounded font-label-sm text-label-sm">1</button>
+<button class="px-sm py-xs hover:bg-surface-container-low rounded font-label-sm text-label-sm">2</button>
+<button class="px-sm py-xs hover:bg-surface-container-low rounded font-label-sm text-label-sm">3</button>
+<button class="p-xs border border-outline-variant rounded hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Secondary Row: Recent Alerts & System Health -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-lg">
+<div class="bg-white border border-outline-variant rounded p-lg">
+<h4 class="font-headline-sm text-headline-sm mb-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-on-tertiary-container">analytics</span>
+                            Análisis de Deserción
+                        </h4>
+<div class="h-48 flex items-end gap-md px-md pb-xs">
+<div class="flex-1 bg-surface-container h-[20%] rounded-t-sm relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-on-primary text-[10px] px-xs rounded">Mar</div>
+</div>
+<div class="flex-1 bg-surface-container h-[35%] rounded-t-sm relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-on-primary text-[10px] px-xs rounded">Abr</div>
+</div>
+<div class="flex-1 bg-on-tertiary-container h-[60%] rounded-t-sm relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-on-primary text-[10px] px-xs rounded">May</div>
+</div>
+<div class="flex-1 bg-surface-container h-[45%] rounded-t-sm relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-on-primary text-[10px] px-xs rounded">Jun</div>
+</div>
+<div class="flex-1 bg-surface-container h-[30%] rounded-t-sm relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-on-primary text-[10px] px-xs rounded">Jul</div>
+</div>
+</div>
+<div class="mt-lg pt-md border-t border-outline-variant flex justify-between text-label-sm font-label-sm text-secondary">
+<span>Promedio histórico: 12%</span>
+<span class="text-error font-bold">Variación actual: +4.2%</span>
+</div>
+</div>
+<div class="bg-primary-container text-on-primary-container rounded p-lg flex flex-col justify-center overflow-hidden relative">
+<!-- Abstract Background Decoration -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+<h4 class="font-headline-sm text-headline-sm mb-xs relative z-10">Optimiza tu Gestión Académica</h4>
+<p class="font-body-md text-body-md opacity-80 mb-lg relative z-10">Has completado el 85% de las tareas administrativas de este mes. Mantén el ritmo para un cierre de ciclo exitoso.</p>
+<div class="flex gap-md relative z-10">
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-black">2.4k</span>
+<span class="font-label-sm text-label-sm opacity-60 uppercase">Registros Procesados</span>
+</div>
+<div class="h-10 w-[1px] bg-white/20 self-center"></div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-black">0.4s</span>
+<span class="font-label-sm text-label-sm opacity-60 uppercase">Latencia API</span>
+</div>
+</div>
+<button class="mt-lg w-fit px-md py-sm bg-white text-primary rounded font-label-md text-label-md hover:scale-105 transition-transform">
+                            Ver Logs del Sistema
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro-interaction for feedback -->
+<script>
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if(el.tagName === 'A' && el.getAttribute('href') === '#') e.preventDefault();
+                console.log('Action triggered:', el.innerText || el.getAttribute('data-icon'));
+            });
+        });
+
+        // Simple pulse effect for the "Urgentes" notification
+        const urgentBadge = document.querySelector('.text-on-tertiary-fixed.bg-tertiary-fixed\\/30');
+        if (urgentBadge) {
+            setInterval(() => {
+                urgentBadge.classList.toggle('opacity-50');
+            }, 1000);
+        }
+    </script>
+</body></html>

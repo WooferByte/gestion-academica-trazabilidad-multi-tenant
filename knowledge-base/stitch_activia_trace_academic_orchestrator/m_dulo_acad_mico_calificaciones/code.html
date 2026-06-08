@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Geist+Mono:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#2d3133",
+                        "on-tertiary-fixed": "#001d31",
+                        "primary-fixed": "#dae2fd",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-secondary-container": "#54647a",
+                        "on-tertiary-container": "#188ace",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#bec6e0",
+                        "on-secondary-fixed": "#0b1c30",
+                        "tertiary": "#000000",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "outline-variant": "#c6c6cd",
+                        "on-primary-container": "#7c839b",
+                        "on-surface-variant": "#45464d",
+                        "background": "#f7f9fb",
+                        "surface-bright": "#f7f9fb",
+                        "surface-tint": "#565e74",
+                        "tertiary-fixed-dim": "#93ccff",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e0e3e5",
+                        "surface-container-low": "#f2f4f6",
+                        "on-background": "#191c1e",
+                        "secondary-container": "#d0e1fb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#004b73",
+                        "on-surface": "#191c1e",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "primary-container": "#131b2e",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-container": "#eceef0",
+                        "error-container": "#ffdad6",
+                        "surface": "#f7f9fb",
+                        "tertiary-container": "#001d31",
+                        "outline": "#76777d",
+                        "surface-dim": "#d8dadc",
+                        "primary": "#000000",
+                        "on-primary-fixed": "#131b2e",
+                        "secondary": "#505f76",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface-variant": "#e0e3e5",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#cce5ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "sidebar-collapsed": "64px",
+                        "sidebar-width": "260px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "base": "4px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Geist"],
+                        "mono-data": ["Geist Mono"],
+                        "headline-lg": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "body-md": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "headline-sm": ["Geist"],
+                        "body-sm": ["Geist"],
+                        "label-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "mono-data": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-sm": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Geist', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen">
+<!-- SIDEBAR -->
+<aside class="bg-surface-container-lowest h-screen sticky top-0 left-0 border-r border-outline-variant flex flex-col w-[260px] z-50">
+<div class="p-lg">
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">Activia Trace</h1>
+<p class="font-body-sm text-on-surface-variant">Gestión Académica</p>
+</div>
+<nav class="flex-1 px-md space-y-xs">
+<a class="flex items-center gap-md p-sm text-secondary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+<span class="font-body-md text-body-md">Autenticación</span>
+</a>
+<a class="flex items-center gap-md p-sm bg-secondary-container text-on-secondary-container font-semibold transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span class="font-body-md text-body-md">Académico</span>
+</a>
+<a class="flex items-center gap-md p-sm text-secondary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="assignment_ind">assignment_ind</span>
+<span class="font-body-md text-body-md">Coordinación</span>
+</a>
+<a class="flex items-center gap-md p-sm text-secondary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-body-md text-body-md">Finanzas</span>
+</a>
+<a class="flex items-center gap-md p-sm text-secondary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings_applications">settings_applications</span>
+<span class="font-body-md text-body-md">Administración</span>
+</a>
+</nav>
+<div class="p-md space-y-xs mt-auto border-t border-outline-variant">
+<button class="w-full bg-primary text-on-primary py-sm font-label-md transition-transform scale-95 active:scale-90 flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined" data-icon="add" style="font-size: 18px;">add</span>
+                Nuevo Registro
+            </button>
+<a class="flex items-center gap-md p-sm text-secondary hover:bg-surface-container-low" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-body-md text-body-md">Ayuda</span>
+</a>
+<a class="flex items-center gap-md p-sm text-secondary hover:bg-surface-container-low" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-body-md text-body-md">Cerrar Sesión</span>
+</a>
+</div>
+</aside>
+<!-- MAIN CONTENT -->
+<main class="flex-1 flex flex-col min-w-0">
+<!-- TOP NAV BAR -->
+<header class="bg-surface-container-lowest h-16 px-lg flex justify-between items-center sticky top-0 border-b border-outline-variant z-40">
+<div class="flex items-center gap-lg">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="pl-xl pr-md py-xs bg-surface-container rounded-lg border-none focus:ring-1 focus:ring-primary w-64 text-body-sm" placeholder="Buscar alumnos o cursos..." type="text"/>
+</div>
+<div class="hidden md:flex gap-md">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary" href="#">Reportes</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Auditoría</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary" data-icon="history">history</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-xs"></div>
+<div class="flex items-center gap-sm">
+<div class="text-right">
+<p class="font-label-md text-label-md font-bold">Admin Prof.</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Titular</p>
+</div>
+<img alt="Usuario Administrador" class="h-8 w-8 rounded-full border border-outline-variant" data-alt="A professional headshot of a middle-aged male educator with glasses and a friendly expression. He is wearing a dark navy blue blazer over a crisp white shirt. The background is a soft, blurred academic office with shelves of books. The lighting is bright and even, reflecting a clean and modern professional atmosphere consistent with an enterprise SaaS dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwY867-UPoU0sezzqx02hiNAciBVUqtwfW_xS4zmapQtpAqNJg2tZE3KFjEp1NSN2kVBTV6SborJcms9eGWLx5zFPH9dm9hGe49GJZA4zvY7Czyeetoho5WOXNhOmfemPpMOF3skzXjgLtuRb1xN5RlRpTHLod6bm4pMam_xcE45cSvD9Qiobr6d_cwon4drkaiSidBy9_RCWQaJCuyHiUNHTjcvYqrpehq7rVYD8X1fv87pUb39pjjAOOUCD4XD869WR1B66_pta2"/>
+</div>
+</div>
+</header>
+<div class="p-lg space-y-lg overflow-y-auto">
+<!-- Header Section -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Calificaciones e Importación</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Gestión masiva de registros académicos y seguimiento de cumplimiento.</p>
+</div>
+<button class="bg-primary text-on-primary px-lg py-sm font-label-md flex items-center gap-sm transition-transform active:scale-95 shadow-lg" onclick="toggleQueue()">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+                    Enviar Comunicaciones Masivas
+                </button>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-lg">
+<!-- 1. Drag & Drop Area -->
+<div class="col-span-12 lg:col-span-4 bg-surface-container-lowest border border-outline-variant p-lg flex flex-col justify-center items-center text-center space-y-md group relative overflow-hidden">
+<div class="absolute inset-0 bg-primary opacity-0 group-hover:opacity-[0.02] transition-opacity pointer-events-none"></div>
+<div class="h-16 w-16 rounded-full bg-surface-container flex items-center justify-center mb-md border-2 border-dashed border-outline group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-primary scale-125" data-icon="upload_file">upload_file</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm">Cargar Archivo</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Arrastra y suelta tu archivo .xlsx o .csv aquí o haz clic para explorar.</p>
+</div>
+<input class="absolute inset-0 opacity-0 cursor-pointer" type="file"/>
+<div class="flex gap-sm mt-md">
+<div class="flex items-center gap-xs px-sm py-xs bg-surface-container rounded font-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]" data-icon="description">description</span>
+                            Plantilla.xlsx
+                        </div>
+</div>
+</div>
+<!-- 3. Alumnos Atrasados (Right Side Card) -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-outline-variant p-lg space-y-md">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-error" data-icon="warning">warning</span>
+<h3 class="font-headline-sm text-headline-sm">Alumnos con Entregas Atrasadas</h3>
+</div>
+<div class="flex items-center gap-md">
+<span class="font-label-sm text-on-surface-variant">Umbral: <b class="text-primary">&gt; 3 días</b></span>
+<button class="material-symbols-outlined text-on-surface-variant" data-icon="settings">settings</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="flex items-center gap-md p-md border border-outline-variant bg-surface group hover:border-error transition-colors">
+<img alt="Student" class="h-10 w-10 rounded shadow-sm" data-alt="A focused young female student with dark hair tied back, wearing a simple gray sweater. She is looking slightly off-camera with a neutral expression. The photograph has a soft, studio-quality lighting setup with a clean, light-colored background that fits perfectly into a modern enterprise academic portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVKxXsXEBO164Y8fIkU9yci4I5VTn3XI-79TxHY2uCCRJNDKH-U-vEYCmDGvPlz00j1hcadX_lz_0f3cp_nKJxE1bIUkvwjPPmP2tl5ukJUStjoR75toXFRAD5Dfe6dc35zPdccxm--8AHVGkOek8lZBXweIHQxTEnJw64NPfOJcxfUQPpXvN1dkQ3Z9PvN9A4Wu6-XYl_JkFs1qyvLrOjaT2AIUDCDthafd1J3DXpUslyiQPH-x_QH3VoAjHRA7q-XOzcg4PvKTCx"/>
+<div class="flex-1 min-w-0">
+<p class="font-label-md text-label-md truncate">Martínez, Sofía</p>
+<p class="font-mono-data text-mono-data text-on-surface-variant">ID: 29041-B</p>
+</div>
+<div class="text-right">
+<span class="bg-error-container text-on-error-container px-sm py-xs font-label-sm rounded">5 Días</span>
+</div>
+</div>
+<div class="flex items-center gap-md p-md border border-outline-variant bg-surface group hover:border-error transition-colors">
+<img alt="Student" class="h-10 w-10 rounded shadow-sm" data-alt="A young male student with short blond hair and blue eyes, wearing a casual navy blue t-shirt. He has a subtle smile, conveying a friendly and approachable persona. The image is a professional-grade portrait with sharp focus and balanced natural light, ideal for a high-end educational user interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZtpvrLXv0DxBjvTkm9BVtQfZF2_tQPYfkaOpBcyeaIxDdx7RXeIVirIforNUSHgdB8TDKjs_MANpOduuZywRQLx64C_q6CCqhdAQTzisSGBj4QhwnLJJPMxR-UqnaPD7Hu55cJOnMaEQos3WZDLugwPwAJLISGxyr07QAbBvZRDKb2GOf4wVHDSmk3eeV3yu0fNQN9HptrZ1hEVtP7Hcha-XN_3L3MxmxBTuVDJLjNX5G6LGD7tJGEFiJkRgrrmTQH6SPRZCFfzQA"/>
+<div class="flex-1 min-w-0">
+<p class="font-label-md text-label-md truncate">Ramírez, Julián</p>
+<p class="font-mono-data text-mono-data text-on-surface-variant">ID: 31220-C</p>
+</div>
+<div class="text-right">
+<span class="bg-error-container text-on-error-container px-sm py-xs font-label-sm rounded">4 Días</span>
+</div>
+</div>
+<div class="flex items-center gap-md p-md border border-outline-variant bg-surface group hover:border-error transition-colors">
+<img alt="Student" class="h-10 w-10 rounded shadow-sm" data-alt="A portrait of a teenage student with curly dark hair and a warm, genuine smile. They are wearing a denim jacket over a white shirt. The lighting is warm and natural, suggesting an outdoor or brightly lit indoor environment. The aesthetic is clean and modern, suitable for a sophisticated school administration dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7Ol-SNrekPgVygzTPxpKYf3snfQPtYkXlmU6nA9GEwfTp_G6KP_iYWVQrTz4_TcnNsGf51OAAzdHQBWAmeAALEhpOcxD6AkuG_nqXZPD2GcswBIerP4w79h3Jmy3TJa-FCqes6gSxJfqxc7TgnLGD4cTDnINdDRB1ZC0zWrhyvHNZrAJtnNyTZKoEalVRM-UnCco29x5i8zQeySCz7Iz3Dgn3uyswKm7wU6VyCdy3NPO9zZSc7JVNxmK3FrOE1LFy62aYqXmQeVkJ"/>
+<div class="flex-1 min-w-0">
+<p class="font-label-md text-label-md truncate">Gómez, Lucas</p>
+<p class="font-mono-data text-mono-data text-on-surface-variant">ID: 15582-A</p>
+</div>
+<div class="text-right">
+<span class="bg-surface-container-highest text-on-surface-variant px-sm py-xs font-label-sm rounded">3 Días</span>
+</div>
+</div>
+<div class="flex items-center justify-center p-md border-2 border-dashed border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary cursor-pointer transition-all">
+<span class="font-label-md">+ Ver 12 más</span>
+</div>
+</div>
+</div>
+<!-- 2. Preview de tabla de datos -->
+<div class="col-span-12 bg-surface-container-lowest border border-outline-variant overflow-hidden">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<div class="flex items-center gap-md">
+<h3 class="font-label-md text-label-md font-bold uppercase tracking-wider text-on-surface-variant">Vista Previa de Importación</h3>
+<span class="bg-on-tertiary-container text-white px-sm py-xs font-label-sm rounded-full">84 registros detectados</span>
+</div>
+<div class="flex gap-sm">
+<button class="bg-white border border-outline-variant px-md py-xs font-label-md text-secondary hover:bg-surface-container transition-colors">Limpiar</button>
+<button class="bg-primary text-on-primary px-md py-xs font-label-md transition-transform active:scale-95">Confirmar Carga</button>
+</div>
+</div>
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-lg py-md font-label-sm text-on-surface-variant border-b border-outline-variant">Alumno</th>
+<th class="px-lg py-md font-label-sm text-on-surface-variant border-b border-outline-variant">Asignatura</th>
+<th class="px-lg py-md font-label-sm text-on-surface-variant border-b border-outline-variant">Calificación</th>
+<th class="px-lg py-md font-label-sm text-on-surface-variant border-b border-outline-variant">Tipo Dato</th>
+<th class="px-lg py-md font-label-sm text-on-surface-variant border-b border-outline-variant">Estado Validación</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-lg py-md font-body-md">Sánchez, Elena</td>
+<td class="px-lg py-md font-body-md">Matemáticas II</td>
+<td class="px-lg py-md font-mono-data text-primary">8.5</td>
+<td class="px-lg py-md">
+<span class="text-on-tertiary-container bg-tertiary-fixed px-sm py-xs font-label-sm rounded">Float/Decimal</span>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs text-on-tertiary-container font-label-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="check_circle">check_circle</span>
+                                            Válido
+                                        </div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-lg py-md font-body-md">Pérez, Juan</td>
+<td class="px-lg py-md font-body-md">Matemáticas II</td>
+<td class="px-lg py-md font-mono-data text-error">N/A</td>
+<td class="px-lg py-md">
+<span class="text-error bg-error-container px-sm py-xs font-label-sm rounded">String/Inválido</span>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs text-error font-label-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+                                            Requiere Acción
+                                        </div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-lg py-md font-body-md">Torres, Diego</td>
+<td class="px-lg py-md font-body-md">Matemáticas II</td>
+<td class="px-lg py-md font-mono-data text-primary">6.0</td>
+<td class="px-lg py-md">
+<span class="text-on-tertiary-container bg-tertiary-fixed px-sm py-xs font-label-sm rounded">Float/Decimal</span>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs text-on-tertiary-container font-label-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="check_circle">check_circle</span>
+                                            Válido
+                                        </div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- 4. Cola de Envío (Slide-over/Drawer) -->
+<div class="fixed inset-y-0 right-0 w-96 bg-surface-container-lowest shadow-2xl z-[60] transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-outline-variant" id="comms-drawer">
+<div class="p-lg border-b border-outline-variant flex justify-between items-center">
+<div>
+<h3 class="font-headline-sm text-headline-sm">Cola de Envío</h3>
+<p class="font-body-sm text-on-surface-variant">42 mensajes en espera</p>
+</div>
+<button class="material-symbols-outlined hover:bg-surface-container rounded-full p-xs" data-icon="close" onclick="toggleQueue()">close</button>
+</div>
+<div class="flex-1 overflow-y-auto p-lg space-y-md">
+<!-- Sending Item -->
+<div class="p-md border border-primary bg-primary-fixed/20 space-y-sm">
+<div class="flex justify-between items-start">
+<span class="font-label-md font-bold text-primary">Enviando...</span>
+<span class="font-mono-data text-[11px]">85%</span>
+</div>
+<div class="h-1 bg-surface-container-highest w-full rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[85%] animate-pulse"></div>
+</div>
+<p class="font-body-sm text-body-sm">Aviso de entrega: Martínez, Sofía</p>
+</div>
+<!-- Queue Items -->
+<div class="space-y-sm">
+<div class="p-md border border-outline-variant bg-surface-container-low opacity-60">
+<p class="font-label-md">Aviso de entrega: Ramírez, Julián</p>
+<p class="font-mono-data text-[11px] text-on-surface-variant">Protocolo: Email + Push</p>
+</div>
+<div class="p-md border border-outline-variant bg-surface-container-low opacity-60">
+<p class="font-label-md">Aviso de entrega: Gómez, Lucas</p>
+<p class="font-mono-data text-[11px] text-on-surface-variant">Protocolo: Email + Push</p>
+</div>
+<div class="p-md border border-outline-variant bg-surface-container-low opacity-60">
+<p class="font-label-md">Aviso de entrega: Vargas, Mateo</p>
+<p class="font-mono-data text-[11px] text-on-surface-variant">Protocolo: Email + Push</p>
+</div>
+</div>
+</div>
+<div class="p-lg border-t border-outline-variant bg-surface-container-low">
+<button class="w-full bg-error text-on-error py-md font-label-md hover:bg-error/90 transition-colors">
+                Detener Todos los Envíos
+            </button>
+</div>
+</div>
+<!-- Overlay -->
+<div class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[55] opacity-0 pointer-events-none transition-opacity duration-300" id="drawer-overlay" onclick="toggleQueue()"></div>
+<script>
+        function toggleQueue() {
+            const drawer = document.getElementById('comms-drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            drawer.classList.toggle('translate-x-full');
+            overlay.classList.toggle('opacity-0');
+            overlay.classList.toggle('pointer-events-none');
+        }
+
+        // Micro-interaction for hover states
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('mousedown', () => el.classList.add('scale-95'));
+            el.addEventListener('mouseup', () => el.classList.remove('scale-95'));
+            el.addEventListener('mouseleave', () => el.classList.remove('scale-95'));
+        });
+    </script>
+</body></html>

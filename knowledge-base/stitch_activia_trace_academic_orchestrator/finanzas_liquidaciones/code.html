@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Activia Trace - Finanzas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Geist+Mono:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-surface": "#2d3133",
+                    "on-tertiary-fixed": "#001d31",
+                    "primary-fixed": "#dae2fd",
+                    "secondary-fixed": "#d3e4fe",
+                    "on-secondary-container": "#54647a",
+                    "on-tertiary-container": "#188ace",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#bec6e0",
+                    "on-secondary-fixed": "#0b1c30",
+                    "tertiary": "#000000",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "outline-variant": "#c6c6cd",
+                    "on-primary-container": "#7c839b",
+                    "on-surface-variant": "#45464d",
+                    "background": "#f7f9fb",
+                    "surface-bright": "#f7f9fb",
+                    "surface-tint": "#565e74",
+                    "tertiary-fixed-dim": "#93ccff",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e0e3e5",
+                    "surface-container-low": "#f2f4f6",
+                    "on-background": "#191c1e",
+                    "secondary-container": "#d0e1fb",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed-variant": "#004b73",
+                    "on-surface": "#191c1e",
+                    "error": "#ba1a1a",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "primary-container": "#131b2e",
+                    "surface-container-high": "#e6e8ea",
+                    "surface-container": "#eceef0",
+                    "error-container": "#ffdad6",
+                    "surface": "#f7f9fb",
+                    "tertiary-container": "#001d31",
+                    "outline": "#76777d",
+                    "surface-dim": "#d8dadc",
+                    "primary": "#000000",
+                    "on-primary-fixed": "#131b2e",
+                    "secondary": "#505f76",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary-fixed-dim": "#bec6e0",
+                    "surface-variant": "#e0e3e5",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed": "#cce5ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "xl": "32px",
+                    "md": "16px",
+                    "sidebar-collapsed": "64px",
+                    "sidebar-width": "260px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "base": "4px",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Geist"],
+                    "mono-data": ["Geist Mono"],
+                    "headline-lg": ["Geist"],
+                    "label-sm": ["Geist"],
+                    "body-md": ["Geist"],
+                    "body-lg": ["Geist"],
+                    "headline-sm": ["Geist"],
+                    "body-sm": ["Geist"],
+                    "label-md": ["Geist"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "mono-data": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-sm": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Geist', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8e0; border-radius: 10px; }
+        .glass-header { backdrop-filter: blur(8px); background: rgba(255, 255, 255, 0.8); }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-screen sticky top-0 left-0 border-r border-outline-variant bg-surface-container-lowest w-[260px] z-50">
+<div class="p-lg flex flex-col gap-xs">
+<span class="font-headline-sm text-headline-sm font-bold text-primary">Activia Trace</span>
+<span class="font-body-md text-body-md text-on-surface-variant opacity-70">Gestión Académica</span>
+</div>
+<nav class="flex-1 px-md space-y-xs mt-md">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-low transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">security</span>
+<span class="font-body-md text-body-md">Autenticación</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-low transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">school</span>
+<span class="font-body-md text-body-md">Académico</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-low transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">assignment_ind</span>
+<span class="font-body-md text-body-md">Coordinación</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-secondary-container text-on-secondary-container font-semibold transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-md text-body-md">Finanzas</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-low transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">settings_applications</span>
+<span class="font-body-md text-body-md">Administración</span>
+</a>
+</nav>
+<div class="mt-auto p-md border-t border-outline-variant space-y-xs">
+<button class="w-full flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-low">
+<span class="material-symbols-outlined">help</span>
+<span class="font-body-md text-body-md">Ayuda</span>
+</button>
+<button class="w-full flex items-center gap-md px-md py-sm rounded-lg text-error hover:bg-error-container transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md text-body-md">Cerrar Sesión</span>
+</button>
+</div>
+</aside>
+<main class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center h-16 px-lg w-full bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-40">
+<div class="flex items-center gap-xl">
+<div class="relative group">
+<span class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">search</span>
+</span>
+<input class="h-9 w-64 pl-10 pr-4 bg-surface-container-low border-none rounded-lg text-body-sm focus:ring-1 focus:ring-primary" placeholder="Buscar liquidación..." type="text"/>
+</div>
+<nav class="hidden md:flex gap-lg">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary" href="#">Reportes</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Auditoría</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="flex items-center gap-xs px-sm py-xs text-label-md font-label-md text-secondary border border-outline-variant rounded-lg hover:bg-surface-container-low transition-opacity opacity-80 hover:opacity-100">
+<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
+                        Impersonar
+                    </button>
+<div class="h-8 w-[1px] bg-outline-variant mx-xs"></div>
+<button class="relative p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</button>
+<div class="flex items-center gap-sm ml-xs">
+<img alt="Usuario Administrador" class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="A professional headshot of a corporate finance executive in a clean-cut suit, set against a blurred modern office background with soft neutral tones. The lighting is bright and professional, emphasizing a high-end enterprise SaaS aesthetic with focus and clarity. The color palette is composed of professional greys, whites, and deep blues." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD48MzTNuK2bl9qSiExaeiJOsua7FM__4vEtAR03xMYkMbT3HR_OJHCy0UHBlJzuTNmzstKlzJ7vufE9GnRFXuC7hscS_0YYTNiSzgp-TcxeEwO9yhPYVnX1cNcVbSWXLkMjrjiRg7xLoK2SnYZLiXmfynZvnNb5dA_lBKIk-nIv7EuJXDI3iSYCgR-pabffyUDx33jl26kn7wm9G8Gg0vWgYIDBpdliX6yAqv-HIgEgTIXD4QFaJ1k9csc_NYcMo6hUO1Ne5MYpOjQ"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<div class="p-lg space-y-lg overflow-y-auto">
+<div class="flex justify-between items-end">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Liquidaciones y Salarios</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Gestión centralizada de haberes y facturación docente.</p>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-sm px-md py-sm bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                            Nuevo Registro
+                        </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-lg">
+<!-- Section 1: Monthly Settlements Table -->
+<div class="col-span-12 xl:col-span-8 space-y-md">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+<div class="px-md py-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low/30">
+<h3 class="font-headline-sm text-headline-sm flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                                    Liquidaciones Mensuales
+                                </h3>
+<div class="flex gap-xs">
+<button class="p-xs hover:bg-surface-container-high rounded text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</button>
+<button class="p-xs hover:bg-surface-container-high rounded text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-md py-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Empleado/Rol</th>
+<th class="px-md py-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Base</th>
+<th class="px-md py-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Plus Rol</th>
+<th class="px-md py-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total</th>
+<th class="px-md py-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Estado</th>
+<th class="px-md py-sm font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-right">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-md">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Dr. Ricardo Gómez</span>
+<span class="text-label-sm text-on-surface-variant">Coordinador de Cátedra</span>
+</div>
+</td>
+<td class="px-md py-md font-mono-data text-mono-data">$450.000,00</td>
+<td class="px-md py-md">
+<span class="px-sm py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded-full text-label-sm">+$85.000,00</span>
+</td>
+<td class="px-md py-md font-mono-data text-mono-data font-bold">$535.000,00</td>
+<td class="px-md py-md">
+<div class="flex items-center gap-xs text-green-700">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-label-md font-label-md">Pagado</span>
+</div>
+</td>
+<td class="px-md py-md text-right">
+<button class="p-1 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-md py-md">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Lic. Elena Martínez</span>
+<span class="text-label-sm text-on-surface-variant">Docente Titular</span>
+</div>
+</td>
+<td class="px-md py-md font-mono-data text-mono-data">$380.000,00</td>
+<td class="px-md py-md">
+<span class="px-sm py-1 bg-surface-container-high text-on-surface-variant rounded-full text-label-sm">+$15.000,00</span>
+</td>
+<td class="px-md py-md font-mono-data text-mono-data font-bold">$395.000,00</td>
+<td class="px-md py-md">
+<div class="flex items-center gap-xs text-amber-700">
+<span class="w-2 h-2 rounded-full bg-amber-500"></span>
+<span class="text-label-md font-label-md">Pendiente</span>
+</div>
+</td>
+<td class="px-md py-md text-right">
+<button class="p-1 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-md py-md">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Ing. Marcos Solari</span>
+<span class="text-label-sm text-on-surface-variant">Auditor Técnico</span>
+</div>
+</td>
+<td class="px-md py-md font-mono-data text-mono-data">$510.000,00</td>
+<td class="px-md py-md">
+<span class="px-sm py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded-full text-label-sm">+$120.000,00</span>
+</td>
+<td class="px-md py-md font-mono-data text-mono-data font-bold">$630.000,00</td>
+<td class="px-md py-md">
+<div class="flex items-center gap-xs text-green-700">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-label-md font-label-md">Pagado</span>
+</div>
+</td>
+<td class="px-md py-md text-right">
+<button class="p-1 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Section 2: Salary Grid Configuration -->
+<div class="col-span-12 xl:col-span-4 space-y-md">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col h-full">
+<h3 class="font-headline-sm text-headline-sm mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">settings</span>
+                                Grilla Salarial Base
+                            </h3>
+<div class="space-y-sm flex-1">
+<div class="p-sm border border-outline-variant rounded-lg flex justify-between items-center hover:bg-surface-container-low transition-colors">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Director de Área</p>
+<p class="font-body-md text-body-md font-bold">$780.000,00</p>
+</div>
+<button class="p-xs text-secondary hover:text-primary"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+</div>
+<div class="p-sm border border-outline-variant rounded-lg flex justify-between items-center hover:bg-surface-container-low transition-colors">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Coordinador</p>
+<p class="font-body-md text-body-md font-bold">$450.000,00</p>
+</div>
+<button class="p-xs text-secondary hover:text-primary"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+</div>
+<div class="p-sm border border-outline-variant rounded-lg flex justify-between items-center hover:bg-surface-container-low transition-colors">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Docente Titular</p>
+<p class="font-body-md text-body-md font-bold">$380.000,00</p>
+</div>
+<button class="p-xs text-secondary hover:text-primary"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+</div>
+<div class="p-sm border border-outline-variant rounded-lg flex justify-between items-center hover:bg-surface-container-low transition-colors">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Auxiliar Académico</p>
+<p class="font-body-md text-body-md font-bold">$220.000,00</p>
+</div>
+<button class="p-xs text-secondary hover:text-primary"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+</div>
+</div>
+<button class="mt-md w-full py-sm border-2 border-dashed border-outline-variant rounded-lg text-label-md font-label-md text-on-surface-variant hover:border-primary hover:text-primary transition-all">
+                                + Agregar Nuevo Rol
+                            </button>
+</div>
+</div>
+<!-- Section 3: Monotributistas Invoices ABM -->
+<div class="col-span-12 space-y-md">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="px-md py-md border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">receipt_long</span>
+                                    Facturas Monotributistas (Externos)
+                                </h3>
+<div class="flex gap-sm">
+<span class="px-md py-1 bg-surface-container-high rounded-full text-label-sm font-label-sm text-on-surface-variant flex items-center gap-xs">
+                                        Total Mes: $1.240.500
+                                    </span>
+<button class="flex items-center gap-xs px-md py-1.5 border border-outline-variant rounded-lg text-label-md font-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">upload_file</span>
+                                        Subir Factura
+                                    </button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md p-md">
+<!-- Invoice Card 1 -->
+<div class="border border-outline-variant rounded-lg p-md flex flex-col gap-md hover:border-primary/40 transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex gap-sm">
+<div class="w-10 h-10 rounded bg-red-50 text-red-600 flex items-center justify-center">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div>
+<p class="font-body-md text-body-md font-bold">FACT-A-00234</p>
+<p class="text-label-sm text-on-surface-variant">Sosa, Julián - Desarrollo</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">12 Oct 2023</span>
+</div>
+<div class="flex justify-between items-center mt-xs">
+<span class="font-mono-data text-mono-data text-headline-sm">$145.000,00</span>
+<div class="flex gap-xs">
+<button class="p-1.5 hover:bg-surface-container-high rounded text-secondary" title="Ver PDF">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="p-1.5 hover:bg-error-container hover:text-error rounded text-secondary">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Invoice Card 2 -->
+<div class="border border-outline-variant rounded-lg p-md flex flex-col gap-md hover:border-primary/40 transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex gap-sm">
+<div class="w-10 h-10 rounded bg-red-50 text-red-600 flex items-center justify-center">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div>
+<p class="font-body-md text-body-md font-bold">FACT-C-00912</p>
+<p class="text-label-sm text-on-surface-variant">López, Clara - Diseño</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">10 Oct 2023</span>
+</div>
+<div class="flex justify-between items-center mt-xs">
+<span class="font-mono-data text-mono-data text-headline-sm">$92.400,00</span>
+<div class="flex gap-xs">
+<button class="p-1.5 hover:bg-surface-container-high rounded text-secondary" title="Ver PDF">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="p-1.5 hover:bg-error-container hover:text-error rounded text-secondary">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Invoice Card 3 (Draft/New) -->
+<div class="border-2 border-dashed border-outline-variant rounded-lg p-md flex flex-col items-center justify-center gap-sm text-on-surface-variant hover:border-primary hover:text-primary cursor-pointer transition-all bg-surface-container-low/20">
+<span class="material-symbols-outlined text-[40px] opacity-40">post_add</span>
+<span class="font-label-md text-label-md">Arrastre factura aquí o haga click</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro-interaction for sidebar expansion/hover (Simulation) -->
+<script>
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!this.classList.contains('bg-secondary-container')) {
+                    // Logic to handle navigation could go here
+                }
+            });
+        });
+
+        // Simple PDF Viewer Mock interaction
+        const viewButtons = document.querySelectorAll('[title="Ver PDF"]');
+        viewButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                alert('Abriendo previsualización de archivo PDF en modal del sistema...');
+            });
+        });
+    </script>
+</body></html>
