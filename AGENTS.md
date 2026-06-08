@@ -68,7 +68,7 @@ La fuente de verdad del dominio vive en `knowledge-base/` (agnóstica de tecnolo
 
 > ⚠️ **Roles del dominio**: ALUMNO · TUTOR · PROFESOR · COORDINADOR · NEXO · ADMIN · FINANZAS. Leé `03_actores_y_roles.md` para internalizar el modelo de permisos ANTES de cualquier implementación.
 
-> ⚠️ **Preguntas ALTA pendientes** (resolver antes de tocar el dominio afectado): **PA-01** catálogo de materias (Materia vs InstanciaDictado), **PA-07** cohortes ↔ carrera, **PA-22**/**PA-23** claves de Plus y acumulación en liquidaciones, **PA-25** semántica del rol NEXO. Ver [10_preguntas_abiertas.md](knowledge-base/10_preguntas_abiertas.md). No codees el módulo de liquidaciones (C-18) ni el de estructura académica (C-06) sin cerrar las preguntas que los bloquean.
+> ⚠️ **Preguntas ALTA pendientes** (resolver antes de tocar el dominio afectado): **PA-01** catálogo de materias (Materia vs InstanciaDictado), **PA-07** cohortes ↔ carrera, **PA-25** semántica del rol NEXO. Ver [10_preguntas_abiertas.md](knowledge-base/10_preguntas_abiertas.md). ~~PA-22~~ y ~~PA-23~~ ya resueltas en C-18.
 
 ---
 
@@ -80,12 +80,12 @@ Cargá la skill correspondiente al contexto **ANTES** de escribir código. Aplic
 |--------|-----|------------------|
 | **Backend Core** | FastAPI / SQLAlchemy / migraciones / modelos | `fastapi-templates`, `postgresql-table-design`, `python-testing-patterns`, `test-driven-development` |
 | **Backend Aux** | Servicios, integraciones, seguridad, performance | `api-security-best-practices`, `postgresql-optimization`, `systematic-debugging` |
-| **Frontend** | React / TanStack / Tailwind / E2E | `typescript-advanced-types`, `tailwind-design-system`, `playwright-best-practices` |
+| **Frontend** | React / TanStack / Tailwind / E2E / Dashboard | `typescript-advanced-types`, `tailwind-design-system`, `playwright-best-practices`, `dashboard-crud-page`, `help-system-content`, `vercel-react-best-practices`, `web-design-guidelines`, `ui-ux-pro-max` |
 | **DevOps** | Contenedores / build | `multi-stage-dockerfile` |
 | **Transversal** | Calidad / revisión | `code-review-excellence`, `systematic-debugging` |
 | **Orquestación** | SDD / OPSX / docs | `kb-creator`, `roadmap-generator`, `agent-instruction`, `find-skill` |
 
-> **Gap conocido**: no hay skill de buenas prácticas React instalada (`vercel-react-best-practices` recomendada pero NO instalada por decisión del usuario). El stack queda cubierto ~100% por las skills preinstaladas.
+> **Skills frontend actualizadas**: se agregaron `dashboard-crud-page` (CRUD estandarizado), `help-system-content` (sistema de ayuda), `vercel-react-best-practices` (70 reglas de performance React), `web-design-guidelines` (guías de diseño web), `ui-ux-pro-max` (UI/UX), y se actualizó `react-dev`.
 
 ---
 
