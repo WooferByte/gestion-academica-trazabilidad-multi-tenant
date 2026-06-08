@@ -618,3 +618,19 @@ def _create_calificaciones(
                 actividad=actividad, nota_numerica=grades[j],
                 origen='Importado',
             ))
+
+if __name__ == '__main__':
+    import asyncio
+    from app.core.database import init_engine, get_session_factory, dispose_engine
+    from app.core.config import Settings
+
+    async def _main() -> None:
+        settings = Settings()
+        init_engine(str(settings.database_url))
+        async with get_session_factory()() as session:
+            await run_seed(session)
+            await session.commit()
+            print('✅ Seed completado exitosamente')
+        await dispose_engine()
+
+    asyncio.run(_main())

@@ -1,7 +1,7 @@
 """migrate materia.categoria string to categoria_plus_id FK
 
-Revision ID: 015
-Revises: 014
+Revision ID: 016
+Revises: 015
 Create Date: 2026-06-06
 """
 from typing import Sequence, Union
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects.postgresql import UUID
 
-revision: str = '015'
-down_revision: Union[str, None] = '014'
+revision: str = '016'
+down_revision: Union[str, None] = '015'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
