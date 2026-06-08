@@ -218,7 +218,9 @@ async def run_seed(session: AsyncSession) -> None:
     role_prof = Role(id=ROLE_PROFESOR_ID, tenant_id=TENANT_ID, name='PROFESOR', codigo='PROFESOR')
     role_tutor = Role(id=ROLE_TUTOR_ID, tenant_id=TENANT_ID, name='TUTOR', codigo='TUTOR')
     role_finanzas = Role(id=ROLE_FINANZAS_ID, tenant_id=TENANT_ID, name='FINANZAS', codigo='FINANZAS')
-    session.add_all([role_admin, role_prof, role_tutor, role_finanzas])
+    role_alumno_id = uuid.uuid5(NS, 'seed-role-alumno')
+    role_alumno = Role(id=role_alumno_id, tenant_id=TENANT_ID, name='ALUMNO', codigo='ALUMNO')
+    session.add_all([role_admin, role_prof, role_tutor, role_finanzas, role_alumno])
     await session.flush()
 
     # ── Permissions & RolePermissions ────────────────────────────────────
@@ -230,15 +232,57 @@ async def run_seed(session: AsyncSession) -> None:
             codigo=codigo, modulo=modulo, accion=accion,
         ))
     await session.flush()
-    for codigo in ALL_PERMISOS:
-        perm_id = uuid.uuid5(NS, f'seed-perm-{codigo.replace(":", "-")}')
-        for role_id in [ROLE_ADMIN_ID, ROLE_PROFESOR_ID, ROLE_TUTOR_ID, ROLE_FINANZAS_ID]:
+
+    # Permission matrix per role
+    def _assign(role_id: uuid.UUID, *permisos: str) -> None:
+        for codigo in permisos:
+            perm_id = uuid.uuid5(NS, f'seed-perm-{codigo.replace(":", "-")}')
             rp_id = uuid.uuid5(NS, f'seed-rp-{role_id}-{codigo.replace(":", "-")}')
+            session.add(RolePermission(
+                id=rp_id, tenant_id=TENANT_ID,
+                role_id=role_id, permiso_id=perm_id,
+                propio=False,
+            ))
+
+    def _assign_propio(role_id: uuid.UUID, *permisos: str) -> None:
+        for codigo in permisos:
+            perm_id = uuid.uuid5(NS, f'seed-perm-{codigo.replace(":", "-")}')
+            rp_id = uuid.uuid5(NS, f'seed-rp-{role_id}-{codigo.replace(":", "-")}-propio')
             session.add(RolePermission(
                 id=rp_id, tenant_id=TENANT_ID,
                 role_id=role_id, permiso_id=perm_id,
                 propio=True,
             ))
+
+    # ADMIN: todo
+    _assign(ROLE_ADMIN_ID, *ALL_PERMISOS)
+
+    # PROFESOR (atrasados:ver se asigna como propio abajo)
+    _assign(ROLE_PROFESOR_ID,
+        'calificaciones:importar',
+        'comunicacion:enviar', 'encuentros:gestionar',
+        'coloquios:gestionar', 'coloquios:reservar',
+        'tareas:gestionar', 'equipos:asignar',
+    )
+
+    # TUTOR
+    _assign(ROLE_TUTOR_ID,
+        'atrasados:ver', 'encuentros:gestionar',
+        'comunicacion:enviar', 'coloquios:reservar',
+    )
+
+    # FINANZAS
+    _assign(ROLE_FINANZAS_ID,
+        'liquidaciones:ver', 'liquidaciones:calcular',
+        'liquidaciones:cerrar', 'liquidaciones:exportar',
+        'liquidaciones:configurar-salarios', 'facturas:gestionar',
+    )
+
+    # ALUMNO: solo coloquios
+    _assign(role_alumno_id, 'coloquios:reservar')
+
+    # COORDINADOR scope (propio): ve solo sus materias
+    _assign_propio(ROLE_PROFESOR_ID, 'atrasados:ver')
 
     # ── 3. Users ─────────────────────────────────────────────────────────
     users_data = [
@@ -250,13 +294,25 @@ async def run_seed(session: AsyncSession) -> None:
         (USER_ALUMNO_COL_1, 'alumno.col1@test.com', 'alumno'),
         (USER_ALUMNO_COL_2, 'alumno.col2@test.com', 'alumno'),
     ]
-    role_map = {'admin': ROLE_ADMIN_ID, 'profesor': ROLE_PROFESOR_ID, 'tutor': ROLE_TUTOR_ID, 'alumno': ROLE_ADMIN_ID}
+    role_map = {'admin': ROLE_ADMIN_ID, 'profesor': ROLE_PROFESOR_ID, 'tutor': ROLE_TUTOR_ID, 'alumno': role_alumno_id}
+    nombres = {
+        USER_ADMIN_ID: ('Admin', 'Sistema'),
+        USER_ANA_ID: ('Ana', 'Profesor'),
+        USER_CARLOS_ID: ('Carlos', 'Profesor'),
+        USER_MARIA_ID: ('María', 'Tutor'),
+        USER_PEDRO_ID: ('Pedro', 'Tutor'),
+        USER_ALUMNO_COL_1: ('Alumno', 'Uno'),
+        USER_ALUMNO_COL_2: ('Alumno', 'Dos'),
+    }
     for uid, email, rol in users_data:
         role_upper = rol.upper() if rol != 'alumno' else 'alumno'
+        nom, ape = nombres.get(uid, ('', ''))
         user = User(
             id=uid, tenant_id=TENANT_ID, email=email,
             email_cifrado=encrypt(email), email_hash=hash_email(email),
             password_hash=hash_password('password123'),
+            nombre_cifrado=encrypt(nom),
+            apellido_cifrado=encrypt(ape),
             roles=[role_upper], estado='Activo', is_active=True,
         )
         session.add(user)
