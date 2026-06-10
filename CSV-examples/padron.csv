@@ -1,0 +1,13 @@
+nombre,apellidos,email,comision,regional,legajo
+Juan,Pérez García,juan@test.com,A,CABA,1001
+María,García López,maria@test.com,A,GBA,1002
+Carlos,López Martínez,carlos@test.com,A,CABA,1003
+Ana,Martínez Rodríguez,ana@test.com,A,GBA,1004
+Pedro,Rodríguez Fernández,pedro@test.com,A,Interior,1005
+Laura,Fernández González,laura@test.com,B,CABA,1006
+Diego,González Ramírez,diego@test.com,B,GBA,1007
+Sofía,Ramírez Torres,sofia@test.com,B,Interior,1008
+Miguel,Torres Díaz,miguel@test.com,B,CABA,1009
+Valentina,Díaz Pérez,valentina@test.com,B,GBA,1010
+Lucía,Moreno Ruiz,lucia@test.com,A,CABA,1011
+Mateo,Álvarez Castro,mateo@test.com,B,GBA,1012

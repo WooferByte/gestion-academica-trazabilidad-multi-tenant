@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
-from app.core.dependencies import get_current_user, get_db
+from app.core.dependencies import get_current_user, get_db, require_permission
 from app.core.rate_limiter import LoginRateLimiter
 from app.core.security import create_access_token, decode_token
 from app.models.tenant import Tenant
@@ -31,6 +31,7 @@ from app.schemas.auth import (
     TOTPVerifyRequest,
     UserContext,
 )
+from app.models.user import User
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix='/api/v1/auth')
@@ -272,3 +273,49 @@ async def reset(
         return ResetResponse(detail='Contraseña actualizada exitosamente')
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
+
+
+@router.get('/me')
+async def get_current_user_profile(
+    current_user: UserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    from app.models.user import User as UserModel
+    from app.core.permissions import PermissionResolver
+    from app.core.security import decrypt
+
+    result = await db.execute(
+        select(UserModel).where(
+            UserModel.id == current_user.user_id,
+            UserModel.deleted_at.is_(None),
+        ),
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=401, detail='Usuario no encontrado')
+
+    resolver = PermissionResolver(db, current_user.tenant_id)
+    effective = await resolver.get_effective_permissions(current_user.user_id)
+
+    nombre = ''
+    apellido = ''
+    if user.nombre_cifrado:
+        try:
+            nombre = decrypt(user.nombre_cifrado)
+        except Exception:
+            nombre = ''
+    if user.apellido_cifrado:
+        try:
+            apellido = decrypt(user.apellido_cifrado)
+        except Exception:
+            apellido = ''
+
+    return {
+        'id': str(user.id),
+        'email': user.email,
+        'nombre': nombre,
+        'apellido': apellido,
+        'roles': user.roles or [],
+        'permisos': list(effective),
+        'tenant_id': str(current_user.tenant_id),
+    }

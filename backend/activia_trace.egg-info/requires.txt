@@ -13,6 +13,9 @@ opentelemetry-api<2.0.0,>=1.27.0
 opentelemetry-sdk<2.0.0,>=1.27.0
 opentelemetry-instrumentation-fastapi<1.0.0,>=0.48b0
 cryptography<45.0.0,>=44.0.0
+email-validator<3.0.0,>=2.0.0
+openpyxl<4.0.0,>=3.1.0
+python-multipart<1.0.0,>=0.0.18
 
 [dev]
 pytest<9.0.0,>=8.3.0

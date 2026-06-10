@@ -14,7 +14,7 @@ from app.api.v1.routers.auth_impersonation import router as auth_impersonation_r
 from app.api.v1.routers.carreras import router as carreras_router
 from app.api.v1.routers.categorias_plus import router as categorias_plus_router
 from app.api.v1.routers.cohortes import router as cohortes_router
-from app.api.v1.routers.equipos import router as equipos_router
+from app.api.v1.routers.equipos import docente_router, router as equipos_router
 from app.api.v1.routers.comunicaciones import router as comunicaciones_router
 from app.api.v1.routers.health import router as health_router
 from app.api.v1.routers.materia_categoria import router as materia_categoria_router
@@ -90,6 +90,7 @@ def create_app() -> FastAPI:
     app_instance.include_router(categorias_plus_router)
     app_instance.include_router(cohortes_router)
     app_instance.include_router(equipos_router)
+    app_instance.include_router(docente_router)
     app_instance.include_router(materia_categoria_router)
     app_instance.include_router(materias_router)
     app_instance.include_router(roles_router)

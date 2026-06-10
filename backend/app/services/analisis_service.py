@@ -145,6 +145,14 @@ class AnalisisService:
         entries.sort(key=lambda e: (-e.actividades_aprobadas, e.apellidos, e.nombre))
         return entries
 
+    async def listar_actividades(
+        self, materia_id: uuid.UUID, cohorte_id: uuid.UUID,
+    ) -> list[dict]:
+        actividades = await self._analisis_repo.get_actividades_por_materia(
+            materia_id, cohorte_id,
+        )
+        return [{'nombre': a, 'id': a} for a in actividades]
+
     async def calcular_reporte_rapido(
         self, materia_id: uuid.UUID, cohorte_id: uuid.UUID,
     ) -> ReporteRapido:

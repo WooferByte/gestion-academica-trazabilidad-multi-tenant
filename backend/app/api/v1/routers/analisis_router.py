@@ -53,6 +53,20 @@ async def reportes_rapidos(
     return await service.calcular_reporte_rapido(materia_id, cohorte_id)
 
 
+@router.get('/actividades')
+async def list_actividades(
+    materia_id: uuid.UUID = Query(...),
+    cohorte_id: uuid.UUID = Query(...),
+    session: AsyncSession = Depends(get_db),
+    current_user: UserContext = Depends(get_current_user),
+    _=require_permission('atrasados:ver'),
+) -> dict:
+    from app.services.analisis_service import AnalisisService
+    service = AnalisisService(session, current_user.tenant_id)
+    actividades = await service.listar_actividades(materia_id, cohorte_id)
+    return {'items': actividades, 'total': len(actividades)}
+
+
 @router.get('/notas-finales')
 async def notas_finales(
     materia_id: uuid.UUID = Query(...),

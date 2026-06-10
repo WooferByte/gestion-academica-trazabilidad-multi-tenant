@@ -3,9 +3,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import StreamingResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_db, require_permission
+from app.models.asignacion import Asignacion
+from app.models.cohorte import Cohorte
+from app.models.materia import Materia
 from app.schemas.asignacion import (
     AsignacionListResponse,
     AsignacionMasivaRequest,
@@ -16,6 +20,7 @@ from app.schemas.asignacion import (
     VigenciaUpdateResponse,
 )
 from app.schemas.auth import UserContext
+from app.schemas.equipos import ComisionResponse
 from app.services.asignacion import AsignacionService
 
 router = APIRouter(prefix='/api/v1/equipos', tags=['equipos'])
@@ -121,3 +126,42 @@ async def exportar_equipo(
             'Content-Disposition': 'attachment; filename=equipo-docente.csv',
         },
     )
+
+
+docente_router = APIRouter(prefix='/api/v1/docente', tags=['docente'])
+
+
+@docente_router.get('/comisiones', response_model=list[ComisionResponse])
+async def get_docente_comisiones(
+    current_user: UserContext = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> list[ComisionResponse]:
+    query = (
+        select(
+            Asignacion.materia_id,
+            Asignacion.cohorte_id,
+            Asignacion.rol,
+            Materia.nombre.label('materia_nombre'),
+            Cohorte.nombre.label('cohorte_nombre'),
+        )
+        .join(Materia, Asignacion.materia_id == Materia.id)
+        .join(Cohorte, Asignacion.cohorte_id == Cohorte.id)
+        .where(
+            Asignacion.usuario_id == current_user.user_id,
+            Asignacion.tenant_id == current_user.tenant_id,
+            Asignacion.deleted_at.is_(None),
+            Asignacion.rol.in_(['PROFESOR', 'TUTOR']),
+        )
+    )
+    result = await session.execute(query)
+    rows = result.all()
+    return [
+        ComisionResponse(
+            materia_id=str(row.materia_id),
+            materia_nombre=row.materia_nombre,
+            cohorte_id=str(row.cohorte_id),
+            cohorte_nombre=row.cohorte_nombre,
+            rol=row.rol,
+        )
+        for row in rows
+    ]

@@ -9,7 +9,6 @@ from datetime import date, datetime, time, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import encrypt, hash_email, hash_password
-from app.models.acknowledgment_aviso import AcknowledgmentAviso
 from app.models.asignacion import Asignacion
 from app.models.aviso import Aviso
 from app.models.tarea import Tarea, ComentarioTarea, EstadoTarea
@@ -48,6 +47,7 @@ ROLE_ADMIN_ID = uuid.uuid5(NS, 'seed-role-admin')
 ROLE_PROFESOR_ID = uuid.uuid5(NS, 'seed-role-profesor')
 ROLE_TUTOR_ID = uuid.uuid5(NS, 'seed-role-tutor')
 ROLE_FINANZAS_ID = uuid.uuid5(NS, 'seed-role-finanzas')
+ROLE_ALUMNO_ID = uuid.uuid5(NS, 'seed-role-alumno')
 
 USER_ADMIN_ID = uuid.uuid5(NS, 'seed-user-admin')
 USER_ANA_ID = uuid.uuid5(NS, 'seed-user-ana')
@@ -132,6 +132,7 @@ FECHA_ALGEBRA_TP2 = uuid.uuid5(NS, 'seed-fecha-algebra-tp2')
 FECHA_CONTABILIDAD_PARCIAL1 = uuid.uuid5(NS, 'seed-fecha-contab-parcial1')
 FECHA_CONTABILIDAD_PARCIAL2 = uuid.uuid5(NS, 'seed-fecha-contab-parcial2')
 FECHA_CONTABILIDAD_TP1 = uuid.uuid5(NS, 'seed-fecha-contab-tp1')
+FECHA_ALGEBRA_REC1 = uuid.uuid5(NS, 'seed-fecha-algebra-rec1')
 
 # ── Data ─────────────────────────────────────────────────────────────────
 
@@ -218,8 +219,7 @@ async def run_seed(session: AsyncSession) -> None:
     role_prof = Role(id=ROLE_PROFESOR_ID, tenant_id=TENANT_ID, name='PROFESOR', codigo='PROFESOR')
     role_tutor = Role(id=ROLE_TUTOR_ID, tenant_id=TENANT_ID, name='TUTOR', codigo='TUTOR')
     role_finanzas = Role(id=ROLE_FINANZAS_ID, tenant_id=TENANT_ID, name='FINANZAS', codigo='FINANZAS')
-    role_alumno_id = uuid.uuid5(NS, 'seed-role-alumno')
-    role_alumno = Role(id=role_alumno_id, tenant_id=TENANT_ID, name='ALUMNO', codigo='ALUMNO')
+    role_alumno = Role(id=ROLE_ALUMNO_ID, tenant_id=TENANT_ID, name='ALUMNO', codigo='ALUMNO')
     session.add_all([role_admin, role_prof, role_tutor, role_finanzas, role_alumno])
     await session.flush()
 
@@ -279,7 +279,7 @@ async def run_seed(session: AsyncSession) -> None:
     )
 
     # ALUMNO: solo coloquios
-    _assign(role_alumno_id, 'coloquios:reservar')
+    _assign(ROLE_ALUMNO_ID, 'coloquios:reservar')
 
     # COORDINADOR scope (propio): ve solo sus materias
     _assign_propio(ROLE_PROFESOR_ID, 'atrasados:ver')
@@ -294,7 +294,7 @@ async def run_seed(session: AsyncSession) -> None:
         (USER_ALUMNO_COL_1, 'alumno.col1@test.com', 'alumno'),
         (USER_ALUMNO_COL_2, 'alumno.col2@test.com', 'alumno'),
     ]
-    role_map = {'admin': ROLE_ADMIN_ID, 'profesor': ROLE_PROFESOR_ID, 'tutor': ROLE_TUTOR_ID, 'alumno': role_alumno_id}
+    role_map = {'admin': ROLE_ADMIN_ID, 'profesor': ROLE_PROFESOR_ID, 'tutor': ROLE_TUTOR_ID, 'alumno': ROLE_ALUMNO_ID}
     nombres = {
         USER_ADMIN_ID: ('Admin', 'Sistema'),
         USER_ANA_ID: ('Ana', 'Profesor'),
@@ -638,7 +638,7 @@ async def run_seed(session: AsyncSession) -> None:
         (FECHA_ALGEBRA_PARCIAL2, MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, TipoFechaAcademica.PARCIAL, 2, '2024-1C', date(2024, 7, 10), 'Segundo Parcial'),
         (FECHA_ALGEBRA_TP1, MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, TipoFechaAcademica.TP, 1, '2024-1C', date(2024, 4, 20), 'TP1 - Álgebra'),
         (FECHA_ALGEBRA_TP2, MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, TipoFechaAcademica.TP, 2, '2024-1C', date(2024, 6, 5), 'TP2 - Álgebra'),
-        (uuid.uuid5(NS, 'seed-fecha-algebra-rec1'), MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, TipoFechaAcademica.RECUPERATORIO, 1, '2024-1C', date(2024, 7, 20), 'Recuperatorio Álgebra'),
+        (FECHA_ALGEBRA_REC1, MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, TipoFechaAcademica.RECUPERATORIO, 1, '2024-1C', date(2024, 7, 20), 'Recuperatorio Álgebra'),
         (FECHA_CONTABILIDAD_PARCIAL1, MATERIA_CONTABILIDAD_ID, COHORTE_ADM_2024_ID, TipoFechaAcademica.PARCIAL, 1, '2024-1C', date(2024, 5, 18), 'Primer Parcial Contabilidad'),
         (FECHA_CONTABILIDAD_PARCIAL2, MATERIA_CONTABILIDAD_ID, COHORTE_ADM_2024_ID, TipoFechaAcademica.PARCIAL, 2, '2024-1C', date(2024, 7, 12), 'Segundo Parcial Contabilidad'),
         (FECHA_CONTABILIDAD_TP1, MATERIA_CONTABILIDAD_ID, COHORTE_ADM_2024_ID, TipoFechaAcademica.TP, 1, '2024-1C', date(2024, 4, 22), 'TP1 - Contabilidad'),

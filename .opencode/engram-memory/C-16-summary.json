@@ -1,0 +1,7 @@
+{
+  "title": "C-16 tareas-internas implementation complete",
+  "type": "architecture",
+  "scope": "project",
+  "topic_key": "architecture/tareas-module",
+  "content": "Implemented full task management module (C-16). Created models (Tarea, ComentarioTarea with EstadoTarea enum), schemas (Pydantic v2 extra='forbid'), repository (TareaRepository, ComentarioTareaRepository extending BaseRepository), service (TareaService with estado transition validation), router (with /mis-tareas for self + CRUD + admin view), migration '013' (tables + 4 indices + enum), and 34 tests covering CRUD, state machine transitions, multi-tenant isolation, soft delete, and comments. Added 'tareas:gestionar' permission to seed and 5 seed tareas + 2 seed comentarios. All 34 tarea tests + comprehensive seeded tests + regression tests pass."
+}

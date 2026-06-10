@@ -203,9 +203,17 @@ class CalificacionesService:
 
         id_cols_lower = {h.lower() for i, h in enumerate(headers) if h.lower() in COLUMNAS_IGNORAR}
         id_cols = {h for h in headers if h.lower() in id_cols_lower}
-        col_nombre = _find_header_index(headers, 'nombre') or _find_header_index(headers, 'Nombre')
-        col_apellidos = _find_header_index(headers, 'apellidos') or _find_header_index(headers, 'Apellidos')
-        col_email = _find_header_index(headers, 'email') or _find_header_index(headers, 'Email')
+        col_nombre = _find_header_index(headers, 'nombre')
+        if col_nombre < 0:
+            col_nombre = _find_header_index(headers, 'Nombre')
+        col_apellidos = _find_header_index(headers, 'apellidos')
+        if col_apellidos < 0:
+            col_apellidos = _find_header_index(headers, 'apellido')
+        if col_apellidos < 0:
+            col_apellidos = _find_header_index(headers, 'Apellidos')
+        col_email = _find_header_index(headers, 'email')
+        if col_email < 0:
+            col_email = _find_header_index(headers, 'Email')
 
         calificaciones_data = []
         filas_sin_match = 0
@@ -310,9 +318,17 @@ class CalificacionesService:
             key = f'{e.nombre.lower()}|{e.apellidos.lower()}|{e.email.lower()}'
             entrada_map[key] = (e.id, e.nombre, e.apellidos)
 
-        col_nombre = _find_header_index(headers, 'nombre') or _find_header_index(headers, 'Nombre')
-        col_apellidos = _find_header_index(headers, 'apellidos') or _find_header_index(headers, 'Apellidos')
-        col_email = _find_header_index(headers, 'email') or _find_header_index(headers, 'Email')
+        col_nombre = _find_header_index(headers, 'nombre')
+        if col_nombre < 0:
+            col_nombre = _find_header_index(headers, 'Nombre')
+        col_apellidos = _find_header_index(headers, 'apellidos')
+        if col_apellidos < 0:
+            col_apellidos = _find_header_index(headers, 'apellido')
+        if col_apellidos < 0:
+            col_apellidos = _find_header_index(headers, 'Apellidos')
+        col_email = _find_header_index(headers, 'email')
+        if col_email < 0:
+            col_email = _find_header_index(headers, 'Email')
 
         textuales = [a for a in actividades if a.tipo == 'textual']
         entregas_sin_corregir = []

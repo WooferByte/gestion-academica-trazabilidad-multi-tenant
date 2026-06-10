@@ -2,7 +2,7 @@ from app.api.v1.routers.auth import router as auth_router
 from app.api.v1.routers.avisos import router as avisos_router
 from app.api.v1.routers.carreras import router as carreras_router
 from app.api.v1.routers.cohortes import router as cohortes_router
-from app.api.v1.routers.equipos import router as equipos_router
+from app.api.v1.routers.equipos import docente_router, router as equipos_router
 from app.api.v1.routers.health import router as health_router
 from app.api.v1.routers.materias import router as materias_router
 from app.api.v1.routers.padron import router as padron_router
@@ -10,12 +10,14 @@ from app.api.v1.routers.roles import router as roles_router
 from app.api.v1.routers.permisos import router as permisos_router
 from app.api.v1.routers.role_permisos import router as role_permisos_router
 from app.api.v1.routers.user_roles import router as user_roles_router
+from app.api.v1.routers.auditoria import router as auditoria_router
 
 __all__ = [
     'auth_router',
     'avisos_router',
     'carreras_router',
     'cohortes_router',
+    'docente_router',
     'equipos_router',
     'health_router',
     'materias_router',
@@ -23,4 +25,5 @@ __all__ = [
     'permisos_router',
     'role_permisos_router',
     'user_roles_router',
+    'auditoria_router',
 ]

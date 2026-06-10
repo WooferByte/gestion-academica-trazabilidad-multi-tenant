@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit_codes import PADRON_CARGAR
+from app.models.calificacion import Calificacion
 from app.models.user import User
 from app.repositories.padron_repository import EntradaPadronRepository, VersionPadronRepository
 from app.schemas.auth import UserContext
@@ -60,7 +61,7 @@ def _parse_csv(file_bytes: bytes) -> list[dict]:
         )
     result = []
     for row in reader:
-        item = {k.strip().lower(): (v or '').strip() for k, v in row.items() if k}
+        item = {k.strip().lower(): (v or '').strip() for k, v in row.items() if k and k.strip().lower() in COLUMNAS_ESPERADAS}
         if any(item.get(h) for h in COLUMNAS_ESPERADAS):
             result.append(item)
     return result
@@ -188,6 +189,16 @@ class PadronService:
                 total_entradas += count
                 await self._version_repo.desactivar_version(activa.id)
                 version_desactivada = True
+
+        # También eliminar calificaciones de esta materia+cohorte
+        from sqlalchemy import delete as sa_delete
+        await self._session.execute(
+            sa_delete(Calificacion).where(
+                Calificacion.materia_id == materia_id,
+                Calificacion.cohorte_id.in_(cohorte_ids),
+                Calificacion.tenant_id == self._tenant_id,
+            ),
+        )
 
         await audit.log(
             accion=PADRON_CARGAR,
