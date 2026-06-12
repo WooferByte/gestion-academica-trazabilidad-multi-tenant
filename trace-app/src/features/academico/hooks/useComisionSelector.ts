@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/api/client";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { Comision } from "@/api/types";
 
 export function useComisionSelector() {
+  const { user } = useAuth();
   const query = useQuery<Comision[]>({
-    queryKey: ["docente", "comisiones"],
+    queryKey: ["docente", "comisiones", user?.id],
     queryFn: async () => {
       const res = await api.get<Comision[]>("/docente/comisiones");
       return res.data;

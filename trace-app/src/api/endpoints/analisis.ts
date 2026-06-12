@@ -56,18 +56,20 @@ export function getReportesRapidos(params: {
 
 export function getMonitorSeguimiento(params?: {
   materia_id?: string;
-  comision_id?: string;
-  q?: string;
-  fecha_desde?: string;
-  fecha_hasta?: string;
+  comision?: string;
+  busqueda?: string;
+  desde?: string;
+  hasta?: string;
+  min_actividades?: number;
 }) {
   return api.get<MonitorSeguimientoResponse>("/analisis/monitor-seguimiento", { params });
 }
 
 export function getMonitorGeneral(params?: {
-  q?: string;
-  fecha_desde?: string;
-  fecha_hasta?: string;
+  materia_id?: string;
+  comision?: string;
+  regional?: string;
+  busqueda?: string;
 }) {
   return api.get<MonitorGeneralResponse>("/analisis/monitor-general", { params });
 }

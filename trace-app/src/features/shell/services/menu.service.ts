@@ -15,17 +15,23 @@ const ALL_MENU_ITEMS: NavSection[] = [
         label: "Académico",
         icon: "school",
         path: "/academico",
-        permission: "estructura:gestionar",
+        permission: "atrasados:ver",
         children: [
           {
             id: "comisiones",
             label: "Comisiones",
             icon: "groups",
             path: "/academico",
-            permission: "estructura:gestionar",
+            permission: "atrasados:ver",
           },
         ],
       },
+    ],
+  },
+  {
+    id: "coordinacion",
+    label: "Coordinación",
+    items: [
       {
         id: "equipos",
         label: "Equipos Docentes",
@@ -40,6 +46,60 @@ const ALL_MENU_ITEMS: NavSection[] = [
         path: "/encuentros",
         permission: "encuentros:gestionar",
       },
+      {
+        id: "avisos",
+        label: "Avisos",
+        icon: "campaign",
+        path: "/avisos",
+        permission: "avisos:publicar",
+      },
+      {
+        id: "tareas",
+        label: "Tareas Internas",
+        icon: "checklist",
+        path: "/tareas",
+        permission: "tareas:gestionar",
+      },
+      {
+        id: "coloquios",
+        label: "Coloquios",
+        icon: "quiz",
+        path: "/coloquios",
+        permission: "coloquios:gestionar",
+      },
+    ],
+  },
+  {
+    id: "admin",
+    label: "Administración",
+    items: [
+      {
+        id: "estructura",
+        label: "Estructura Académica",
+        icon: "account_tree",
+        path: "/estructura",
+        permission: "estructura:gestionar",
+      },
+      {
+        id: "usuarios",
+        label: "Usuarios",
+        icon: "people",
+        path: "/usuarios",
+        permission: "usuarios:gestionar",
+      },
+      {
+        id: "auditoria",
+        label: "Auditoría",
+        icon: "receipt_long",
+        path: "/auditoria",
+        permission: "auditoria:ver",
+      },
+    ],
+  },
+  {
+    id: "finanzas",
+    label: "Finanzas",
+    items: [
       {
         id: "liquidaciones",
         label: "Liquidaciones",

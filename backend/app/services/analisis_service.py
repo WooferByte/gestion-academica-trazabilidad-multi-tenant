@@ -139,7 +139,6 @@ class AnalisisService:
                 actividades_aprobadas=data['aprobadas'],
             )
             for ep_id, data in alumno_aprobadas.items()
-            if data['aprobadas'] >= 1
         ]
 
         entries.sort(key=lambda e: (-e.actividades_aprobadas, e.apellidos, e.nombre))
@@ -266,8 +265,9 @@ class AnalisisService:
             for actividad in actividades:
                 if actividad not in calificadas:
                     result.append(TPSinCorregir(
-                        alumno_nombre=alumno.nombre,
-                        alumno_apellidos=alumno.apellidos,
+                        entrada_padron_id=alumno.id,
+                        nombre=alumno.nombre,
+                        apellido=alumno.apellidos,
                         actividad=actividad,
                         comision=alumno.comision,
                     ))

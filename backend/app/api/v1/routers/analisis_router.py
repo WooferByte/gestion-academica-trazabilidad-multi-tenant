@@ -99,8 +99,8 @@ async def tps_sin_corregir(
     result = await service.exportar_tps_sin_corregir(materia_id, cohorte_id)
 
     if format == 'csv':
-        headers = ['alumno_nombre', 'alumno_apellidos', 'actividad', 'comision']
-        rows = [[e.alumno_nombre, e.alumno_apellidos, e.actividad, e.comision] for e in result]
+        headers = ['nombre', 'apellido', 'actividad', 'comision']
+        rows = [[e.nombre, e.apellido, e.actividad, e.comision] for e in result]
         csv_content = service.to_csv(headers, rows)
         return PlainTextResponse(
             content=csv_content,

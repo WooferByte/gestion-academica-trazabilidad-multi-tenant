@@ -140,39 +140,54 @@ export interface NotasFinalesResponse {
 }
 
 export interface TpSinCorregir {
-  id: string;
-  alumno_id: string;
+  entrada_padron_id: string;
   nombre: string;
   apellido: string;
-  legajo: string;
-  actividad_nombre: string;
-  actividad_tipo: string;
-  fecha_entrega: string;
+  actividad: string;
+  comision: string;
 }
 
 export interface TpsSinCorregirResponse {
-  tps: TpSinCorregir[];
+  items: TpSinCorregir[];
+  total: number;
 }
 
-export interface MonitorItem {
-  alumno_id: string;
+export interface MonitorSeguimientoItem {
+  entrada_padron_id: string;
   nombre: string;
-  apellido: string;
-  legajo: string;
-  materia: string;
+  apellidos: string;
   comision: string;
-  actividades_aprobadas: number;
-  actividades_totales: number;
-  porcentaje: number;
-  ultima_actividad: string;
+  materia_id: string;
+  actividad: string;
+  nota_numerica: number | null;
+  nota_textual: string | null;
+  aprobado: boolean | null;
+  importado_at: string | null;
+}
+
+export interface MonitorGeneralItem {
+  entrada_padron_id: string;
+  nombre: string;
+  apellidos: string;
+  comision: string;
+  regional: string;
+  materia_id: string;
+  materia_nombre: string;
+  actividad: string;
+  nota_numerica: number | null;
+  nota_textual: string | null;
+  aprobado: boolean | null;
+  importado_at: string | null;
 }
 
 export interface MonitorSeguimientoResponse {
-  items: MonitorItem[];
+  items: MonitorSeguimientoItem[];
+  total: number;
 }
 
 export interface MonitorGeneralResponse {
-  items: MonitorItem[];
+  items: MonitorGeneralItem[];
+  total: number;
 }
 
 export interface CalificacionesPreviewResponse {

@@ -136,6 +136,32 @@ async def get_docente_comisiones(
     current_user: UserContext = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> list[ComisionResponse]:
+    # Admin ve materias que tienen version_padron (tienen datos cargados)
+    if 'ADMIN' in current_user.roles:
+        from sqlalchemy import text as sa_text
+        rows = await session.execute(sa_text('''
+            SELECT DISTINCT m.id AS materia_id, m.nombre AS materia_nombre,
+                   vp.cohorte_id, c.nombre AS cohorte_nombre
+            FROM version_padron vp
+            JOIN materias m ON m.id = vp.materia_id
+            JOIN cohortes c ON c.id = vp.cohorte_id
+            WHERE vp.tenant_id = :tid
+              AND vp.deleted_at IS NULL
+              AND m.deleted_at IS NULL AND c.deleted_at IS NULL
+            ORDER BY m.nombre, c.nombre
+        '''), {'tid': current_user.tenant_id})
+        return [
+            ComisionResponse(
+                materia_id=str(r.materia_id),
+                materia_nombre=r.materia_nombre,
+                cohorte_id=str(r.cohorte_id),
+                cohorte_nombre=r.cohorte_nombre,
+                rol='ADMIN',
+            )
+            for r in rows
+        ]
+
+    # For non-admin: filter by user's asignaciones
     query = (
         select(
             Asignacion.materia_id,

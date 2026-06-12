@@ -56,6 +56,12 @@ USER_MARIA_ID = uuid.uuid5(NS, 'seed-user-maria')
 USER_PEDRO_ID = uuid.uuid5(NS, 'seed-user-pedro')
 USER_ALUMNO_COL_1 = uuid.uuid5(NS, 'seed-alumno-col-1')
 USER_ALUMNO_COL_2 = uuid.uuid5(NS, 'seed-alumno-col-2')
+# CSV-aligned ALUMNO users (emails match CSV-examples/)
+USER_CSV_JUAN = uuid.uuid5(NS, 'seed-csv-juan')
+USER_CSV_MARIA = uuid.uuid5(NS, 'seed-csv-maria')
+USER_CSV_CARLOS = uuid.uuid5(NS, 'seed-csv-carlos')
+USER_CSV_ANA = uuid.uuid5(NS, 'seed-csv-ana')
+USER_CSV_PEDRO = uuid.uuid5(NS, 'seed-csv-pedro')
 
 CARRERA_ING_ID = uuid.uuid5(NS, 'seed-carrera-ing')
 CARRERA_ADM_ID = uuid.uuid5(NS, 'seed-carrera-adm')
@@ -259,7 +265,7 @@ async def run_seed(session: AsyncSession) -> None:
 
     # PROFESOR (atrasados:ver se asigna como propio abajo)
     _assign(ROLE_PROFESOR_ID,
-        'calificaciones:importar',
+        'calificaciones:importar', 'padron:cargar',
         'comunicacion:enviar', 'encuentros:gestionar',
         'coloquios:gestionar', 'coloquios:reservar',
         'tareas:gestionar', 'equipos:asignar',
@@ -293,6 +299,12 @@ async def run_seed(session: AsyncSession) -> None:
         (USER_PEDRO_ID, 'pedro.tutor@test.com', 'tutor'),
         (USER_ALUMNO_COL_1, 'alumno.col1@test.com', 'alumno'),
         (USER_ALUMNO_COL_2, 'alumno.col2@test.com', 'alumno'),
+        # CSV-aligned ALUMNO users (5)
+        (USER_CSV_JUAN, 'juan@test.com', 'alumno'),
+        (USER_CSV_MARIA, 'maria@test.com', 'alumno'),
+        (USER_CSV_CARLOS, 'carlos@test.com', 'alumno'),
+        (USER_CSV_ANA, 'ana@test.com', 'alumno'),
+        (USER_CSV_PEDRO, 'pedro@test.com', 'alumno'),
     ]
     role_map = {'admin': ROLE_ADMIN_ID, 'profesor': ROLE_PROFESOR_ID, 'tutor': ROLE_TUTOR_ID, 'alumno': ROLE_ALUMNO_ID}
     nombres = {
@@ -303,6 +315,11 @@ async def run_seed(session: AsyncSession) -> None:
         USER_PEDRO_ID: ('Pedro', 'Tutor'),
         USER_ALUMNO_COL_1: ('Alumno', 'Uno'),
         USER_ALUMNO_COL_2: ('Alumno', 'Dos'),
+        USER_CSV_JUAN: ('Juan', 'Pérez García'),
+        USER_CSV_MARIA: ('María', 'García López'),
+        USER_CSV_CARLOS: ('Carlos', 'López Martínez'),
+        USER_CSV_ANA: ('Ana', 'Martínez Rodríguez'),
+        USER_CSV_PEDRO: ('Pedro', 'Rodríguez Fernández'),
     }
     for uid, email, rol in users_data:
         role_upper = rol.upper() if rol != 'alumno' else 'alumno'
@@ -374,11 +391,11 @@ async def run_seed(session: AsyncSession) -> None:
         Asignacion(id=ASIG_ANA_ALGEBRA_ID, tenant_id=TENANT_ID, usuario_id=USER_ANA_ID,
                    rol='PROFESOR', materia_id=MATERIA_ALGEBRA_ID, cohorte_id=COHORTE_ING_2024_ID),
         Asignacion(id=ASIG_CARLOS_PROG1_ID, tenant_id=TENANT_ID, usuario_id=USER_CARLOS_ID,
-                   rol='PROFESOR', materia_id=MATERIA_PROG1_ID, cohorte_id=COHORTE_ING_2024_ID),
+                   rol='PROFESOR', materia_id=MATERIA_CONTABILIDAD_ID, cohorte_id=COHORTE_ADM_2024_ID),
         Asignacion(id=ASIG_MARIA_ALGEBRA_ID, tenant_id=TENANT_ID, usuario_id=USER_MARIA_ID,
                    rol='TUTOR', materia_id=MATERIA_ALGEBRA_ID, cohorte_id=COHORTE_ING_2024_ID),
         Asignacion(id=ASIG_PEDRO_PROG1_ID, tenant_id=TENANT_ID, usuario_id=USER_PEDRO_ID,
-                   rol='TUTOR', materia_id=MATERIA_PROG1_ID, cohorte_id=COHORTE_ING_2024_ID),
+                   rol='TUTOR', materia_id=MATERIA_CONTABILIDAD_ID, cohorte_id=COHORTE_ADM_2024_ID),
         Asignacion(id=ASIG_PEDRO_BD_ID, tenant_id=TENANT_ID, usuario_id=USER_PEDRO_ID,
                    rol='TUTOR', materia_id=MATERIA_BD_ID, cohorte_id=COHORTE_ING_2025_ID),
     ])
@@ -424,8 +441,8 @@ async def run_seed(session: AsyncSession) -> None:
     await session.flush()  # ensure entrada_padron exists before calificaciones
 
     # ── 9. Calificaciones (240+) ─────────────────────────────────────────
-    # Algebra: 30 alumnos × 4 actividades = 120
-    _create_calificaciones(session, MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, entrada_ids_algebra, FAILING_GRADES, PASSING_GRADES)
+    # Algebra: 30 alumnos × 4 actividades = 120, skip last activity for first 5 (creates TPs sin corregir)
+    _create_calificaciones(session, MATERIA_ALGEBRA_ID, COHORTE_ING_2024_ID, entrada_ids_algebra, FAILING_GRADES, PASSING_GRADES, skip_indices={0, 1, 2, 3, 4}, skip_actividades={3})
     # Contabilidad: 30 alumnos × 4 actividades = 120
     _create_calificaciones(session, MATERIA_CONTABILIDAD_ID, COHORTE_ADM_2024_ID, entrada_ids_contabilidad, FAILING_GRADES, PASSING_GRADES)
 
@@ -661,11 +678,16 @@ def _create_calificaciones(
     entrada_ids: list[uuid.UUID],
     failing_grades: list[tuple[float, float, float, float]],
     passing_grades: list[tuple[float, float, float, float]],
+    skip_indices: set[int] | None = None,
+    skip_actividades: set[int] | None = None,
 ) -> None:
     for i, ep_id in enumerate(entrada_ids):
         is_failing = i < len(failing_grades)
         grades = failing_grades[i] if is_failing else passing_grades[(i - len(failing_grades)) % len(passing_grades)]
         for j, actividad in enumerate(ACTIVIDADES):
+            # Skip this calificacion to simulate ungraded TPs
+            if skip_indices and i in skip_indices and skip_actividades and j in skip_actividades:
+                continue
             calif_id = uuid.uuid5(NS, f'seed-calif-{materia_id}-{i}-{j}')
             session.add(Calificacion(
                 id=calif_id, tenant_id=TENANT_ID,

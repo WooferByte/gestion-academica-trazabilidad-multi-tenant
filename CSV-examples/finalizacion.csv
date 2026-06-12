@@ -1,13 +1,6 @@
 nombre,apellido,email,legajo,comision,TP1(Real),TP2(Real),Parcial(Real),TrabajoFinal
-Juan,Pérez García,juan@test.com,1001,A,85,90,72,entregado
-María,García López,maria@test.com,1002,A,45,30,50,entregado
-Carlos,López Martínez,carlos@test.com,1003,A,78,70,82,entregado
-Ana,Martínez Rodríguez,ana@test.com,1004,A,92,95,88,entregado
-Pedro,Rodríguez Fernández,pedro@test.com,1005,A,30,40,25,entregado
-Laura,Fernández González,laura@test.com,1006,B,65,68,70,entregado
-Diego,González Ramírez,diego@test.com,1007,B,80,78,75,entregado
-Sofía,Ramírez Torres,sofia@test.com,1008,B,55,58,60,entregado
-Miguel,Torres Díaz,miguel@test.com,1009,B,88,85,92,entregado
-Valentina,Díaz Pérez,valentina@test.com,1010,B,70,72,65,entregado
-Lucía,Moreno Ruiz,lucia@test.com,1011,A,80,78,82,entregado
-Mateo,Álvarez Castro,mateo@test.com,1012,B,60,62,58,entregado
+Juan,Pérez García,juan@test.com,CSV001,A,85,90,72,entregado
+María,García López,maria@test.com,CSV002,A,45,30,50,entregado
+Carlos,López Martínez,carlos@test.com,CSV003,A,78,70,82,entregado
+Ana,Martínez Rodríguez,ana@test.com,CSV004,A,92,95,88,entregado
+Pedro,Rodríguez Fernández,pedro@test.com,CSV005,A,30,40,25,entregado

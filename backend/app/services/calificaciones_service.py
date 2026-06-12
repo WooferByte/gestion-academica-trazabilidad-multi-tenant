@@ -33,7 +33,7 @@ def _detectar_actividades(headers: list[str]) -> list[ActividadDetectada]:
         if clean.lower() in COLUMNAS_IGNORAR:
             continue
         if clean.endswith('(Real)'):
-            nombre = clean[:-7].strip()
+            nombre = clean[:-6].strip()
             tipo = 'numerica'
         else:
             nombre = clean
@@ -418,6 +418,6 @@ def _find_header_index_by_actividad(headers: list[str], actividad_nombre: str) -
         clean = h.strip()
         if clean.lower() == nombre_lower:
             return i
-        if clean.endswith('(Real)') and clean[:-7].strip().lower() == nombre_lower:
+        if clean.endswith('(Real)') and clean[:-6].strip().lower() == nombre_lower:
             return i
     return -1

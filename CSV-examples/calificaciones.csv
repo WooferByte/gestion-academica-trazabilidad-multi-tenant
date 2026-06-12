@@ -1,13 +1,6 @@
 nombre,apellido,email,legajo,comision,TP1(Real),Parcial(Real),TP2(Real),Recuperatorio(Real)
-Juan,Pérez García,juan@test.com,1001,A,85,72,90,88
-María,García López,maria@test.com,1002,A,45,50,30,55
-Carlos,López Martínez,carlos@test.com,1003,A,78,82,70,75
-Ana,Martínez Rodríguez,ana@test.com,1004,A,92,88,95,90
-Pedro,Rodríguez Fernández,pedro@test.com,1005,A,30,25,40,35
-Laura,Fernández González,laura@test.com,1006,B,65,70,68,72
-Diego,González Ramírez,diego@test.com,1007,B,80,75,78,85
-Sofía,Ramírez Torres,sofia@test.com,1008,B,55,60,58,62
-Miguel,Torres Díaz,miguel@test.com,1009,B,88,92,85,90
-Valentina,Díaz Pérez,valentina@test.com,1010,B,70,65,72,68
-Lucía,Moreno Ruiz,lucia@test.com,1011,A,80,85,78,82
-Mateo,Álvarez Castro,mateo@test.com,1012,B,60,55,62,58
+Juan,Pérez García,juan@test.com,CSV001,A,85,72,90,88
+María,García López,maria@test.com,CSV002,A,45,50,30,55
+Carlos,López Martínez,carlos@test.com,CSV003,A,78,82,70,75
+Ana,Martínez Rodríguez,ana@test.com,CSV004,A,92,88,95,90
+Pedro,Rodríguez Fernández,pedro@test.com,CSV005,A,30,25,40,35

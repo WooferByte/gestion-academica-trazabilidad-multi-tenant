@@ -2,7 +2,7 @@ import uuid
 from collections.abc import Sequence
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.calificacion import Calificacion
@@ -83,6 +83,8 @@ class AnalisisRepository:
         regional: str | None = None,
         busqueda: str | None = None,
     ) -> list[dict]:
+        from app.models.materia import Materia
+
         stmt = (
             select(
                 Calificacion.id,
@@ -109,11 +111,12 @@ class AnalisisRepository:
         if regional is not None:
             stmt = stmt.where(EntradaPadron.regional == regional)
         if busqueda is not None:
-            pattern = f'%{busqueda}%'
-            stmt = stmt.where(
-                EntradaPadron.nombre.ilike(pattern)
-                | EntradaPadron.apellidos.ilike(pattern),
-            )
+            terms = [t.strip() for t in busqueda.split() if t.strip()]
+            for term in terms:
+                stmt = stmt.where(
+                    func.unaccent(EntradaPadron.nombre).ilike(f'%{term}%')
+                    | func.unaccent(EntradaPadron.apellidos).ilike(f'%{term}%'),
+                )
         result = await self._session.execute(stmt)
         rows = result.all()
         return [dict(row._mapping) for row in rows]
@@ -170,11 +173,12 @@ class AnalisisRepository:
         if hasta is not None:
             stmt = stmt.where(Calificacion.importado_at <= hasta)
         if busqueda is not None:
-            pattern = f'%{busqueda}%'
-            stmt = stmt.where(
-                EntradaPadron.nombre.ilike(pattern)
-                | EntradaPadron.apellidos.ilike(pattern),
-            )
+            terms = [t.strip() for t in busqueda.split() if t.strip()]
+            for term in terms:
+                stmt = stmt.where(
+                    func.unaccent(EntradaPadron.nombre).ilike(f'%{term}%')
+                    | func.unaccent(EntradaPadron.apellidos).ilike(f'%{term}%'),
+                )
         result = await self._session.execute(stmt)
         rows = result.all()
         return [dict(row._mapping) for row in rows]

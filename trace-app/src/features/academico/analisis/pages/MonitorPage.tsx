@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { useBreadcrumb } from "@/features/academico/hooks/useBreadcrumb";
 import { useMonitor } from "@/features/academico/analisis/hooks/useMonitor";
 import { MonitorFilters } from "@/features/academico/analisis/components/MonitorFilters";
@@ -7,12 +8,15 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function MonitorPage() {
+  const { materiaId, cohorteId } = useParams<{ materiaId: string; cohorteId: string }>();
   const breadcrumb = useBreadcrumb();
   const { permissions } = useAuth();
   const isCoordinador = permissions.includes("comunicacion:aprobar");
   const [filters, setFilters] = useState({ q: "", fecha_desde: "", fecha_hasta: "" });
 
   const { data, isLoading } = useMonitor({
+    materia_id: materiaId,
+    cohorte_id: cohorteId,  // pasamos para que monitor_seguimiento filtre
     q: filters.q || undefined,
     fecha_desde: filters.fecha_desde || undefined,
     fecha_hasta: filters.fecha_hasta || undefined,
@@ -21,7 +25,7 @@ export default function MonitorPage() {
   const items = data?.items ?? [];
 
   return (
-    <div className="space-y-lg">
+    <div className="space-y-lg p-lg">
       <nav className="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant">
         {breadcrumb.map((b, i) => (
           <span key={i} className="flex items-center gap-xs">
@@ -41,7 +45,7 @@ export default function MonitorPage() {
         </h1>
       </div>
 
-      <MonitorFilters filters={filters} onChange={setFilters} />
+      <MonitorFilters filters={filters} onChange={setFilters} showDates={!isCoordinador} />
 
       {isLoading ? (
         <div className="space-y-sm">
@@ -50,7 +54,7 @@ export default function MonitorPage() {
           ))}
         </div>
       ) : (
-        <MonitorTable items={items} />
+        <MonitorTable items={items} isGeneral={isCoordinador} />
       )}
     </div>
   );

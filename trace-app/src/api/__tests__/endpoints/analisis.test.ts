@@ -49,11 +49,11 @@ describe("analisis API", () => {
   it("getTpsSinCorregir returns pending TPs", async () => {
     server.use(
       http.get(`${BASE}/analisis/tps-sin-corregir`, () =>
-        HttpResponse.json({ tps: [{ id: "tp1", alumno_id: "a1", nombre: "Juan", apellido: "Pérez", legajo: "L001", actividad_nombre: "TP1", actividad_tipo: "tp", fecha_entrega: "2024-01-01" }] }),
+        HttpResponse.json({ items: [{ entrada_padron_id: "a1", nombre: "Juan", apellido: "Pérez", actividad: "TP1", comision: "A" }], total: 1 }),
       ),
     );
     const res = await getTpsSinCorregir({ materia_id: "m1", cohorte_id: "c1" });
-    expect(res.data.tps).toHaveLength(1);
+    expect(res.data.items).toHaveLength(1);
   });
 
   it("getReportesRapidos returns KPIs", async () => {
@@ -69,7 +69,7 @@ describe("analisis API", () => {
   it("getMonitorSeguimiento returns items", async () => {
     server.use(
       http.get(`${BASE}/analisis/monitor-seguimiento`, () =>
-        HttpResponse.json({ items: [{ alumno_id: "a1", nombre: "Juan", apellido: "Pérez", legajo: "L001", materia: "Matemática", comision: "A", actividades_aprobadas: 5, actividades_totales: 10, porcentaje: 50, ultima_actividad: "" }] }),
+        HttpResponse.json({ items: [{ entrada_padron_id: "a1", nombre: "Juan", apellidos: "Pérez", comision: "A", materia_id: "m1", actividad: "TP1", nota_numerica: 85, nota_textual: null, aprobado: true, importado_at: "2024-01-01T00:00:00Z" }], total: 1 }),
       ),
     );
     const res = await getMonitorSeguimiento();
@@ -79,7 +79,7 @@ describe("analisis API", () => {
   it("getMonitorGeneral returns aggregated data", async () => {
     server.use(
       http.get(`${BASE}/analisis/monitor-general`, () =>
-        HttpResponse.json({ items: [{ alumno_id: "a1", nombre: "Juan", apellido: "Pérez", legajo: "L001", materia: "Matemática", comision: "A", actividades_aprobadas: 5, actividades_totales: 10, porcentaje: 50, ultima_actividad: "" }] }),
+        HttpResponse.json({ items: [{ entrada_padron_id: "a1", nombre: "Juan", apellidos: "Pérez", comision: "A", regional: "CABA", materia_id: "m1", materia_nombre: "Matemática", actividad: "TP1", nota_numerica: 85, nota_textual: null, aprobado: true, importado_at: "2024-01-01T00:00:00Z" }], total: 1 }),
       ),
     );
     const res = await getMonitorGeneral();

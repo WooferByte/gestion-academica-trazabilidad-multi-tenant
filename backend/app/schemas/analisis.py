@@ -54,8 +54,9 @@ class NotaFinal(BaseModel):
 class TPSinCorregir(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    alumno_nombre: str
-    alumno_apellidos: str
+    entrada_padron_id: uuid.UUID
+    nombre: str
+    apellido: str
     actividad: str
     comision: str
 
