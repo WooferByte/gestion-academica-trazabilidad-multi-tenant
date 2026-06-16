@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class SlotEncuentroCreate(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    asignacion_id: uuid.UUID
+    asignacion_id: uuid.UUID | None = None
     materia_id: uuid.UUID
     titulo: str = Field(..., min_length=1, max_length=255)
     hora: str = Field(..., pattern=r'^\d{2}:\d{2}$')

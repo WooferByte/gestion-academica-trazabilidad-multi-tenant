@@ -68,6 +68,26 @@ class SlotEncuentroService:
     async def create_slot(self, data: SlotEncuentroCreate) -> SlotEncuentroResponse:
         dia = _validate_dia_semana(data.dia_semana)
 
+        # Si no viene asignacion_id, resolver desde materia + primer usuario del tenant
+        if data.asignacion_id is None:
+            from app.models.asignacion import Asignacion
+            from sqlalchemy import select
+            result = await self._session.execute(
+                select(Asignacion)
+                .where(Asignacion.tenant_id == self._tenant_id)
+                .where(Asignacion.materia_id == data.materia_id)
+                .where(Asignacion.deleted_at.is_(None))
+                .limit(1)
+            )
+            asig = result.scalar_one_or_none()
+            if asig is None:
+                from fastapi import HTTPException
+                raise HTTPException(
+                    status_code=400,
+                    detail='No hay asignaciones activas para esta materia. Creá una asignación primero.',
+                )
+            data.asignacion_id = asig.id
+
         slot = await self._slot_repo.create(
             asignacion_id=data.asignacion_id,
             materia_id=data.materia_id,

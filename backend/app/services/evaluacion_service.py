@@ -204,7 +204,7 @@ class EvaluacionService:
             if not user:
                 raise HTTPException(status_code=422, detail=f'Usuario {alumno_id} no encontrado o no existe en el tenant')
 
-            roles = user.roles or []
+            roles = [r.upper() for r in (user.roles or [])]
             if 'ALUMNO' not in roles:
                 raise HTTPException(status_code=422, detail=f'Usuario {alumno_id} no tiene rol ALUMNO')
 

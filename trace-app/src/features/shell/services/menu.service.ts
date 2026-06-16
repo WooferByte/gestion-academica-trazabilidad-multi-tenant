@@ -37,7 +37,43 @@ const ALL_MENU_ITEMS: NavSection[] = [
         label: "Equipos Docentes",
         icon: "badge",
         path: "/equipos",
-        permission: "equipos:asignar",
+        children: [
+          {
+            id: "mis-equipos",
+            label: "Mis Equipos",
+            icon: "badge",
+            path: "/equipos",
+            permission: "atrasados:ver",
+          },
+          {
+            id: "gestion-asignaciones",
+            label: "Gestión de Asignaciones",
+            icon: "manage_accounts",
+            path: "/equipos/asignaciones",
+            permission: "equipos:asignar",
+          },
+          {
+            id: "asignacion-masiva",
+            label: "Asignación Masiva",
+            icon: "group_add",
+            path: "/equipos/asignacion-masiva",
+            permission: "equipos:asignar",
+          },
+          {
+            id: "clonar-equipo",
+            label: "Clonar Equipo",
+            icon: "content_copy",
+            path: "/equipos/clonar",
+            permission: "equipos:asignar",
+          },
+          {
+            id: "vigencia",
+            label: "Vigencia",
+            icon: "schedule",
+            path: "/equipos/vigencia",
+            permission: "equipos:asignar",
+          },
+        ],
       },
       {
         id: "encuentros",
@@ -45,6 +81,22 @@ const ALL_MENU_ITEMS: NavSection[] = [
         icon: "calendar_month",
         path: "/encuentros",
         permission: "encuentros:gestionar",
+        children: [
+          {
+            id: "slots",
+            label: "Slots",
+            icon: "calendar_month",
+            path: "/encuentros",
+            permission: "encuentros:gestionar",
+          },
+          {
+            id: "guardias",
+            label: "Guardias",
+            icon: "security",
+            path: "/encuentros/guardias",
+            permission: "encuentros:gestionar",
+          },
+        ],
       },
       {
         id: "avisos",
@@ -52,6 +104,21 @@ const ALL_MENU_ITEMS: NavSection[] = [
         icon: "campaign",
         path: "/avisos",
         permission: "avisos:publicar",
+        children: [
+          {
+            id: "gestion-avisos",
+            label: "Gestión de Avisos",
+            icon: "campaign",
+            path: "/avisos",
+            permission: "avisos:publicar",
+          },
+          {
+            id: "avisos-activos",
+            label: "Avisos Activos",
+            icon: "notifications",
+            path: "/avisos/activos",
+          },
+        ],
       },
       {
         id: "tareas",
@@ -65,7 +132,7 @@ const ALL_MENU_ITEMS: NavSection[] = [
         label: "Coloquios",
         icon: "quiz",
         path: "/coloquios",
-        permission: "coloquios:gestionar",
+        permission: "coloquios:reservar",
       },
     ],
   },
@@ -78,6 +145,13 @@ const ALL_MENU_ITEMS: NavSection[] = [
         label: "Estructura Académica",
         icon: "account_tree",
         path: "/estructura",
+        permission: "estructura:gestionar",
+      },
+      {
+        id: "setup-cuatrimestre",
+        label: "Setup Cuatrimestre",
+        icon: "calendar_month",
+        path: "/setup-cuatrimestre",
         permission: "estructura:gestionar",
       },
       {
@@ -121,17 +195,30 @@ function hasAccess(item: MenuItem, permissions: string[]): boolean {
   return permissions.includes(item.permission);
 }
 
-export function getMenuItems(permissions: string[]): NavSection[] {
-  function filterItems(items: NavSection[]): NavSection[] {
-    return items
-      .map((section) => ({
-        ...section,
-        items: section.items.filter((item) => hasAccess(item, permissions)),
-      }))
-      .filter((section) => section.items.length > 0);
+function filterMenuItem(item: MenuItem, permissions: string[]): MenuItem | null {
+  // Si tiene hijos, filtrar hijos recursivamente
+  if (item.children && item.children.length > 0) {
+    const filteredChildren = item.children
+      .map((child) => filterMenuItem(child, permissions))
+      .filter((c): c is MenuItem => c !== null);
+    if (filteredChildren.length === 0) return null;
+    return { ...item, children: filteredChildren };
   }
+  // Si no tiene hijos, verificar permiso directo
+  if (!item.permission) return item;
+  if (permissions.includes(item.permission)) return item;
+  return null;
+}
 
-  return filterItems(ALL_MENU_ITEMS);
+export function getMenuItems(permissions: string[]): NavSection[] {
+  return ALL_MENU_ITEMS
+    .map((section) => ({
+      ...section,
+      items: section.items
+        .map((item) => filterMenuItem(item, permissions))
+        .filter((item): item is MenuItem => item !== null),
+    }))
+    .filter((section) => section.items.length > 0);
 }
 
 export function hasMenuItemPermission(

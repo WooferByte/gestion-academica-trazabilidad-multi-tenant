@@ -263,18 +263,17 @@ async def run_seed(session: AsyncSession) -> None:
     # ADMIN: todo
     _assign(ROLE_ADMIN_ID, *ALL_PERMISOS)
 
-    # PROFESOR (atrasados:ver se asigna como propio abajo)
+    # PROFESOR: calificaciones, tareas (propias), comunicacion
     _assign(ROLE_PROFESOR_ID,
         'calificaciones:importar', 'padron:cargar',
-        'comunicacion:enviar', 'encuentros:gestionar',
-        'coloquios:gestionar', 'coloquios:reservar',
-        'tareas:gestionar', 'equipos:asignar',
+        'comunicacion:enviar', 'coloquios:reservar',
+        'tareas:gestionar',
     )
 
-    # TUTOR
+    # TUTOR: seguimiento y comunicacion
     _assign(ROLE_TUTOR_ID,
-        'atrasados:ver', 'encuentros:gestionar',
-        'comunicacion:enviar', 'coloquios:reservar',
+        'atrasados:ver', 'comunicacion:enviar',
+        'coloquios:reservar',
     )
 
     # FINANZAS
@@ -306,7 +305,7 @@ async def run_seed(session: AsyncSession) -> None:
         (USER_CSV_ANA, 'ana@test.com', 'alumno'),
         (USER_CSV_PEDRO, 'pedro@test.com', 'alumno'),
     ]
-    role_map = {'admin': ROLE_ADMIN_ID, 'profesor': ROLE_PROFESOR_ID, 'tutor': ROLE_TUTOR_ID, 'alumno': ROLE_ALUMNO_ID}
+    role_map = {'ADMIN': ROLE_ADMIN_ID, 'PROFESOR': ROLE_PROFESOR_ID, 'TUTOR': ROLE_TUTOR_ID, 'ALUMNO': ROLE_ALUMNO_ID, 'FINANZAS': ROLE_FINANZAS_ID}
     nombres = {
         USER_ADMIN_ID: ('Admin', 'Sistema'),
         USER_ANA_ID: ('Ana', 'Profesor'),
@@ -322,7 +321,7 @@ async def run_seed(session: AsyncSession) -> None:
         USER_CSV_PEDRO: ('Pedro', 'Rodríguez Fernández'),
     }
     for uid, email, rol in users_data:
-        role_upper = rol.upper() if rol != 'alumno' else 'alumno'
+        role_upper = rol.upper()
         nom, ape = nombres.get(uid, ('', ''))
         user = User(
             id=uid, tenant_id=TENANT_ID, email=email,
@@ -333,7 +332,7 @@ async def run_seed(session: AsyncSession) -> None:
             roles=[role_upper], estado='Activo', is_active=True,
         )
         session.add(user)
-        role_id = role_map[rol]
+        role_id = role_map[rol.upper()]
         ur_id = uuid.uuid5(NS, f'seed-ur-{uid}')
         session.add(UserRole(id=ur_id, tenant_id=TENANT_ID, user_id=uid, role_id=role_id))
     await session.flush()  # ensure users exist before asignaciones

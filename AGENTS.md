@@ -78,14 +78,14 @@ Cargá la skill correspondiente al contexto **ANTES** de escribir código. Aplic
 
 | Agente | Rol | Skills que carga |
 |--------|-----|------------------|
-| **Backend Core** | FastAPI / SQLAlchemy / migraciones / modelos | `fastapi-templates`, `postgresql-table-design`, `python-testing-patterns`, `test-driven-development` |
-| **Backend Aux** | Servicios, integraciones, seguridad, performance | `api-security-best-practices`, `postgresql-optimization`, `systematic-debugging` |
-| **Frontend** | React / TanStack / Tailwind / E2E / Dashboard | `typescript-advanced-types`, `tailwind-design-system`, `playwright-best-practices`, `dashboard-crud-page`, `help-system-content`, `vercel-react-best-practices`, `web-design-guidelines`, `ui-ux-pro-max`, `aceternity-ui`, `micro-interactions` |
-| **DevOps** | Contenedores / build | `multi-stage-dockerfile` |
-| **Transversal** | Calidad / revisión | `code-review-excellence`, `systematic-debugging` |
-| **Orquestación** | SDD / OPSX / docs | `kb-creator`, `roadmap-generator`, `agent-instruction`, `find-skill` |
+| **Backend Core** | FastAPI / SQLAlchemy / migraciones / modelos | `fastapi-python`, `sqlalchemy-postgres`, `python-testing`, `test-driven-development`, `postgresql-database-engineering` |
+| **Backend Aux** | Servicios, integraciones, seguridad, performance | `api-security-hardening`, `systematic-debugging`, `postgresql-database-engineering` |
+| **Frontend** | React / TanStack / Tailwind / E2E / Dashboard | `typescript-advanced-types`, `tailwind-design-system`, `react-dev`, `tanstack-query`, `playwright-e2e-init`, `dashboard-crud-page`, `help-system-content`, `vercel-react-best-practices`, `web-design-guidelines`, `ui-ux-pro-max`, `aceternity-ui`, `micro-interactions` |
+| **DevOps** | Contenedores / build | `postgresql-database-engineering` |
+| **Transversal** | Calidad / revisión | `code-review`, `systematic-debugging`, `judgment-day` |
+| **Orquestación** | SDD / OPSX / docs | `kb-creator`, `roadmap-generator`, `agents-md-generator`, `find-skills`, `skill-registry` |
 
-> **Skills frontend actualizadas**: se agregaron `dashboard-crud-page` (CRUD estandarizado), `help-system-content` (sistema de ayuda), `vercel-react-best-practices` (70 reglas de performance React), `web-design-guidelines` (guías de diseño web), `ui-ux-pro-max` (UI/UX), `aceternity-ui` (efectos visuales animados), `micro-interactions` (micro interacciones), y se actualizó `react-dev`.
+> **Skills frontend actualizadas**: se corrigieron nombres de skills obsoletos y se agregó `tanstack-query` (3.2K installs, oficial de TanStack) para consultas server-state tipadas. Skills transversales: se agregó `judgment-day` (revisión adversarial paralela) y `code-review` (reemplaza `code-review-excellence`). Skills de backend: se corrigieron a `fastapi-python`, `sqlalchemy-postgres`, `python-testing`, `api-security-hardening`.
 
 > **Diseño UI**: el diseño del frontend fue realizado en Google Stitch y está disponible en `knowledge-base/stitch_activia_trace_academic_orchestrator/`. Incluye design tokens (colores, tipografía Geist, espaciado), layout (sidebar colapsable 260px/64px), y pantallas de los 5 módulos (dashboard, académico, coordinación, finanzas). Consultar ANTES de implementar cualquier componente frontend. Las skills `tailwind-design-system`, `ui-ux-pro-max`, `aceternity-ui` y `micro-interactions` se alinean directamente con este diseño.
 
@@ -95,7 +95,7 @@ Cargá la skill correspondiente al contexto **ANTES** de escribir código. Aplic
 
 El plan de implementación completo está en [CHANGES.md](CHANGES.md). Resumen:
 
-- **Total**: 24 changes (`C-01`…`C-24`) en 6 fases, organizados con 11 gates de paralelismo y un plan óptimo de 3 agentes (Backend Core / Backend Aux / Frontend).
+- **Total**: 27 changes (`C-01`…`C-24b`) en 6 fases, organizados con 11 gates de paralelismo y un plan óptimo de 3 agentes (Backend Core / Backend Aux / Frontend).
 - **Camino crítico** (10 changes, mínimo irreducible): `C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 → C-12`. Es el flujo de mayor valor: importar → analizar → comunicar, en producción multi-tenant.
 - **Primer change**: `C-01 foundation-setup` (infra, Docker, FastAPI skeleton, DB inicial, OpenTelemetry). Sin dependencias.
 - **Primer fork** (GATE 4, tras `C-04 rbac`): seguridad lista → arrancan en paralelo `C-05 audit-log`, `C-06 estructura-academica` y `C-21 frontend-shell-y-auth`.

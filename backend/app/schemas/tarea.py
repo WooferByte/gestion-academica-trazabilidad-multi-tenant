@@ -49,7 +49,9 @@ class TareaResponse(BaseModel):
     tenant_id: uuid.UUID
     materia_id: uuid.UUID | None = None
     asignado_a: uuid.UUID
+    asignado_a_nombre: str = ''
     asignado_por: uuid.UUID
+    asignado_por_nombre: str = ''
     estado: str
     descripcion: str
     contexto_id: uuid.UUID | None = None

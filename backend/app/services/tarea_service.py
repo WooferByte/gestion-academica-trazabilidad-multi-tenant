@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import decrypt
 from app.models.tarea import ComentarioTarea, EstadoTarea, Tarea
 from app.models.user import User
 from app.repositories.tarea_repository import ComentarioTareaRepository, TareaRepository
@@ -170,12 +171,24 @@ class TareaService:
             )
             for c in comentarios
         ]
+        # Resolve user names (use email as fallback since names are encrypted)
+        def _get_user_name(user: User | None) -> str:
+            if user and hasattr(user, 'email') and user.email:
+                return user.email.split('@')[0]
+            return ''
+        a_asignado = await self._session.execute(select(User).where(User.id == tarea.asignado_a))
+        u_asignado = a_asignado.scalar_one_or_none()
+        a_por = await self._session.execute(select(User).where(User.id == tarea.asignado_por))
+        u_por = a_por.scalar_one_or_none()
+
         return TareaResponse(
             id=tarea.id,
             tenant_id=tarea.tenant_id,
             materia_id=tarea.materia_id,
             asignado_a=tarea.asignado_a,
+            asignado_a_nombre=_get_user_name(u_asignado),
             asignado_por=tarea.asignado_por,
+            asignado_por_nombre=_get_user_name(u_por),
             estado=tarea.estado.value if hasattr(tarea.estado, 'value') else str(tarea.estado),
             descripcion=tarea.descripcion,
             contexto_id=tarea.contexto_id,

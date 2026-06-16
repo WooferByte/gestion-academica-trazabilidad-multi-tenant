@@ -20,6 +20,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit_codes import ASIGNACION_MODIFICAR
+from app.core.security import decrypt
+from app.models.carrera import Carrera
+from app.models.cohorte import Cohorte
+from app.models.materia import Materia
 from app.models.user import User
 from app.repositories.asignacion import AsignacionRepository
 from app.schemas.asignacion import (
@@ -69,7 +73,7 @@ class AsignacionService:
             limit=limit,
         )
         return {
-            'items': [self._to_response(a) for a in asignaciones],
+            'items': [await self._to_response(a) for a in asignaciones],
             'total': len(asignaciones),
         }
 
@@ -77,7 +81,7 @@ class AsignacionService:
         asignacion = await self._repo.get(asignacion_id)
         if not asignacion:
             raise HTTPException(status_code=404, detail='Asignacion no encontrada')
-        return self._to_response(asignacion)
+        return await self._to_response(asignacion)
 
     async def create_asignacion(self, data: AsignacionCreate) -> dict:
         await self._validar_no_solapamiento(
@@ -88,7 +92,7 @@ class AsignacionService:
             hasta=data.hasta,
         )
         asignacion = await self._repo.create(**data.model_dump())
-        return self._to_response(asignacion)
+        return await self._to_response(asignacion)
 
     async def update_asignacion(
         self, asignacion_id: uuid.UUID, data: AsignacionUpdate,
@@ -98,7 +102,7 @@ class AsignacionService:
             raise HTTPException(status_code=404, detail='Asignacion no encontrada')
         update_data = {k: v for k, v in data.model_dump().items() if v is not None}
         if not update_data:
-            return self._to_response(asignacion)
+            return await self._to_response(asignacion)
 
         if any(k in update_data for k in ('materia_id', 'cohorte_id', 'desde', 'hasta')):
             await self._validar_no_solapamiento(
@@ -111,7 +115,7 @@ class AsignacionService:
             )
 
         updated = await self._repo.update(asignacion, **update_data)
-        return self._to_response(updated)
+        return await self._to_response(updated)
 
     async def delete_asignacion(self, asignacion_id: uuid.UUID) -> None:
         asignacion = await self._repo.get(asignacion_id)
@@ -134,7 +138,7 @@ class AsignacionService:
             solo_vigentes=solo_vigentes,
         )
         return {
-            'items': [self._to_response(a) for a in asignaciones],
+            'items': [await self._to_response(a) for a in asignaciones],
             'total': len(asignaciones),
         }
 
@@ -190,7 +194,7 @@ class AsignacionService:
             filas_afectadas=len(asignaciones),
         )
 
-        return [self._to_response(a) for a in asignaciones]
+        return [await self._to_response(a) for a in asignaciones]
 
     async def clonar_equipo(
         self,
@@ -215,7 +219,7 @@ class AsignacionService:
             filas_afectadas=len(creadas),
         )
 
-        return [self._to_response(a) for a in creadas]
+        return [await self._to_response(a) for a in creadas]
 
     async def modificar_vigencia(
         self,
@@ -349,15 +353,61 @@ class AsignacionService:
                     ),
                 )
 
-    def _to_response(self, asignacion) -> dict:
+    async def _resolve_nombre_usuario(self, usuario_id: uuid.UUID) -> str:
+        result = await self._session.execute(
+            select(User).where(User.id == usuario_id, User.tenant_id == self._tenant_id)
+        )
+        user = result.scalar_one_or_none()
+        if not user:
+            return str(usuario_id)
+        nombre = decrypt(user.nombre_cifrado) if user.nombre_cifrado else ''
+        apellido = decrypt(user.apellido_cifrado) if user.apellido_cifrado else ''
+        return f"{nombre} {apellido}".strip() or str(usuario_id)
+
+    async def _resolve_nombre_materia(self, materia_id: uuid.UUID | None) -> str | None:
+        if not materia_id:
+            return None
+        result = await self._session.execute(
+            select(Materia).where(Materia.id == materia_id, Materia.tenant_id == self._tenant_id)
+        )
+        materia = result.scalar_one_or_none()
+        return materia.nombre if materia else None
+
+    async def _resolve_nombre_carrera(self, carrera_id: uuid.UUID | None) -> str | None:
+        if not carrera_id:
+            return None
+        result = await self._session.execute(
+            select(Carrera).where(Carrera.id == carrera_id, Carrera.tenant_id == self._tenant_id)
+        )
+        carrera = result.scalar_one_or_none()
+        return carrera.nombre if carrera else None
+
+    async def _resolve_nombre_cohorte(self, cohorte_id: uuid.UUID | None) -> str | None:
+        if not cohorte_id:
+            return None
+        result = await self._session.execute(
+            select(Cohorte).where(Cohorte.id == cohorte_id, Cohorte.tenant_id == self._tenant_id)
+        )
+        cohorte = result.scalar_one_or_none()
+        return cohorte.nombre if cohorte else None
+
+    async def _to_response(self, asignacion) -> dict:
+        usuario_nombre = await self._resolve_nombre_usuario(asignacion.usuario_id)
+        materia_nombre = await self._resolve_nombre_materia(asignacion.materia_id)
+        carrera_nombre = await self._resolve_nombre_carrera(asignacion.carrera_id)
+        cohorte_nombre = await self._resolve_nombre_cohorte(asignacion.cohorte_id)
         return AsignacionResponse(
             id=asignacion.id,
             tenant_id=asignacion.tenant_id,
             usuario_id=asignacion.usuario_id,
+            usuario_nombre=usuario_nombre,
             rol=asignacion.rol,
             materia_id=asignacion.materia_id,
+            materia_nombre=materia_nombre,
             carrera_id=asignacion.carrera_id,
+            carrera_nombre=carrera_nombre,
             cohorte_id=asignacion.cohorte_id,
+            cohorte_nombre=cohorte_nombre,
             comisiones=asignacion.comisiones,
             responsable_id=asignacion.responsable_id,
             desde=asignacion.desde,

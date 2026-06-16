@@ -89,10 +89,6 @@ api.interceptors.response.use(
     if (!originalRequest) return Promise.reject(error);
 
     if (error.response?.status === 403) {
-      showToast(
-        "No tienes permiso para realizar esta acción",
-        "error",
-      );
       return Promise.reject(error);
     }
 

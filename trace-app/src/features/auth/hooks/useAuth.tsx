@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import type { User } from "@/features/auth/types/auth.types";
 import type {
   LoginRequest,
@@ -39,6 +40,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    queryClient.clear();
     getMeService()
       .then((userData) => {
         setSession(userData);
@@ -74,36 +77,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [setSession, clearSession]);
+  }, [setSession, clearSession, queryClient]);
 
   const login = useCallback(
     async (data: LoginRequest) => {
       const result = await loginService(data);
       if (!result.requires_2fa && result.access_token) {
+        queryClient.clear();
         const userData = await getMeService();
         setSession(userData);
         navigate("/dashboard", { replace: true });
       }
       return { requires_2fa: result.requires_2fa, temp_token: result.temp_token };
     },
-    [navigate, setSession],
+    [navigate, setSession, queryClient],
   );
 
   const verify2fa = useCallback(
     async (data: Verify2faRequest) => {
       await verify2faSvc(data);
+      queryClient.clear();
       const userData = await getMeService();
       setSession(userData);
       navigate("/dashboard", { replace: true });
     },
-    [navigate, setSession],
+    [navigate, setSession, queryClient],
   );
 
   const logout = useCallback(async () => {
+    queryClient.clear();
     clearSession();
     clearTokens();
     navigate("/login", { replace: true });
-  }, [navigate, clearSession]);
+  }, [navigate, clearSession, queryClient]);
 
   const requestRecovery = useCallback(async (data: RecoveryRequest) => {
     const result = await requestRecoveryService(data);

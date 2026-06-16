@@ -37,10 +37,14 @@ class AsignacionResponse(BaseModel):
     id: uuid.UUID
     tenant_id: uuid.UUID
     usuario_id: uuid.UUID
+    usuario_nombre: str = ''
     rol: str
     materia_id: uuid.UUID | None = None
+    materia_nombre: str | None = None
     carrera_id: uuid.UUID | None = None
+    carrera_nombre: str | None = None
     cohorte_id: uuid.UUID | None = None
+    cohorte_nombre: str | None = None
     comisiones: list[str] | None = None
     responsable_id: uuid.UUID | None = None
     desde: datetime | None = None
@@ -100,8 +104,8 @@ class VigenciaEquipoRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     materia_id: uuid.UUID
-    carrera_id: uuid.UUID
-    cohorte_id: uuid.UUID
+    carrera_id: uuid.UUID | None = None
+    cohorte_id: uuid.UUID | None = None
     desde: datetime | None = None
     hasta: datetime | None = None
 

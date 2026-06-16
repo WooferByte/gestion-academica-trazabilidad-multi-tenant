@@ -40,9 +40,12 @@ C-01 foundation-setup (infra, Docker, FastAPI skel, DB inicial, OTel)
             │   ├── C-19 panel-auditoria-metricas (dashboards de uso, F9.1)
             │   ├── C-20 perfil-y-mensajeria-interna (perfil propio, inbox interno)
             │   └── C-21 frontend-shell-y-auth (SPA shell, login, guard, cliente HTTP)
-            │       ├── C-22 frontend-academico-docente (importación, atrasados, comunicaciones)
-            │       ├── C-23 frontend-coordinacion (equipos, avisos, tareas, monitores)
-            │       └── C-24 frontend-finanzas-y-admin (liquidaciones, facturas, estructura, auditoría)
+│       ├── C-22 frontend-academico-docente (importación, atrasados, comunicaciones)
+│       ├── C-23a frontend-equipos-docentes (equipos + avisos)
+│       ├── C-23b frontend-encuentros-col (encuentros + guardias + coloquios)
+│       ├── C-23c frontend-tareas-monitores (tareas + setup cuatrimestre)
+│       ├── C-24a frontend-admin-estructura (carreras, cohortes, materias, usuarios, auditoría)
+│       └── C-24b frontend-finanzas-core (liquidaciones + facturas + grilla salarial)
 ```
 
 ### Paralelismo por fase
@@ -91,8 +94,11 @@ GATE 9: C-11 ✓                                     ← flujo central del PROFE
 
 GATE 10: C-21 ✓ + backend de cada dominio ✓       ← capa de presentación
   → C-22 frontend-academico-docente                [Agente C — si C-12 ✓]
-  → C-23 frontend-coordinacion                     [Agente C — si C-08, C-15, C-16 ✓]
-  → C-24 frontend-finanzas-y-admin                 [Agente C — si C-18, C-19 ✓]
+  → C-23a frontend-equipos-docentes                [Agente C — si C-08, C-15 ✓]
+  → C-23b frontend-encuentros-col                  [Agente C — si C-13, C-14 ✓]
+  → C-23c frontend-tareas-monitores                [Agente C — si C-16, C-17 ✓]
+  → C-24a frontend-admin-estructura                [Agente C — si C-06, C-07, C-19 ✓]
+  → C-24b frontend-finanzas-core                   [Agente C — si C-18 ✓]
 ```
 
 ### Camino crítico (10 changes — mínimo irreducible)
@@ -119,9 +125,11 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 | 8 | C-13 encuentros-y-guardias | C-10 calificaciones-y-umbral | C-16 tareas-internas |
 | 9 | C-14 evaluaciones-y-coloquios | C-11 analisis-atrasados-reportes | C-18 liquidaciones-y-honorarios |
 | 10 | C-19 panel-auditoria-metricas | C-12 comunicaciones-cola-worker | C-22 frontend-academico-docente |
-| 11 | — | C-23 frontend-coordinacion | C-24 frontend-finanzas-y-admin |
+| 11 | — | C-23a equipos-docentes | C-23b encuentros-col |
+| 12 | — | C-23c tareas-monitores | C-24a admin-estructura |
+| 13 | — | C-24b finanzas-core | — |
 
-> Los 3 agentes convergen alrededor del paso 10-11. El Agente A queda libre antes y puede tomar `C-19` o adelantar refactors.
+> Los cambios de frontend (C-23a/b/c, C-24a/b) son independientes entre sí y pueden ejecutarse en paralelo. Cada uno es ~2-3 sesiones. El orden sugerido prioriza features más usadas primero.
 
 ---
 
@@ -470,7 +478,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 
 ## FASE 5 — Frontend (SPA por features)
 
-> `C-21` es el shell común. Las features (C-22/23/24) consumen los endpoints ya construidos en backend.
+> `C-21` es el shell común. Las features (C-22, C-23a/b/c, C-24a/b) consumen los endpoints ya construidos en backend.
 
 ### [C-21] `frontend-shell-y-auth`
 - **Estado**: `[x]` completado ✓
@@ -488,6 +496,16 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 
 ### [C-22] `frontend-academico-docente`
 - **Estado**: `[x]` completado ✓
+
+### [C-22b] `fix-seed-y-bugs`
+- **Estado**: `[x]` completado ✓
+- **Scope**:
+  - Seed: roles `'alumno'` → `'ALUMNO'` para consistencia con backend
+  - Seed: role_map normalizado a mayúsculas
+  - Seed: permisos de PROFESOR y TUTOR ajustados (sin permisos de admin)
+  - Specs: encuentros-instancias limpiado (delta headers removidos)
+- **Dependencias**: `C-22`
+- **Governance**: BAJO
 - **Scope**:
   - Feature de gestión de comisión (PROFESOR): importación de calificaciones con preview y selección de actividades, configuración de umbral, vista de atrasados, ranking, notas finales, reportes rápidos.
   - Detección de entregas sin corregir + export. Comunicación a atrasados: preview + envío + tracking de estado en tiempo real.
@@ -499,29 +517,75 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/06_funcionalidades.md` Épicas 1, 2, 3
   - `knowledge-base/07_flujos_principales.md` FL-02, FL-04
 
-### [C-23] `frontend-coordinacion`
-- **Estado**: `[ ]` pendiente
+### [C-23a] `frontend-equipos-docentes`
+- **Estado**: `[x]` completado ✓
 - **Scope**:
-  - Features de COORDINADOR/ADMIN: gestión de equipos docentes (mis-equipos, masiva, clonar, vigencia, export), avisos (ABM + scope + ack), tareas internas (workflow), monitores transversales (general F2.7, F2.9), encuentros admin, coloquios.
-  - Setup de cuatrimestre (FL-03). Consume `C-08`, `C-13`, `C-14`, `C-15`, `C-16`, `C-17`.
-  - Tests: ABM equipos, clonado, publicación de aviso, workflow de tarea, filtros de monitor.
-- **Dependencias**: `C-21`, `C-08`, `C-15`, `C-16`
+  - Gestión de equipos docentes (F4.2–F4.7): mis-equipos, asignación masiva, clonar entre períodos, modificar vigencia general, exportar equipo.
+  - ABM de avisos con alcance configurable (F3.5): publicación, filtrado por scope (rol/cohorte/materia), acknowledgment de lectura, vigencia.
+  - Consume `C-08` (equipos) + `C-15` (avisos).
+  - Tests: asignación masiva, clonado, vigencia, publicación/llectura de aviso.
+- **Dependencias**: `C-21`, `C-08`, `C-15`
 - **Governance**: BAJO
 - **Leer antes**:
-  - `knowledge-base/06_funcionalidades.md` Épicas 4, 5, 6, 7, 8
-  - `knowledge-base/07_flujos_principales.md` FL-03, FL-05, FL-06, FL-09
+  - `knowledge-base/06_funcionalidades.md` Épica 4 (F4.2–F4.7), F3.5
+  - `knowledge-base/07_flujos_principales.md` FL-03 (setup cuatrimestre), FL-09 (avisos)
 
-### [C-24] `frontend-finanzas-y-admin`
-- **Estado**: `[ ]` pendiente
+### [C-23b] `frontend-encuentros-col`
+- **Estado**: `[x]` completado ✓
 - **Scope**:
-  - Feature FINANZAS: vista de liquidaciones del período con segmentación (general / NEXO / factura) + KPIs, cerrar liquidación, historial, grilla salarial, gestión de facturas.
-  - Feature ADMIN: estructura académica (carreras, cohortes, materias), usuarios del tenant, panel de auditoría y métricas, log completo. Consume `C-06`, `C-07`, `C-18`, `C-19`.
-  - Tests: vista de liquidación segmentada, cierre, ABM grilla salarial, panel de auditoría con filtros.
-- **Dependencias**: `C-21`, `C-18`, `C-19`
+  - Encuentros (F6.1–F6.6): crear encuentro recurrente/único, editar instancia, generar HTML para aula virtual, vista admin de encuentros.
+  - Guardias (F6.6): registro de guardias, consulta global + export.
+  - Coloquios (F7.1–F7.5): crear convocatoria con cupos, importar alumnos, listado, panel de métricas, admin global.
+  - Consume `C-13` (encuentros+guardias) + `C-14` (coloquios).
+  - Tests: creación de encuentros, registro de guardia, convocatoria con cupo, métricas.
+- **Dependencias**: `C-21`, `C-13`, `C-14`
 - **Governance**: BAJO
 - **Leer antes**:
-  - `knowledge-base/06_funcionalidades.md` Épicas 9, 10, 5
-  - `knowledge-base/07_flujos_principales.md` FL-08, FL-11, FL-12
+  - `knowledge-base/06_funcionalidades.md` Épica 6 (F6.1–F6.6), Épica 7 (F7.1–F7.5)
+  - `knowledge-base/07_flujos_principales.md` FL-06, FL-07
+
+### [C-23c] `frontend-tareas-monitores`
+- **Estado**: `[x]` completado ✓
+- **Scope**:
+  - Tareas internas (F8.1–F8.3): mis tareas, asignar/delegar, administración global con filtros, workflow de estados + comentarios.
+  - Setup de cuatrimestre (FL-03): pantalla de configuración inicial con programas y fechas académicas.
+  - Consume `C-16` (tareas) + `C-17` (programas).
+  - Tests: workflow de tarea, delegación, filtros, setup de cuatrimestre.
+- **Dependencias**: `C-21`, `C-16`, `C-17`
+- **Governance**: BAJO
+- **Leer antes**:
+  - `knowledge-base/06_funcionalidades.md` Épica 8 (F8.1–F8.3), F5.3, F5.4
+  - `knowledge-base/07_flujos_principales.md` FL-03, FL-05
+
+### [C-24a] `frontend-admin-estructura`
+- **Estado**: `[ ]` pendiente
+- **Scope**:
+  - Estructura académica (F5.1–F5.2): ABM carreras, cohortes, materias con validaciones de unicidad y estado activo/inactivo.
+  - Usuarios del tenant (F4.1): ABM usuarios con PII, asignación de roles, filtros.
+  - Panel de auditoría y métricas (F9.1–F9.2): dashboard de interacciones, log completo con filtros (fechas, materia, usuario, estado).
+  - Consume `C-06` (estructura) + `C-07` (usuarios) + `C-19` (auditoría).
+  - Tests: CRUD estructura, ABM usuarios, filtros de auditoría, scope `(propio)`.
+- **Dependencias**: `C-21`, `C-06`, `C-07`, `C-19`
+- **Governance**: BAJO
+- **Leer antes**:
+  - `knowledge-base/06_funcionalidades.md` Épica 5 (F5.1–F5.2), F4.1, Épica 9
+  - `knowledge-base/07_flujos_principales.md` FL-11, FL-12
+
+### [C-24b] `frontend-finanzas-core`
+- **Estado**: `[ ]` pendiente
+- **Scope**:
+  - Liquidaciones del período (F10.1–F10.3): vista con segmentación (general / NEXO / factura), KPIs, cerrar liquidación (inmutable RN-22), historial.
+  - Grilla salarial (F10.4, RN-31/32/33): ABM salarios base y plus por categoría.
+  - Facturas (F10.5): gestión de facturas de docentes, exclusión de liquidación general.
+  - Separación contable (F10.6): KPIs factura vs no-factura.
+  - Consume `C-18` (liquidaciones).
+  - Tests: vista segmentada, cierre inmutable, ABM grilla, exclusión por factura.
+- **Dependencias**: `C-21`, `C-18`
+- **Governance**: BAJO
+- **Leer antes**:
+  - `knowledge-base/06_funcionalidades.md` Épica 10 (F10.1–F10.6)
+  - `knowledge-base/07_flujos_principales.md` FL-08 (liquidación)
+  - `knowledge-base/05_reglas_de_negocio.md` RN-21, RN-31 a RN-38
 
 ---
 
@@ -529,13 +593,13 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 
 | Métrica | Valor |
 |---------|-------|
-| Total de changes | 24 |
+| Total de changes | 27 (22 completados + 5 pendientes) |
 | Fases | 6 (FASE 0 a FASE 5) |
 | Camino crítico | 10 changes (`C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 → C-12`) |
 | Gates de paralelismo | 11 (GATE 0 a GATE 10) |
 | Changes CRITICO (governance) | 6 (C-02, C-03, C-04, C-05, C-07, C-18) |
 | Primer fork | GATE 4 (tras C-04, seguridad lista) |
 
-**Primer change recomendado**: `C-01` (foundation-setup).
+**Próximo change recomendado**: `C-23a` (`frontend-equipos-docentes`).
 
-Para arrancar: `/opsx:propose C-01-foundation-setup`
+Para arrancar: `/opsx:propose C-23a-frontend-equipos-docentes`

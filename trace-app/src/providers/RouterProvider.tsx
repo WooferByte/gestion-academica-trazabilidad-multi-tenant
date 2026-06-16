@@ -22,6 +22,33 @@ const NotasFinalesPage = lazy(() => import("@/features/academico/analisis/pages/
 const TpsSinCorregirPage = lazy(() => import("@/features/academico/analisis/pages/TpsSinCorregirPage"));
 const ComunicarPage = lazy(() => import("@/features/academico/comunicaciones/pages/ComunicarPage"));
 const MonitorPage = lazy(() => import("@/features/academico/analisis/pages/MonitorPage"));
+const MisEquiposPage = lazy(() => import("@/features/equipos/pages/MisEquiposPage"));
+const GestionAsignacionesPage = lazy(() => import("@/features/equipos/pages/GestionAsignacionesPage"));
+const AsignacionMasivaPage = lazy(() => import("@/features/equipos/pages/AsignacionMasivaPage"));
+const ClonarEquipoPage = lazy(() => import("@/features/equipos/pages/ClonarEquipoPage"));
+const VigenciaPage = lazy(() => import("@/features/equipos/pages/VigenciaPage"));
+const AvisosListPage = lazy(() => import("@/features/avisos/pages/AvisosListPage"));
+const AvisoFormPage = lazy(() => import("@/features/avisos/pages/AvisoFormPage"));
+const AvisosActivosPage = lazy(() => import("@/features/avisos/pages/AvisosActivosPage"));
+
+// Encuentros
+const EncuentroSlotsListPage = lazy(() => import("@/features/encuentros/pages/EncuentroSlotsListPage"));
+const EncuentroSlotCrearPage = lazy(() => import("@/features/encuentros/pages/EncuentroSlotCrearPage"));
+const EncuentroSlotDetailPage = lazy(() => import("@/features/encuentros/pages/EncuentroSlotDetailPage"));
+const GuardiasListPage = lazy(() => import("@/features/encuentros/pages/GuardiasListPage"));
+
+// Coloquios
+const ColoquiosDashboardPage = lazy(() => import("@/features/coloquios/pages/ColoquiosDashboardPage"));
+const ColoquioCrearPage = lazy(() => import("@/features/coloquios/pages/ColoquioCrearPage"));
+const ColoquioDetailPage = lazy(() => import("@/features/coloquios/pages/ColoquioDetailPage"));
+const MetricasColoquiosPage = lazy(() => import("@/features/coloquios/pages/MetricasColoquiosPage"));
+
+// Tareas
+const TareasPage = lazy(() => import("@/features/tareas/pages/TareasPage"));
+const TareaDetailPage = lazy(() => import("@/features/tareas/pages/TareaDetailPage"));
+
+// Setup Cuatrimestre
+const SetupCuatrimestrePage = lazy(() => import("@/features/setup-cuatrimestre/pages/SetupCuatrimestrePage"));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>;
@@ -55,6 +82,38 @@ export function RouterProvider() {
                 <Route path=":materiaId/:cohorteId/tps-sin-corregir" element={<SuspenseWrapper><TpsSinCorregirPage /></SuspenseWrapper>} />
                 <Route path=":materiaId/:cohorteId/comunicar" element={<SuspenseWrapper><ComunicarPage /></SuspenseWrapper>} />
                 <Route path=":materiaId/:cohorteId/monitor" element={<SuspenseWrapper><MonitorPage /></SuspenseWrapper>} />
+              </Route>
+              <Route path="equipos">
+                <Route index element={<SuspenseWrapper><MisEquiposPage /></SuspenseWrapper>} />
+                <Route path="asignaciones" element={<SuspenseWrapper><GestionAsignacionesPage /></SuspenseWrapper>} />
+                <Route path="asignacion-masiva" element={<SuspenseWrapper><AsignacionMasivaPage /></SuspenseWrapper>} />
+                <Route path="clonar" element={<SuspenseWrapper><ClonarEquipoPage /></SuspenseWrapper>} />
+                <Route path="vigencia" element={<SuspenseWrapper><VigenciaPage /></SuspenseWrapper>} />
+              </Route>
+              <Route path="avisos">
+                <Route index element={<SuspenseWrapper><AvisosListPage /></SuspenseWrapper>} />
+                <Route path="crear" element={<SuspenseWrapper><AvisoFormPage /></SuspenseWrapper>} />
+                <Route path="editar/:id" element={<SuspenseWrapper><AvisoFormPage /></SuspenseWrapper>} />
+                <Route path="activos" element={<SuspenseWrapper><AvisosActivosPage /></SuspenseWrapper>} />
+              </Route>
+              <Route path="encuentros">
+                <Route index element={<SuspenseWrapper><EncuentroSlotsListPage /></SuspenseWrapper>} />
+                <Route path="crear" element={<SuspenseWrapper><EncuentroSlotCrearPage /></SuspenseWrapper>} />
+                <Route path="slots/:slotId" element={<SuspenseWrapper><EncuentroSlotDetailPage /></SuspenseWrapper>} />
+                <Route path="guardias" element={<SuspenseWrapper><GuardiasListPage /></SuspenseWrapper>} />
+              </Route>
+              <Route path="coloquios">
+                <Route index element={<SuspenseWrapper><ColoquiosDashboardPage /></SuspenseWrapper>} />
+                <Route path="crear" element={<SuspenseWrapper><ColoquioCrearPage /></SuspenseWrapper>} />
+                <Route path="metricas" element={<SuspenseWrapper><MetricasColoquiosPage /></SuspenseWrapper>} />
+                <Route path=":evaluacionId" element={<SuspenseWrapper><ColoquioDetailPage /></SuspenseWrapper>} />
+              </Route>
+              <Route path="tareas">
+                <Route index element={<SuspenseWrapper><TareasPage /></SuspenseWrapper>} />
+                <Route path=":tareaId" element={<SuspenseWrapper><TareaDetailPage /></SuspenseWrapper>} />
+              </Route>
+              <Route path="setup-cuatrimestre">
+                <Route index element={<SuspenseWrapper><SetupCuatrimestrePage /></SuspenseWrapper>} />
               </Route>
             </Route>
           </Route>

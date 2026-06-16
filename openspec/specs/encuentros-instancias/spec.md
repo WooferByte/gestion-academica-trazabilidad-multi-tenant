@@ -1,4 +1,4 @@
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Editar instancia de encuentro (F6.3)
 El sistema SHALL exponer `PATCH /api/v1/encuentros/instancias/{id}` para actualizar una instancia existente. Solo accesible con permiso `encuentros:gestionar`. Campos editables: `estado` (Programado|Realizado|Cancelado), `meet_url`, `video_url`, `comentario`. Las instancias SHALL pertenecer al tenant del usuario autenticado (filtro por tenant_id).
