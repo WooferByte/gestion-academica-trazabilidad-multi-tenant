@@ -147,7 +147,7 @@ ALL_PERMISOS = [
     'equipos:asignar', 'padron:cargar', 'calificaciones:importar',
     'atrasados:ver', 'comunicacion:enviar', 'comunicacion:aprobar',
     'avisos:publicar', 'encuentros:gestionar', 'coloquios:gestionar',
-    'coloquios:reservar', 'tareas:gestionar',
+    'coloquios:reservar', 'tareas:gestionar', 'auditoria:ver',
     'liquidaciones:ver', 'liquidaciones:calcular', 'liquidaciones:cerrar',
     'liquidaciones:exportar', 'liquidaciones:configurar-salarios',
     'facturas:gestionar',
@@ -696,6 +696,74 @@ def _create_calificaciones(
                 origen='Importado',
             ))
 
+async def seed_finanzas(session) -> None:
+    """Seed finanzas: salarios, liquidaciones, facturas."""
+    import uuid
+    from datetime import date, datetime
+    from app.models.salario_base import SalarioBase
+    from app.models.liquidacion import Liquidacion
+    from app.models.factura import Factura
+    from app.core.database import get_session_factory
+    from app.core.config import Settings
+
+    TENANT_ID = uuid.UUID("a232c35d-2dad-5510-8948-5ce14f18b85d")
+    NS = uuid.NAMESPACE_DNS
+
+    # Get users and cohortes
+    users = (await session.execute("SELECT id FROM users LIMIT 10")).fetchall()
+    cohortes = (await session.execute("SELECT id FROM cohortes LIMIT 5")).fetchall()
+    if not users or not cohortes:
+        return
+
+    roles = ["PROFESOR", "TUTOR", "NEXO", "COORDINADOR"]
+    periodos = ["2025-03", "2025-04", "2025-05"]
+    montos_map = {"PROFESOR": 150000, "TUTOR": 100000, "NEXO": 120000, "COORDINADOR": 180000}
+    estados_liq = ["Abierta", "Calculada", "Cerrada"]
+    estados_fac = ["Pendiente", "Pendiente", "Abonada"]
+
+    # Salarios Base
+    for rol in roles:
+        sid = uuid.uuid5(NS, f"seed-salario-{rol}")
+        await session.merge(SalarioBase(id=sid, tenant_id=TENANT_ID, rol=rol, monto=montos_map[rol], desde=date(2025, 3, 1)))
+    await session.flush()
+    print("  ✅ Salarios base creados")
+
+    # Liquidaciones
+    count = 0
+    for cohorte in cohortes:
+        cid = cohorte[0]
+        for periodo in periodos:
+            for user in users[:4]:
+                uid = user[0]
+                r = roles[count % len(roles)]
+                base = montos_map[r]
+                plus = hash(f"plus-{uid}-{periodo}") % 30000
+                total = base + plus
+                lid = uuid.uuid5(NS, f"seed-liq-{uid}-{cid}-{periodo}")
+                await session.merge(Liquidacion(
+                    id=lid, tenant_id=TENANT_ID, usuario_id=uid, cohorte_id=cid,
+                    periodo=periodo, rol=r, monto_base=base, monto_plus=plus,
+                    total=total, es_nexo=(r == "NEXO"), excluido_por_factura=False,
+                    estado=estados_liq[count % 3],
+                ))
+                count += 1
+    await session.flush()
+    print(f"  ✅ {count} liquidaciones creadas")
+
+    # Facturas
+    for i, periodo in enumerate(periodos):
+        for j, user in enumerate(users[:3]):
+            uid = user[0]
+            fid = uuid.uuid5(NS, f"seed-fac-{uid}-{periodo}")
+            await session.merge(Factura(
+                id=fid, tenant_id=TENANT_ID, usuario_id=uid, periodo=periodo,
+                detalle=f"Honorarios - {periodo}", estado=estados_fac[(i + j) % 3],
+                cargada_at=datetime(2025, 3, 15 + i * 3 + j),
+            ))
+    await session.flush()
+    print("  ✅ 9 facturas creadas")
+
+
 if __name__ == '__main__':
     import asyncio
     from app.core.database import init_engine, get_session_factory, dispose_engine
@@ -707,7 +775,13 @@ if __name__ == '__main__':
         async with get_session_factory()() as session:
             await run_seed(session)
             await session.commit()
-            print('✅ Seed completado exitosamente')
+            print('✅ Seed principal completado')
+            await seed_finanzas(session)
+            await session.commit()
+            print('✅ Seed finanzas completado')
+            print()
+            print('🎉 Seed COMPLETO — todos los datos cargados')
+            print('📋 Login: admin@test.com / password123')
         await dispose_engine()
 
     asyncio.run(_main())

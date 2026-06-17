@@ -1,7 +1,51 @@
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api/client";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
 export function DashboardPage() {
   const { user } = useAuth();
+
+  const { data: alumnos } = useQuery({
+    queryKey: ["dashboard", "alumnos"],
+    queryFn: () =>
+      api
+        .get<{ items: unknown[]; total: number }>("/admin/usuarios", {
+          params: { rol: "ALUMNO" },
+        })
+        .then((r) => r.data.total ?? r.data.items?.length ?? 0)
+        .catch(() => 0),
+    staleTime: 60 * 1000,
+  });
+
+  const { data: materias } = useQuery({
+    queryKey: ["dashboard", "materias"],
+    queryFn: () =>
+      api
+        .get<{ items: unknown[]; total: number }>("/admin/materias")
+        .then((r) => r.data.total ?? r.data.items?.length ?? 0)
+        .catch(() => 0),
+    staleTime: 60 * 1000,
+  });
+
+  const { data: encuentros } = useQuery({
+    queryKey: ["dashboard", "encuentros"],
+    queryFn: () =>
+      api
+        .get<unknown[]>("/encuentros/slots")
+        .then((r) => (Array.isArray(r.data) ? r.data.length : 0))
+        .catch(() => 0),
+    staleTime: 60 * 1000,
+  });
+
+  const { data: atrasados } = useQuery({
+    queryKey: ["dashboard", "atrasados"],
+    queryFn: () =>
+      api
+        .get<{ total?: number; items?: unknown[] }>("/analisis/atrasados")
+        .then((r) => r.data?.total ?? (Array.isArray(r.data) ? r.data.length : 0))
+        .catch(() => 0),
+    staleTime: 60 * 1000,
+  });
 
   return (
     <div className="flex flex-col gap-lg p-lg">
@@ -17,10 +61,10 @@ export function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Alumnos" value="—" icon="people" />
-        <StatCard title="Materias" value="—" icon="menu_book" />
-        <StatCard title="Encuentros" value="—" icon="calendar_month" />
-        <StatCard title="Atrasados" value="—" icon="warning" />
+        <StatCard title="Alumnos" value={String(alumnos ?? "—")} icon="people" />
+        <StatCard title="Materias" value={String(materias ?? "—")} icon="menu_book" />
+        <StatCard title="Encuentros" value={String(encuentros ?? "—")} icon="calendar_month" />
+        <StatCard title="Atrasados" value={String(atrasados ?? "—")} icon="warning" />
       </div>
     </div>
   );

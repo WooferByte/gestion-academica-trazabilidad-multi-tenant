@@ -40,7 +40,7 @@ export function Sidebar() {
       }
     }
     setExpandedMenus((prev) => ({ ...prev, ...next }));
-  }, []);
+  }, [location.pathname]);
 
   const toggleCollapse = () => setCollapsed((prev) => !prev);
 

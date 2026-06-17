@@ -7,8 +7,9 @@ import { ConvocatoriaTable } from "@/features/coloquios/components/ConvocatoriaT
 export default function ColoquiosDashboardPage() {
   const navigate = useNavigate();
   const { permissions } = useAuth();
-  const isAdmin = permissions.includes("coloquios:gestionar");
-  const { data: metricas, isLoading: metricasLoading } = useMetricas(isAdmin);
+  const esAdmin = permissions.includes("coloquios:gestionar");
+  const puedeVerMetricas = esAdmin || permissions.includes("coloquios:reservar");
+  const { data: metricas, isLoading: metricasLoading } = useMetricas(puedeVerMetricas);
   const { data: convocatoriasData, isLoading: convLoading } = useConvocatoriasList();
 
   const convocatorias = convocatoriasData?.items ?? [];
@@ -19,7 +20,7 @@ export default function ColoquiosDashboardPage() {
         <h1 className="font-headline-md text-headline-md text-on-surface">
           Coloquios
         </h1>
-        {isAdmin && (
+        {esAdmin && (
           <button
             onClick={() => navigate("/coloquios/crear")}
             className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90"

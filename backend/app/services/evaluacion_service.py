@@ -96,7 +96,7 @@ class EvaluacionService:
         limit: int = 100,
     ) -> tuple[list[EvaluacionResponse], int]:
         alumno_id = None
-        if current_user and 'COORDINADOR' not in current_user.roles and 'ADMIN' not in current_user.roles:
+        if current_user and 'COORDINADOR' not in current_user.roles and 'ADMIN' not in current_user.roles and 'PROFESOR' not in current_user.roles:
             alumno_id = current_user.user_id
 
         items, total = await self._eval_repo.list_filtered(

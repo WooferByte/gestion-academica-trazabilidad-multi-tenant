@@ -131,9 +131,11 @@ class UsuarioService:
     def _to_response(self, usuario) -> UsuarioResponse:
         nombre = decrypt(usuario.nombre_cifrado) if usuario.nombre_cifrado else None
         apellido = decrypt(usuario.apellido_cifrado) if usuario.apellido_cifrado else None
+        email = usuario.email if not usuario.email_cifrado else decrypt(usuario.email_cifrado)
         return UsuarioResponse(
             id=usuario.id,
             tenant_id=usuario.tenant_id,
+            email=email,
             nombre=nombre,
             apellido=apellido,
             legajo=usuario.legajo,

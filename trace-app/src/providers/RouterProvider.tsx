@@ -6,6 +6,7 @@ import { PublicRoute } from "@/components/routing/PublicRoute";
 import { LoadingSkeleton } from "@/components/routing/LoadingSkeleton";
 import { AppLayout } from "@/features/shell/components/AppLayout";
 import { ToastContainer } from "@/components/ui/Toast";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage"));
 const TwoFactorPage = lazy(() => import("@/features/auth/pages/TwoFactorPage"));
@@ -47,8 +48,23 @@ const MetricasColoquiosPage = lazy(() => import("@/features/coloquios/pages/Metr
 const TareasPage = lazy(() => import("@/features/tareas/pages/TareasPage"));
 const TareaDetailPage = lazy(() => import("@/features/tareas/pages/TareaDetailPage"));
 
+// Finanzas
+const FinanzasLiquidacionesPage = lazy(() => import("@/features/finanzas-liquidaciones/pages/FinanzasLiquidacionesPage"));
+const FinanzasLiquidacionesHistorialPage = lazy(() => import("@/features/finanzas-liquidaciones/pages/FinanzasLiquidacionesHistorialPage"));
+const FinanzasFacturasPage = lazy(() => import("@/features/finanzas-facturas/pages/FinanzasFacturasPage"));
+const FinanzasFacturaDetallePage = lazy(() => import("@/features/finanzas-facturas/pages/FinanzasFacturaDetallePage"));
+const FinanzasGrillaPage = lazy(() => import("@/features/finanzas-grilla/pages/FinanzasGrillaPage"));
+
 // Setup Cuatrimestre
 const SetupCuatrimestrePage = lazy(() => import("@/features/setup-cuatrimestre/pages/SetupCuatrimestrePage"));
+
+// Admin pages
+const AdminCarrerasPage = lazy(() => import("@/features/admin-carreras/pages/AdminCarrerasPage"));
+const AdminCohortesPage = lazy(() => import("@/features/admin-cohortes/pages/AdminCohortesPage"));
+const AdminMateriasPage = lazy(() => import("@/features/admin-materias/pages/AdminMateriasPage"));
+const AdminUsuariosPage = lazy(() => import("@/features/admin-usuarios/pages/AdminUsuariosPage"));
+const AdminAuditoriaPanelPage = lazy(() => import("@/features/admin-auditoria-panel/pages/AdminAuditoriaPanelPage"));
+const AdminAuditoriaLogPage = lazy(() => import("@/features/admin-auditoria-log/pages/AdminAuditoriaLogPage"));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>;
@@ -112,8 +128,29 @@ export function RouterProvider() {
                 <Route index element={<SuspenseWrapper><TareasPage /></SuspenseWrapper>} />
                 <Route path=":tareaId" element={<SuspenseWrapper><TareaDetailPage /></SuspenseWrapper>} />
               </Route>
+              <Route path="liquidaciones">
+                <Route index element={<SuspenseWrapper><FinanzasLiquidacionesPage /></SuspenseWrapper>} />
+                <Route path="historial" element={<SuspenseWrapper><FinanzasLiquidacionesHistorialPage /></SuspenseWrapper>} />
+              </Route>
+              <Route path="facturas">
+                <Route index element={<SuspenseWrapper><FinanzasFacturasPage /></SuspenseWrapper>} />
+                <Route path=":facturaId" element={<SuspenseWrapper><FinanzasFacturaDetallePage /></SuspenseWrapper>} />
+              </Route>
+              <Route path="finanzas/grilla">
+                <Route index element={<SuspenseWrapper><FinanzasGrillaPage /></SuspenseWrapper>} />
+              </Route>
               <Route path="setup-cuatrimestre">
                 <Route index element={<SuspenseWrapper><SetupCuatrimestrePage /></SuspenseWrapper>} />
+              </Route>
+              <Route path="admin">
+                <Route path="carreras" element={<SuspenseWrapper><ErrorBoundary><AdminCarrerasPage /></ErrorBoundary></SuspenseWrapper>} />
+                <Route path="cohortes" element={<SuspenseWrapper><ErrorBoundary><AdminCohortesPage /></ErrorBoundary></SuspenseWrapper>} />
+                <Route path="materias" element={<SuspenseWrapper><ErrorBoundary><AdminMateriasPage /></ErrorBoundary></SuspenseWrapper>} />
+                <Route path="usuarios" element={<SuspenseWrapper><ErrorBoundary><AdminUsuariosPage /></ErrorBoundary></SuspenseWrapper>} />
+                <Route path="auditoria">
+                  <Route index element={<SuspenseWrapper><ErrorBoundary><AdminAuditoriaPanelPage /></ErrorBoundary></SuspenseWrapper>} />
+                  <Route path="log" element={<SuspenseWrapper><ErrorBoundary><AdminAuditoriaLogPage /></ErrorBoundary></SuspenseWrapper>} />
+                </Route>
               </Route>
             </Route>
           </Route>

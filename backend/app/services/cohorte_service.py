@@ -13,8 +13,10 @@ class CohorteService:
         self._repo = CohorteRepository(session, tenant_id)
         self._carrera_repo = CarreraRepository(session, tenant_id)
 
-    async def list_cohortes(self):
+    async def list_cohortes(self, carrera_id: uuid.UUID | None = None):
         cohortes = await self._repo.get_multi()
+        if carrera_id:
+            cohortes = [c for c in cohortes if c.carrera_id == carrera_id]
         return {
             'items': [CohorteResponse.model_validate(c) for c in cohortes],
             'total': len(cohortes),

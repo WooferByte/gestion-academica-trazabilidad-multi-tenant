@@ -46,6 +46,7 @@ class UsuarioResponse(BaseModel):
 
     id: uuid.UUID
     tenant_id: uuid.UUID
+    email: str | None = None
     nombre: str | None = None
     apellido: str | None = None
     legajo: str | None = None

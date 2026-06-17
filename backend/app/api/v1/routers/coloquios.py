@@ -74,7 +74,7 @@ async def listar_convocatorias(
 async def obtener_metricas(
     session: AsyncSession = Depends(get_db),
     current_user: UserContext = Depends(get_current_user),
-    _=require_permission('coloquios:gestionar'),
+    _=require_permission('coloquios:reservar'),
 ) -> MetricasColoquiosResponse:
     service = EvaluacionService(session, current_user.tenant_id)
     return await service.obtener_metricas()
